@@ -3,6 +3,15 @@ uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 authors = ["baggepinnen <cont-frb@ulund.org>"]
 version = "0.1.0"
 
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Lazy = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 

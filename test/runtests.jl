@@ -21,6 +21,9 @@ b = [Particles(1000) for i = 1:3]
 @test sum(a.*b) ≈ 0
 @test all(A*b .≈ [0,0,0])
 
+@test all(A\b .≈ zeros(3))
+using LinearAlgebra
+qr(A)
 
 
 using ControlSystems

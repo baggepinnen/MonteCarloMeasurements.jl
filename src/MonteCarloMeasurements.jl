@@ -20,22 +20,13 @@ function Base.show(io::IO, p::Particles{T,N}) where {T,N}
     end
 end
 
-function Particles(N::Integer = 100)
-    Particles{Float64,N}(randn(N))
-end
-
-function Particles{T,N}(p::Particles{T,N}) where {T,N}
-    p
-end
+Particles(N::Integer = 100) = Particles{Float64,N}(randn(N))
+Particles(v::Vector) = Particles{eltype(v),length(v)}(v)
+Particles{T,N}(p::Particles{T,N}) where {T,N} = p
 
 function Particles(d::Distribution, N=100)
     v = rand(d,N)
     Particles{eltype(v),N}(v)
-end
-
-
-function Particles(v::Vector)
-    Particles{eltype(v),length(v)}(v)
 end
 
 Distributions.Normal(p::Particles) = Normal(mean(p), std(p))
@@ -52,11 +43,9 @@ for fs in setdiff(names(Base), excluded_functions)
         @eval function Base.$f(p::Particles{T,N},a::Real...) where {T,N}
             Particles{T,N}(map(x->$f(x,a...), p.particles))
         end
-
         @eval function Base.$f(a::Real,p::Particles{T,N}) where {T,N}
             Particles{T,N}(map(x->$f(a,x), p.particles))
         end
-
         @eval function Base.$f(p1::Particles{T,N},p2::Particles{T,N}) where {T,N}
             Particles{T,N}(map($f, p1.particles, p2.particles))
         end
@@ -72,16 +61,18 @@ Base.eltype(::Type{Particles{T,N}}) where {T,N} = T
 Base.promote_rule(::Type{S}, ::Type{Particles{T,N}}) where {S,T,N} = Particles{promote_type(S,T),N}
 Base.promote_rule(::Type{Complex}, ::Type{Particles{T,N}}) where {T,N} = Complex{Particles{T,N}}
 Base.convert(::Type{Particles{T,N}}, f::Real) where {T,N} = Particles{T,N}(fill(T(f),N))
-Base.convert(::Type{S}, p::Particles{T,N}) where {S<:Real,T,N} = S(mean(p))
+Base.convert(::Type{Particles{T,N}}, f::Particles{S,N}) where {T,N,S} = Particles{promote_type(T,S),N}(Particles{promote_type(T,S),N}(f))
+# Base.convert(::Type{S}, p::Particles{T,N}) where {S<:Real,T,N} = S(mean(p)) # Not good to define this
 Base.zeros(::Type{Particles{T,N}}, dim::Integer) where {T,N} = [Particles(zeros(eltype(T),N)) for d = 1:dim]
 Base.zero(::Type{Particles{T,N}}) where {T,N} = Particles(zeros(eltype(T),N))
 Base.complex(::Type{Particles{T,N}}) where {T,N} = Complex{Particles{T,N}}
 Base.isfinite(p::Particles{T,N}) where {T,N} = isfinite(mean(p))
 Base.round(p::Particles{T,N}, r::RoundingMode; kwargs...) where {T,N} = round(mean(p), r; kwargs...)
-Base.AbstractFloat(p::Particles) = mean(p)
+# Base.AbstractFloat(p::Particles) = mean(p) # Not good to define this
 
 
 Base.:(==)(p1::Particles{T,N},p2::Particles{T,N}) where {T,N} = p1.particles == p2.particles
+Base.:(!=)(p1::Particles{T,N},p2::Particles{T,N}) where {T,N} = p1.particles != p2.particles
 Base.:<(a::Real,p::Particles) = a < mean(p)
 Base.:<(p::Particles,a::Real) = mean(p) < a
 Base.:<(p::Particles, a::Particles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
@@ -99,7 +90,7 @@ Base.:!(p::Particles) = all(p.particles .== 0)
 ≳(a::Real,p::Particles,lim=2) = ≲(a,p,lim)
 ≳(p::Particles,a::Real,lim=2) = ≲(p,a,lim)
 
-for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs)
+for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt)
     f = nameof(ff)
     @eval function (Base.$f)(p::Particles)
         Particles(map($f, p.particles))
