@@ -4,14 +4,19 @@ export Particles,StaticParticles, ≲
 
 
 using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase
+import StatsFuns
 using Lazy: @forward
 
 @reexport using Distributions
 
 include("particles.jl")
+end
 
-# InteractiveUtils, which, names, namesof
-# TODO: Broadcast, Mutation, Code generation or define for all base functions, test on ControlSystems
-# module Operators
+
+# TODO: Mutation, test on ControlSystems
+# TODO: InplaceParticles: maintains an output workspace
+# struct InplaceParticles
+#     particles::Vector
+#     output::ImmutableVector
 # end
-end # module
+# This output should ideally be some kind of immutable vector since it could be unsafe to mutate it. Unclear how the map!(f, output, particles) would be done if output is immutable though.
