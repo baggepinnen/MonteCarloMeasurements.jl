@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/baggepinnen/MonteCarloMeasurements.jl/badge.svg?branch=master)](https://coveralls.io/github/baggepinnen/MonteCarloMeasurements.jl?branch=master)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 
-This package provides two types `Particles <: Real` and `StaticParticles <: Real` that represents a distribution of a floating point number, kind of like the type `Measurement` from Measurements.jl. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handles nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are not handled well using linear uncertainty propagation ala Measurements.jl. The goal is to have a number of this type behave just as any other number while partaking in calculations. After a calculation, the `mean`, `std` etc. can be extracted from the number using the corresponding functions. `Particles` also interact with Distributions.jl, so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
+This package provides two types `Particles <: Real` and `StaticParticles <: Real` that represents a distribution of a floating point number, kind of like the type `Measurement` from [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handles nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). The goal is to have a number of this type behave just as any other number while partaking in calculations. After a calculation, the `mean`, `std` etc. can be extracted from the number using the corresponding functions. `Particles` also interact with Distributions.jl, so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
 
 ## Basic Examples
 ```julia
@@ -79,9 +79,9 @@ The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(d::Distribution, N::Int)` samples `N` particles from the distribution `d`.
-- We don't export the ± operator so as to not mess with Measurements.jl, but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(100)`
+- We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(100)`
 
-**The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead. The correlations can also be broken by permuting the particle vector `Particles(N, permute=true)`. 
+**The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead. The correlations can also be broken by permuting the particle vector `Particles(N, permute=true)`.
 
 
 
@@ -91,3 +91,40 @@ One can also call (`Particles/StaticParticles`)
 The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Be wary of creating your own vector using the constructor `Particles(N)` due to the systematic sampling mentioned above, the particles would not be independent. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
 
 A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`.
+
+## Plotting
+An instance of `p::Particle` can be plotted using `plot(p)`, that creates a histogram by default. If `StatsPlots.jl` is available, once can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
+- `errorbarplot`
+- `mcplot`
+- `ribbonplot`
+
+Below is an example using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
+```julia
+using ControlSystems, MonteCarloMeasurements, StatsPlots
+import MonteCarloMeasurements: ±
+
+p = 1 ± 0.1
+ζ = 0.3 ± 0.1
+ω = 1 ± 0.1
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+
+dc = dcgain(G)[]
+# 500 Particles: 1.012 ± 0.149
+density(dc)
+```
+![window](figs/dens.svg)
+```julia
+w = exp10.(LinRange(-1,1,200))
+mag, phase = bode(G,w) .|> vec
+
+errorbarplot(w,mag, yscale=:log10, xscale=:log10)
+```
+![window](figs/errorbar.svg)
+```julia
+mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
+```
+![window](figs/mc.svg)
+```julia
+ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
+```
+![window](figs/rib.svg)

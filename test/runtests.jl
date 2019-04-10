@@ -114,13 +114,15 @@ end
 # using Test, LinearAlgebra, Statistics
 # import MonteCarloMeasurements: ±, gradient
 # ##
-# p = 1 + 0.1StaticParticles(1000, permute=true)
-# ζ = 0.3 + 0.1StaticParticles(1000, permute=true)
-# ω = 1 + 0.1StaticParticles(1000, permute=true)
+# p = 1 ± 0.1
+# ζ = 0.3 ± 0.1
+# ω = 1 ± 0.1
 # G = tf([p*ω], [1, 2ζ*ω, ω^2])
 #
-# dcgain(G)
-# mag, phase = bode(G)
-# mag,phase = mag[:],phase[:]
+# dc = dcgain(G)
+# w = exp10.(LinRange(-1,1,200))
+# @time mag, phase = bode(G,w) .|> vec
 #
-# plot(log10.(mean.(mag)), xscale=:log10, yscale=:identity, yerror=std.(log.(mag)), ylims=(-3,1))
+# errorbarplot(w,mag, yscale=:log10, xscale=:log10)
+# mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
+# ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
