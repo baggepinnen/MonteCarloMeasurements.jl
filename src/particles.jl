@@ -9,11 +9,10 @@ end
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
-±(μ::Real,σ) = μ + σ*Particles(500, permute=true)
-±(μ::AbstractVector,σ) = Particles(MvNormal(μ, σ), 500)
+±(μ::Real,σ) = μ + σ*Particles(500)
+±(μ::AbstractVector,σ) = Particles(500, MvNormal(μ, σ))
 
-Particles(N::Integer = 500; permute=false) = Particles{Float64,N}(sysrandn(N, permute=permute))
-StaticParticles(N::Integer = 500; permute=false) = StaticParticles{Float64,N}(SVector{N,Float64}(sysrandn(N, permute=permute)))
+# StaticParticles(N::Integer = 500; permute=true) = StaticParticles{Float64,N}(SVector{N,Float64}(systematic_sample(N, permute=permute)))
 
 Base.Broadcast.broadcastable(p::Particles) = Ref(p)
 Base.getindex(p::AbstractParticles, I::Integer...) = getindex(p.particles, I...)
@@ -49,12 +48,16 @@ for PT in (:Particles, :StaticParticles)
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(d::Distribution, N=500)
-            v = rand(d,N)
+        function $PT(N=500, d::Distribution=Normal(0,1); permute=true)
+            if invfun(d) === nothing
+                v = rand(d, N)
+            else
+                v = systematic_sample(N,d; permute=permute)
+            end
             $PT{eltype(v),N}(v)
         end
 
-        function $PT(d::MultivariateDistribution, N=500)
+        function $PT(N, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality
             map($PT{eltype(v),N}, eachcol(v))
         end

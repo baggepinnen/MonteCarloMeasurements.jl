@@ -43,7 +43,7 @@ Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
 ```
 
 ## Why
-Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on a `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. An example
+Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on a `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. A benchmark example (more further down)
 ```julia
 using BenchmarkTools
 A = [Particles(1000) for i = 1:3, j = 1:3]
@@ -75,20 +75,20 @@ B = similar(A, Float64)
 `StaticParticles` allocate much less memory than regular `Partricles`, but are more stressful for the compiler to handle.
 
 ## Constructors
-The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(Normal(μ,σ),N)`. This last constructor works with any distribution from which one can sample.
+The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(N, Normal(μ,σ))`. This last constructor works with any distribution from which one can sample.
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
-- `Particles(d::Distribution, N::Int)` samples `N` particles from the distribution `d`.
+- `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
 - We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(500)`
 
-**The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead. The correlations can also be broken by permuting the particle vector `Particles(N, permute=true)`.
+**Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
 
 
 
 
 ## Multivariate particles
-The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Be wary of creating your own vector using the constructor `Particles(N)` due to the systematic sampling mentioned above, the particles would not be independent. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
+The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
 
 A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`.
 

@@ -7,17 +7,23 @@ import MonteCarloMeasurements: ±, gradient
     # σ/√N = σm
     @testset "sampling" begin
         for _ = 1:10
-            @test -3 < mean(sysrandn(100))*sqrt(100) < 3
-            @test -3 < mean(sysrandn(10000))*sqrt(10000) < 3
-            @test -0.9 < std(sysrandn(100)) < 1.1
-            @test -0.9 < std(sysrandn(10000)) < 1.1
+            @test -3 < mean(systematic_sample(100))*sqrt(100) < 3
+            @test -3 < mean(systematic_sample(10000))*sqrt(10000) < 3
+            @test -0.9 < std(systematic_sample(100)) < 1.1
+            @test -0.9 < std(systematic_sample(10000)) < 1.1
         end
+        @test systematic_sample(10000, Normal(1,1)) |> Base.Fix1(fit, Normal) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
+        systematic_sample(10000, Gamma(1,1)) #|> Base.Fix1(fit, Gamma)
+        systematic_sample(10000, TDist(1)) #|> Base.Fix1(fit, TDist)
+        @test systematic_sample(10000, Beta(1,1)) |> Base.Fix1(fit, Beta) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
+
     end
     @testset "Particles" begin
         for PT = (Particles, StaticParticles)
 
             p = PT(1000)
             @test 0 ± 1 ≈ p
+            @test sum(p) ≈ 0
             @test cov(p) ≈ 1 atol=0.2
             @test std(p) ≈ 1 atol=0.2
             @test var(p) ≈ 1 atol=0.2
@@ -52,7 +58,7 @@ import MonteCarloMeasurements: ±, gradient
 
             @test all(A\b .≈ zeros(3))
             @test_nowarn qr(A)
-            @test_nowarn Particles(MvNormal(2,1)) ./ Particles(Normal(2,1))
+            @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
         end
     end
 
@@ -61,17 +67,18 @@ import MonteCarloMeasurements: ±, gradient
     @testset "Multivariate Particles" begin
         for PT = (Particles, StaticParticles)
 
-            p = PT(MvNormal(2,1), 1000)
+            p = PT(1000, MvNormal(2,1))
+            @test_nowarn sum(p)
             @test cov(p) ≈ I atol=0.2
             @test mean(p) ≈ [0,0] atol=0.1
             @test size(Matrix(p)) == (1000,2)
 
-            p = PT(MvNormal(2,2), 100)
+            p = PT(100, MvNormal(2,2))
             @test cov(p) ≈ 4I atol=2
             @test mean(p) ≈ [0,0] atol=1
             @test size(Matrix(p)) == (100,2)
 
-            p = PT(MvNormal(2,2), 1000)
+            p = PT(1000, MvNormal(2,2))
             @test fit(MvNormal, p).μ ≈ mean(p)
             @test MvNormal(p).μ ≈ mean(p)
             @test cov(MvNormal(p)) ≈ cov(p)
@@ -84,7 +91,7 @@ import MonteCarloMeasurements: ±, gradient
         fp = f(p)
         @test gradient(f,p)[1] ≈ 6 atol=1e-4
         @test gradient(f,p)[2] ≈ 2e atol=1e-4
-        @test gradient(f,3) > 6 # Convex function
+        # @test gradient(f,3) > 6 # Convex function
         @test gradient(f,3) ≈ 6
 
         A = randn(3,3)
@@ -101,6 +108,22 @@ import MonteCarloMeasurements: ±, gradient
         g = 2H*x + h
         @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
         @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
+    end
+    @testset "leastsquares" begin
+        n, m = 10000, 3
+        A = randn(n,m)
+        x = randn(m)
+        y = A*x
+        σ = 0.1
+        yn = y .+ σ.*randn()
+        # xh = A\y
+        C1 = σ^2*inv(A'A)
+
+        yp = y .+ σ.*Particles.(2000)
+        xhp = (A'A)\A'yp
+        @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.1
+
+        @test norm(cov(xhp) .- C1) < 1e-7
     end
 end
 
