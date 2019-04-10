@@ -7,24 +7,8 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-function sysrandn(N)
-    r = LinRange(-4,4,N)
-    e = rand()/N
-    y = e:1/N:(1+e)
-    cdf = StatsFuns.normcdf.(r)
-    x = zeros(N)
-    s = 1
-    for i = 1:N
-        for j = s:N
-            if y[i] < cdf[j]
-                x[i] = r[j]
-                s = j
-                break
-            end
-        end
-    end
-    x
-end
+const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
+
 
 Particles(N::Integer = 100) = Particles{Float64,N}(sysrandn(N))
 StaticParticles(N::Integer = 100) = StaticParticles{Float64,N}(SVector{N,Float64}(randn(N)))
@@ -65,8 +49,15 @@ for PT in (:Particles, :StaticParticles)
             $PT{eltype(v),N}(v)
         end
 
+        function $PT(d::MultivariateDistribution, N=100)
+            v = rand(d,N)' |> copy # For cache locality
+            map($PT{eltype(v),N}, eachcol(v))
+        end
+    end
+    # @eval begin
 
-        for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1)
+    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1)
+        @eval begin
             function Base.$f(p::$PT{T,N},a::Real...) where {T,N}
                 $PT{T,N}(map(x->$f(x,a...), p.particles))
             end
@@ -77,7 +68,9 @@ for PT in (:Particles, :StaticParticles)
                 $PT{T,N}(map($f, p1.particles, p2.particles))
             end
         end
-
+    end
+    # end
+    @eval begin
         Base.length(p::$PT{T,N}) where {T,N} = N
         Base.ndims(p::$PT{T,N}) where {T,N} = ndims(T)
 
@@ -94,22 +87,30 @@ for PT in (:Particles, :StaticParticles)
         Base.round(p::$PT{T,N}, r::RoundingMode; kwargs...) where {T,N} = round(mean(p), r; kwargs...)
         # Base.AbstractFloat(p::$PT) = mean(p) # Not good to define this
 
+        Base.:^(p::$PT, i::Integer) = $PT(p.particles.^1) # Resolves ambiguity
 
-        
-        for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,)
-            f = nameof(ff)
-            function (Base.$f)(p::$PT)
-                $PT(map($f, p.particles))
-            end
+    end
+
+    for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,)
+        f = nameof(ff)
+        @eval function (Base.$f)(p::$PT)
+            $PT(map($f, p.particles))
         end
     end
+    # Multivariate particles
+
 
 
 end
 
-
+Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
+Statistics.mean(v::MvParticles) = mean.(v)
+Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
+Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
+Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
+Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
