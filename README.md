@@ -79,7 +79,7 @@ The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(d::Distribution, N::Int)` samples `N` particles from the distribution `d`.
-- We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(100)`
+- We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(500)`
 
 **The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead. The correlations can also be broken by permuting the particle vector `Particles(N, permute=true)`.
 
@@ -128,3 +128,24 @@ mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 ```
 ![window](figs/rib.svg)
+
+### Control systems benchmark
+```julia
+using BenchmarkTools, Printf
+p  = 1 ± 0.1
+ζ  = 0.3 ± 0.1
+ω  = 1 ± 0.1
+G  = tf([p*ω], [1, 2ζ*ω, ω^2])
+t1 = @belapsed bode($G,$w)
+p  = 1
+ζ  = 0.3
+ω  = 1
+G  = tf([p*ω], [1, 2ζ*ω, ω^2])
+t2 = @belapsed bode($G,$w)
+
+@printf("Time with 500 particles: %16.4fms \nTime with regular floating point: %7.4fms\n500×floating point time: %16.4fms\nSpeedup factor: %22.1fx\n", 1000*t1, 1000*t2, 1000*500t2, 500t2/t1)
+  # Time with 500 particles:          14.9095ms
+  # Time with regular floating point:  0.5517ms
+  # 500×floating point time:         275.8640ms
+  # Speedup factor:                   18.5x
+```

@@ -126,3 +126,17 @@ end
 # errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 # mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 # ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
+
+# using BenchmarkTools, Printf
+# p = 1 ± 0.1
+# ζ = 0.3 ± 0.1
+# ω = 1 ± 0.1
+# G = tf([p*ω], [1, 2ζ*ω, ω^2])
+# t1 = @belapsed bode($G,$w)
+# p = 1
+# ζ = 0.3
+# ω = 1
+# G = tf([p*ω], [1, 2ζ*ω, ω^2])
+# t2 = @belapsed bode($G,$w)
+#
+# @printf("Time with 500 particles: %16.4fms \nTime with regular floating point: %7.4fms\n500×floating point time: %16.4fms\nSpeedup factor: %22.1fx\n", 1000*t1, 1000*t2, 1000*500t2, 500t2/t1)
