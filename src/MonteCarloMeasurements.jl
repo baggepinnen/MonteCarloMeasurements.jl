@@ -3,15 +3,16 @@ module MonteCarloMeasurements
 export Particles,StaticParticles, ≲, SystematicNormal, sysrandn
 
 
-using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase
+using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
 import StatsFuns
 using Lazy: @forward
 
 @reexport using Distributions
 
 include("sampling.jl")
-
 include("particles.jl")
+include("diff.jl")
+
 end
 
 

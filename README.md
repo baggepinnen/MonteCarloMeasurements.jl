@@ -81,7 +81,7 @@ One can also call (`Particles/StaticParticles`)
 - `Particles(d::Distribution, N::Int)` samples `N` particles from the distribution `d`.
 - We don't export the ± operator so as to not mess with Measurements.jl, but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(100)`
 
-**The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead.
+**The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead. The correlations can also be broken by permuting the particle vector `Particles(N, permute=true)`. 
 
 
 

@@ -1,7 +1,11 @@
-function sysrandn(N)
+function sysrandn(N;permute=false)
     e = rand()/N
     y = e:1/N:1
-    StatsFuns.norminvcdf.(y)
+    o = StatsFuns.norminvcdf.(y)
+    if permute
+        permute!(o, randperm(N))
+    end
+    o
 end
 
 struct SystematicNormal{T<:Real} <: UnivariateDistribution{T}

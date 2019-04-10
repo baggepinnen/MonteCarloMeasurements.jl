@@ -1,6 +1,6 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics
-import MonteCarloMeasurements.±
+import MonteCarloMeasurements: ±, gradient
 
 @testset "MonteCarloMeasurements.jl" begin
 
@@ -34,11 +34,11 @@ import MonteCarloMeasurements.±
 
             f = x -> x^2
             p = PT(1000)
-            @test -0.4 < mean(f(p)) < 0.4
-            @test -0.4 < f(p) < 10.4
-            @test f(p) ≈ 0
+            @test 0.9 < mean(f(p)) < 1.1
+            @test 0.9 < mean(f(p)) < 1.1
+            @test f(p) ≈ 1
             @test !(f(p) ≲ 1)
-            @test f(p) ≲ 2.2
+            @test f(p) ≲ 4
             @test -2.2 ≲ f(p)
 
 
@@ -52,7 +52,7 @@ import MonteCarloMeasurements.±
 
             @test all(A\b .≈ zeros(3))
             @test_nowarn qr(A)
-
+            @test_nowarn Particles(MvNormal(2,1)) ./ Particles(Normal(2,1))
         end
     end
 
@@ -77,6 +77,31 @@ import MonteCarloMeasurements.±
             @test cov(MvNormal(p)) ≈ cov(p)
         end
     end
+    @testset "gradient" begin
+        e = 0.001
+        p = 3 ± e
+        f = x -> x^2
+        fp = f(p)
+        @test gradient(f,p)[1] ≈ 6 atol=1e-4
+        @test gradient(f,p)[2] ≈ 2e atol=1e-4
+        @test gradient(f,3) > 6 # Convex function
+        @test gradient(f,3) ≈ 6
+
+        A = randn(3,3)
+        H = A'A
+        h = randn(3)
+        c = randn()
+        @assert isposdef(H)
+        f = x -> (x'H*x + h'x) + c
+        j = x -> H*x + h
+
+        e = 0.001
+        x = randn(3)
+        xp = x ± e
+        g = 2H*x + h
+        @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
+        @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
+    end
 end
 
 # using BenchmarkTools
@@ -85,6 +110,17 @@ end
 # @btime qr($(copy(A)))
 # @btime map(_->qr($B), 1:100);
 
-# using ControlSystems
-# p = 1 + 0.1PT(100)
-# G = tf([p], [1, 2, 1])
+# using ControlSystems, MonteCarloMeasurements
+# using Test, LinearAlgebra, Statistics
+# import MonteCarloMeasurements: ±, gradient
+# ##
+# p = 1 + 0.1StaticParticles(1000, permute=true)
+# ζ = 0.3 + 0.1StaticParticles(1000, permute=true)
+# ω = 1 + 0.1StaticParticles(1000, permute=true)
+# G = tf([p*ω], [1, 2ζ*ω, ω^2])
+#
+# dcgain(G)
+# mag, phase = bode(G)
+# mag,phase = mag[:],phase[:]
+#
+# plot(log10.(mean.(mag)), xscale=:log10, yscale=:identity, yerror=std.(log.(mag)), ylims=(-3,1))

@@ -9,9 +9,14 @@ end
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
-±(μ,σ) = μ + σ*Particles(100)
-Particles(N::Integer = 100) = Particles{Float64,N}(sysrandn(N))
-StaticParticles(N::Integer = 100) = StaticParticles{Float64,N}(SVector{N,Float64}(randn(N)))
+±(μ::Real,σ) = μ + σ*Particles(500, permute=true)
+±(μ::AbstractVector,σ) = Particles(MvNormal(μ, σ), 500)
+
+Particles(N::Integer = 500; permute=false) = Particles{Float64,N}(sysrandn(N, permute=permute))
+StaticParticles(N::Integer = 500; permute=false) = StaticParticles{Float64,N}(SVector{N,Float64}(sysrandn(N, permute=permute)))
+
+Base.Broadcast.broadcastable(p::Particles) = Ref(p)
+Base.getindex(p::AbstractParticles, I::Integer...) = getindex(p.particles, I...)
 
 function print_functions_to_extend()
     excluded_functions = [fill, |>, <, display, show, promote, promote_rule, promote_type, size, length, ndims, convert, isapprox, ≈, <, (<=), (==), zeros, zero, eltype, getproperty, fieldtype, rand, randn]
@@ -29,7 +34,7 @@ end
 
 for PT in (:Particles, :StaticParticles)
     @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
-    @forward @eval($PT).particles Base.iterate, Base.getindex, Base.extrema, Base.minimum, Base.maximum
+    @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin
         function Base.show(io::IO, p::$(PT){T,N}) where {T,N}
@@ -44,19 +49,19 @@ for PT in (:Particles, :StaticParticles)
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(d::Distribution, N=100)
+        function $PT(d::Distribution, N=500)
             v = rand(d,N)
             $PT{eltype(v),N}(v)
         end
 
-        function $PT(d::MultivariateDistribution, N=100)
+        function $PT(d::MultivariateDistribution, N=500)
             v = rand(d,N)' |> copy # For cache locality
             map($PT{eltype(v),N}, eachcol(v))
         end
     end
     # @eval begin
 
-    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1)
+    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1,:atan)
         @eval begin
             function Base.$f(p::$PT{T,N},a::Real...) where {T,N}
                 $PT{T,N}(map(x->$f(x,a...), p.particles))
@@ -77,21 +82,22 @@ for PT in (:Particles, :StaticParticles)
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = T
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         Base.promote_rule(::Type{Complex}, ::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}
+        Base.promote_rule(::Type{Complex{T}}, ::Type{$PT{T,N}}) where {T<:Real,N} = Complex{$PT{T,N}}
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}($PT{promote_type(T,S),N}(f))
         # Base.convert(::Type{S}, p::$PT{T,N}) where {S<:Real,T,N} = S(mean(p)) # Not good to define this
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
-        Base.complex(::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode; kwargs...) where {T,N} = round(mean(p), r; kwargs...)
         # Base.AbstractFloat(p::$PT) = mean(p) # Not good to define this
 
-        Base.:^(p::$PT, i::Integer) = $PT(p.particles.^1) # Resolves ambiguity
 
+        Base.:^(p::$PT, i::Integer) = $PT(p.particles.^i) # Resolves ambiguity
+        Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
     end
 
-    for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,)
+    for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,rad2deg)
         f = nameof(ff)
         @eval function (Base.$f)(p::$PT)
             $PT(map($f, p.particles))
@@ -102,6 +108,11 @@ for PT in (:Particles, :StaticParticles)
 
 
 end
+Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
+# Base.:\(p::AbstractParticles, H) = p.particles\H
+# Base.:\(p::MvParticles, H) = Matrix(p)\H
+# Base.:\(H,p::MvParticles) = H\Matrix(p)
+
 
 Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
 Statistics.mean(v::MvParticles) = mean.(v)
@@ -130,7 +141,15 @@ Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
 ≳(a::Real,p::AbstractParticles,lim=2) = ≲(a,p,lim)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(p,a,lim)
+Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 
+function Base.sqrt(z::Complex{T}) where T <: AbstractParticles
+    rz,iz = z.re,z.im
+    s = map(1:length(rz.particles)) do i
+        sqrt(complex(rz[i], iz[i]))
+    end
+    complex(T(real.(s)), T(imag.(s)))
+end
 
 @recipe function plot(p::AbstractParticles)
     seriestype --> :histogram
