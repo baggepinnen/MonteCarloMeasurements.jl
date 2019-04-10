@@ -1,6 +1,6 @@
 # MonteCarloMeasurements
 
-[![Build Status](https://travis-ci.com/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.com/baggepinnen/MonteCarloMeasurements.jl)
+[![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![Coverage Status](https://coveralls.io/repos/github/baggepinnen/MonteCarloMeasurements.jl/badge.svg?branch=master)](https://coveralls.io/github/baggepinnen/MonteCarloMeasurements.jl?branch=master)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 
