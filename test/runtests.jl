@@ -1,5 +1,6 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics
+import MonteCarloMeasurements.±
 
 @testset "MonteCarloMeasurements.jl" begin
 
@@ -16,6 +17,7 @@ using Test, LinearAlgebra, Statistics
         for PT = (Particles, StaticParticles)
 
             p = PT(1000)
+            @test 0 ± 1 ≈ p
             @test cov(p) ≈ 1 atol=0.2
             @test std(p) ≈ 1 atol=0.2
             @test var(p) ≈ 1 atol=0.2

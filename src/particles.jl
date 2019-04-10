@@ -9,7 +9,7 @@ end
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
-
+±(μ,σ) = μ + σ*Particles(100)
 Particles(N::Integer = 100) = Particles{Float64,N}(sysrandn(N))
 StaticParticles(N::Integer = 100) = StaticParticles{Float64,N}(SVector{N,Float64}(randn(N)))
 

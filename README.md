@@ -2,9 +2,46 @@
 
 [![Build Status](https://travis-ci.com/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.com/baggepinnen/MonteCarloMeasurements.jl)
 
-This package provides two types `Particles <: Real` and `StaticParticles <: Real` that represents a distribution of a floating point number, kind of like the type `Measurement` from Measurements.jl. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions. The goal is to have a number of this type behave just as any other number while partaking in calculations. After a calculation, the `mean`, `std` etc. can be extracted from the number using the corresponding functions. `Particles` also interact with Distributions.jl, so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution.
+This package provides two types `Particles <: Real` and `StaticParticles <: Real` that represents a distribution of a floating point number, kind of like the type `Measurement` from Measurements.jl. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handles nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are not handled well using linear uncertainty propagation ala Measurements.jl. The goal is to have a number of this type behave just as any other number while partaking in calculations. After a calculation, the `mean`, `std` etc. can be extracted from the number using the corresponding functions. `Particles` also interact with Distributions.jl, so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution.
 
-The benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on a `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. An example
+## Basic Examples
+```julia
+julia> p = StaticParticles(100)
+100 StaticParticles: -0.006 ± 1.069
+
+julia> cov(p)
+1.142303346809804
+
+julia> std(p)
+1.0687859218804316
+
+julia> var(p)
+1.142303346809804
+
+julia> mean(p)
+-0.0063862728919496315
+
+julia> f = x -> 2x + 10
+#104 (generic function with 1 method)
+
+julia> 9.6 < f(p) < 10.4 # Comparisons are using the mean
+true
+
+julia> f(p) ≈ 10 # ≈ determines if f(p) is within 2σ of 10
+true
+
+julia> f(p) ≲ 15 # ≲ (\lesssim) tests if f(p) is significantly less than 15
+true
+
+julia> Normal(f(p)) # Fits a normal distribution
+Normal{Float64}(μ=9.9872274542161, σ=2.1375718437608633)
+
+julia> fit(Normal, f(p)) # Same as above
+Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
+```
+
+## Why
+Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on a `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. An example
 ```julia
 using BenchmarkTools
 A = [Particles(1000) for i = 1:3, j = 1:3]
@@ -40,6 +77,7 @@ The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(d::Distribution, N::Int)` samples `N` particles from the distribution `d`.
+- We don't export the ± operator so as to not mess with Measurements.jl, but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(100)`
 
 **The default normal distribution is sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. A side effect of this is that the particles are always sorted and a vector of `Particles` will exhibit strong correlations. If this is not desired, use the constructor `Particles(Normal(μ,σ),N)` instead.
 
