@@ -1,6 +1,8 @@
 using MonteCarloMeasurements
-using Test, LinearAlgebra, Statistics
+using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, gradient
+
+Random.seed!(0)
 
 @testset "MonteCarloMeasurements.jl" begin
 
@@ -70,7 +72,7 @@ import MonteCarloMeasurements: ±, gradient
             p = PT(1000, MvNormal(2,1))
             @test_nowarn sum(p)
             @test cov(p) ≈ I atol=0.2
-            @test mean(p) ≈ [0,0] atol=0.1
+            @test mean(p) ≈ [0,0] atol=0.2
             @test size(Matrix(p)) == (1000,2)
 
             p = PT(100, MvNormal(2,2))
@@ -121,7 +123,7 @@ import MonteCarloMeasurements: ±, gradient
 
         yp = y .+ σ.*Particles.(2000)
         xhp = (A'A)\A'yp
-        @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.1
+        @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
     end

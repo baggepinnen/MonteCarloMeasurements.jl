@@ -1,12 +1,11 @@
 module MonteCarloMeasurements
 
-export Particles,StaticParticles, ≲, SystematicNormal, systematic_sample
+export Particles,StaticParticles, ≲, systematic_sample
 export mean, std, cov, var, quantile, median
 export errorbarplot, mcplot, ribbonplot
 
 
 using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
-import StatsFuns
 using Lazy: @forward
 
 @reexport using Distributions
