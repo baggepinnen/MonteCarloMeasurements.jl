@@ -1,7 +1,10 @@
 name = "MonteCarloMeasurements"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
-authors = ["baggepinnen <cont-frb@ulund.org>"]
+authors = ["baggepinnen <baggepinnen@gmail.com>"]
 version = "0.1.0"
+
+[compat]
+julia = "1.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
