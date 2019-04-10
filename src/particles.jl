@@ -28,7 +28,7 @@ function print_functions_to_extend()
 end
 
 for PT in (:Particles, :StaticParticles)
-    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std
+    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
     @forward @eval($PT).particles Base.iterate, Base.getindex, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin
