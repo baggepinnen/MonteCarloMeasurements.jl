@@ -1,6 +1,8 @@
 module MonteCarloMeasurements
 
 export Particles,StaticParticles, ≲, SystematicNormal, sysrandn
+export mean, std, cov, var, quantile, median
+export errorbarplot, mcplot, ribbonplot
 
 
 using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
