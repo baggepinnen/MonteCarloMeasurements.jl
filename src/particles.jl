@@ -1,3 +1,6 @@
+const ConcreteFloat = Union{Float64,Float32,Float16,BigFloat}
+const ConcreteInt = Union{Int8,Int16,Int32,Int64,Int128,BigInt}
+
 abstract type AbstractParticles{T,N} <: Real end
 struct Particles{T,N} <: AbstractParticles{T,N}
     particles::Vector{T}
@@ -39,18 +42,26 @@ for PT in (:Particles, :StaticParticles)
         function Base.show(io::IO, p::$(PT){T,N}) where {T,N}
             sPT = string($PT)
             if ndims(T) < 1
-                print(io, N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3))
+                print(io, "(", N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3),")")
             else
-                print(io, N, " $sPT with mean ", round.(mean(p), digits=3), " and std ", round.(sqrt.(diag(cov(p))), digits=3))
+                print(io, "(", N, " $sPT with mean ", round.(mean(p), digits=3), " and std ", round.(sqrt.(diag(cov(p))), digits=3),")")
+            end
+        end
+
+        for mime in (MIME"text/x-tex", MIME"text/x-latex")
+            function Base.show(io::IO, ::mime, p::$(PT))
+                print(io, "\$")
+                show(io, p)
+                print("\$")
             end
         end
 
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
-        # function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
-        #     v = fill(n,N)
-        #     $PT{T,N}(v)
-        # end
+        function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
+            v = fill(n,N)
+            $PT{T,N}(v)
+        end
 
         function $PT(N::Integer=500, d::Distribution=Normal(0,1); permute=true, systematic=true)
             if systematic
@@ -68,7 +79,7 @@ for PT in (:Particles, :StaticParticles)
     end
     # @eval begin
 
-    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1,:atan)
+    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1,:atan,:add_sum)
         @eval begin
             function Base.$f(p::$PT{T,N},a::Real...) where {T,N}
                 $PT{T,N}(map(x->$f(x,a...), p.particles))
@@ -95,27 +106,34 @@ for PT in (:Particles, :StaticParticles)
         Base.promote_rule(::Type{Complex{T}}, ::Type{$PT{T,N}}) where {T<:Real,N} = Complex{$PT{T,N}}
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}($PT{promote_type(T,S),N}(f))
-        # Base.convert(::Type{S}, p::$PT{T,N}) where {S<:Real,T,N} = S(mean(p)) # Not good to define this
+        function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
+            std(p) < 100eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
+            return S(p[1])
+        end
+        function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteInt,T,N}
+            isinteger(p) || throw(ArgumentError("Cannot convert a particle distribution to an int if not all particles are the same."))
+            return S(p[1])
+        end
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
-        # Base.AbstractFloat(p::$PT) = mean(p) # Not good to define this
+        function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
+            std(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
+            return T(p[1])
+        end
 
 
         Base.:^(p::$PT, i::Integer) = $PT(p.particles.^i) # Resolves ambiguity
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
     end
 
-    for ff in (*,+,-,/,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,rad2deg)
+    for ff in (*,+,-,/,exp,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,rad2deg)
         f = nameof(ff)
         @eval function (Base.$f)(p::$PT)
             $PT(map($f, p.particles))
         end
     end
-    # Multivariate particles
-
-
 
 end
 Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
@@ -127,6 +145,12 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
 Statistics.mean(v::MvParticles) = mean.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
+# function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
+#     s2 = map(1:length(v[1])) do i
+#         var(getindex.(v,i))
+#     end
+#     eltype(v)(s2)
+# end
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
@@ -146,6 +170,9 @@ Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(
 
 Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
+Base.isinteger(p::AbstractParticles) = all(isinteger, p.particles)
+Base.iszero(p::AbstractParticles) = all(iszero, p.particles)
+
 
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
@@ -154,6 +181,16 @@ Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(p,a,lim)
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(p,a,lim)
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
+Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
+
+function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Integer}=2)
+    if p == 2
+        return abs(mean(x))
+    elseif p == Inf
+        return max(extrema(x)...)
+    end
+    throw(ArgumentError("Cannot take $(p)-norm of particles"))
+end
 
 function Base.sqrt(z::Complex{T}) where T <: AbstractParticles
     rz,iz = z.re,z.im

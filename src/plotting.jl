@@ -59,3 +59,33 @@ mcplot
 Plots a vector of particles with a ribbon representing `q*std(y)`. Default width is 2σ
 """
 ribbonplot
+
+
+
+@recipe function plt(y::MvParticles, q=2)
+    ribbon := q.*std.(y)
+    mean.(y)
+end
+
+@recipe function plt(func::Function, x::MvParticles)
+    y = func.(x)
+    xerror := std.(x)
+    yerror := std.(y)
+    mean.(x), mean.(y)
+end
+
+@recipe function plt(x::MvParticles, y::MvParticles)
+    xerror := std.(x)
+    yerror := std.(y)
+    mean.(x), mean.(y)
+end
+
+@recipe function plt(x::MvParticles, y::AbstractArray)
+    xerror := std.(x)
+    mean.(x), y
+end
+
+@recipe function plt(x::AbstractArray, y::MvParticles, q=2)
+    ribbon := q.*std.(y)
+    x, mean.(y)
+end

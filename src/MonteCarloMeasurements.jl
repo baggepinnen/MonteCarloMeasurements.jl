@@ -4,6 +4,8 @@ export Particles,StaticParticles, ≲,≳, systematic_sample
 export mean, std, cov, var, quantile, median
 export errorbarplot, mcplot, ribbonplot
 
+import Base: add_sum
+
 
 using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
 using Lazy: @forward
@@ -13,6 +15,7 @@ using Lazy: @forward
 include("sampling.jl")
 include("particles.jl")
 include("diff.jl")
+include("plotting.jl")
 
 end
 
