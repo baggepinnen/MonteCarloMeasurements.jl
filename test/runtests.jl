@@ -30,6 +30,27 @@ Random.seed!(0)
             @test cov(p) ≈ 1 atol=0.2
             @test std(p) ≈ 1 atol=0.2
             @test var(p) ≈ 1 atol=0.2
+            @test p <= p
+            @test p >= p
+            @test !(p ≲ p)
+            @test !(p ≳ p)
+            @test (p ≲ 2.1)
+            @test !(p ≲ 1.9)
+            @test (p ≳ -2.1)
+            @test !(p ≳ -1.9)
+            @test (-2.1 ≲ p)
+            @test !(-1.9 ≲ p)
+            @test (2.1 ≳ p)
+            @test !(1.9 ≳ p)
+            @test p ≈ p
+            @test p ≈ 0
+            @test 0 ≈ p
+            @test p != 0
+            @test p ≈ 1.9std(p)
+            @test !(p ≈ 2.1std(p))
+            @test p ≉ 2.1std(p)
+            @test !(p ≉ 1.9std(p))
+
 
             f = x -> 2x + 10
             @test 9.6 < mean(f(p)) < 10.4
@@ -143,18 +164,27 @@ Random.seed!(0)
         @test eltype(typeof(p)) == Float64
         @test eltype(p) == Float64
         @test convert(Int, 0p) == 0
+        @test promote_type(Particles{Float64,10}, Float64) == Particles{Float64,10}
+        @test promote_type(Particles{Float64,10}, Int64) == Particles{Float64,10}
+        @test promote_type(Particles{Float64,10}, ComplexF64) == Complex{Particles{Float64,10}}
+        @test promote_type(Particles{Float64,10}, ComplexF64) == Complex{Particles{Float64,10}}
+        @test convert(Float64, 0p) isa Float64
+        @test convert(Float64, 0p) == 0
+        @test convert(Int, 0p) isa Int
+        @test convert(Int, 0p) == 0
         @test_throws ArgumentError convert(Int, p)
         @test_throws ArgumentError AbstractFloat(p)
         @test AbstractFloat(0p) == 0.0
         @test Particles(500) + Particles(randn(Float32, 500)) isa typeof(Particles(500))
         @test_nowarn sqrt(complex(p,p)) == 1
         @test isfinite(p)
+        @test iszero(0p)
+        @test !iszero(p)
         @test round(p) ≈ 0 atol=0.1
         @test norm(0p) == 0
         @test norm(p) ≈ 0 atol=0.01
+        @test norm(p,Inf) > 0
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
-        @test !(p<p)
-        @test (p ≳ p)
         @test eps(typeof(p)) == eps(Float64)
         A = randn(2,2)
         B = A .± 0

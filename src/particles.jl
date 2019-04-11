@@ -151,6 +151,9 @@ Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwarg
 #     end
 #     eltype(v)(s2)
 # end
+meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
+meanvar(p::AbstractParticles) = var(p)/length(p)
+
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
@@ -167,6 +170,7 @@ Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) wh
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
+Base.:≉(a,b,lim=2) = !(≈(a,b,lim))
 
 Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
@@ -176,10 +180,10 @@ Base.iszero(p::AbstractParticles) = all(iszero, p.particles)
 
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
-≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-≳(a::Real,p::AbstractParticles,lim=2) = ≲(a,p,lim)
-≳(p::AbstractParticles,a::Real,lim=2) = ≲(p,a,lim)
-≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(p,a,lim)
+≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) > lim
+≳(a::Real,p::AbstractParticles,lim=2) = ≲(p,a,lim)
+≳(p::AbstractParticles,a::Real,lim=2) = ≲(a,p,lim)
+≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 

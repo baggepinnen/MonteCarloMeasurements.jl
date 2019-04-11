@@ -1,6 +1,6 @@
 module MonteCarloMeasurements
 
-export Particles,StaticParticles, ≲,≳, systematic_sample
+export Particles,StaticParticles, ≲,≳, systematic_sample, meanstd, meanvar
 export mean, std, cov, var, quantile, median
 export errorbarplot, mcplot, ribbonplot
 
