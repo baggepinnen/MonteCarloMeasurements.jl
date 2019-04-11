@@ -48,7 +48,7 @@ for PT in (:Particles, :StaticParticles)
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(N=500, d::Distribution=Normal(0,1); permute=true, systematic=true)
+        function $PT(N::Integer=500, d::Distribution=Normal(0,1); permute=true, systematic=true)
             if systematic
                 v = systematic_sample(N,d; permute=permute)
             else
@@ -75,6 +75,9 @@ for PT in (:Particles, :StaticParticles)
             function Base.$f(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
                 $PT{T,N}(map($f, p1.particles, p2.particles))
             end
+            function Base.$f(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
+                $PT{promote_type(T,S),N}(map($f, p1.particles, p2.particles))
+            end
         end
     end
     # end
@@ -92,7 +95,7 @@ for PT in (:Particles, :StaticParticles)
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
-        Base.round(p::$PT{T,N}, r::RoundingMode; kwargs...) where {T,N} = round(mean(p), r; kwargs...)
+        Base.round(p::$PT{T,N}, args...; kwargs...) where {T,N} = round(mean(p), args...; kwargs...)
         # Base.AbstractFloat(p::$PT) = mean(p) # Not good to define this
 
 
@@ -130,8 +133,8 @@ Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = 
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
 Base.:<(a::Real,p::AbstractParticles) = a < mean(p)
 Base.:<(p::AbstractParticles,a::Real) = mean(p) < a
-Base.:<(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) where {T,N} = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
+Base.:<(p::AbstractParticles, a::AbstractParticles, lim=2) = mean(p) < mean(a)
+Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) where {T,N} = mean(p) <= mean(a)
 
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
@@ -142,8 +145,10 @@ Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
+≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 ≳(a::Real,p::AbstractParticles,lim=2) = ≲(a,p,lim)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(p,a,lim)
+≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(p,a,lim)
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 
 function Base.sqrt(z::Complex{T}) where T <: AbstractParticles

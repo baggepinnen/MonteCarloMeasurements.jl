@@ -127,6 +127,33 @@ Random.seed!(0)
 
         @test norm(cov(xhp) .- C1) < 1e-7
     end
+
+    @testset "misc" begin
+        p = 0 ± 1
+        @test p[1] == p.particles[1]
+        @test_nowarn display(p)
+        @test_nowarn show(p)
+        @test Particles{Float64,500}(p) == p
+        @test length(Particles(100, MvNormal(2,1))) == 2
+        @test length(p) == 500
+        @test ndims(p) == 0
+        @test eltype(p) == Float64
+        @test Particles(500) + Particles(randn(Float32, 500)) isa typeof(Particles(500))
+        @test_nowarn sqrt(complex(p,p)) == 1
+        @test isfinite(p)
+        @test round(p) ≈ 0 atol=0.1
+        @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
+        @test !(p<p)
+        @test (p ≳ p)
+        @test eps(typeof(p)) == eps(Float64)
+
+        @test_nowarn plot(p)
+        @test_nowarn errorbarplot(1:2,[p,p])
+        @test_nowarn mcplot(1:2,[p,p])
+        @test_nowarn ribbonplot(1:2,[p,p])
+
+        @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
+    end
 end
 
 # using BenchmarkTools
