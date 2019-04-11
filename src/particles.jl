@@ -57,7 +57,7 @@ for PT in (:Particles, :StaticParticles)
             $PT{eltype(v),N}(v)
         end
 
-        function $PT(N, d::MultivariateDistribution)
+        function $PT(N::Integer, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality
             map($PT{eltype(v),N}, eachcol(v))
         end
