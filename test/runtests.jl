@@ -1,6 +1,7 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, gradient
+import Plots
 
 Random.seed!(0)
 
@@ -147,7 +148,7 @@ Random.seed!(0)
         @test (p ≳ p)
         @test eps(typeof(p)) == eps(Float64)
 
-        @test_nowarn plot(p)
+        @test_nowarn Plots.plot(p)
         @test_nowarn errorbarplot(1:2,[p,p])
         @test_nowarn mcplot(1:2,[p,p])
         @test_nowarn ribbonplot(1:2,[p,p])
