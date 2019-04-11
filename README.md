@@ -93,9 +93,10 @@ A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` 
 
 ## Plotting
 An instance of `p::Particle` can be plotted using `plot(p)`, that creates a histogram by default. If `StatsPlots.jl` is available, once can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
-- `errorbarplot`
-- `mcplot`
-- `ribbonplot`
+- `errorbarplot(x,y,[q=0.05])`: `q` determines the quantiles, set to `0` for max/min.
+- `mcplot(x,y)`: Plots all trajectories
+- `ribbonplot(x,y,[k=2])`: Plots with `k` standard deviations shaded area around mean.
+
 
 Below is an example using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
 ```julia
@@ -148,3 +149,6 @@ t2 = @belapsed bode($G,$w)
   # 500×floating point time:         275.8640ms
   # Speedup factor:                   18.5x
 ```
+
+## Differential Equations
+[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. In the second pendulum example, I had to call `solve(..., dt=0.01, adaptive=false)`, otherwise the solver tried to estimate a suitable `dt` using the uncertain state, which created some problems. 

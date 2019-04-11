@@ -26,6 +26,7 @@ end
 @userplot MCplot
 @recipe function plt(p::MCplot)
     x,y = handle_args(p)
+    label --> ""
     m = Matrix(y)'
     x,m
 end
