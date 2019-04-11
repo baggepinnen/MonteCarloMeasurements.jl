@@ -95,7 +95,7 @@ for PT in (:Particles, :StaticParticles)
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
-        Base.round(p::$PT{T,N}, args...; kwargs...) where {T,N} = round(mean(p), args...; kwargs...)
+        Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
         # Base.AbstractFloat(p::$PT) = mean(p) # Not good to define this
 
 
