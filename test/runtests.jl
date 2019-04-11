@@ -134,24 +134,46 @@ Random.seed!(0)
         @test p[1] == p.particles[1]
         @test_nowarn display(p)
         @test_nowarn show(p)
+        @test_nowarn show(stdout, MIME"text/x-latex"(), p)
         @test Particles{Float64,500}(p) == p
+        @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
         @test length(p) == 500
         @test ndims(p) == 0
+        @test eltype(typeof(p)) == Float64
         @test eltype(p) == Float64
+        @test convert(Int, 0p) == 0
+        @test_throws ArgumentError convert(Int, p)
+        @test_throws ArgumentError AbstractFloat(p)
+        @test AbstractFloat(0p) == 0.0
         @test Particles(500) + Particles(randn(Float32, 500)) isa typeof(Particles(500))
         @test_nowarn sqrt(complex(p,p)) == 1
         @test isfinite(p)
         @test round(p) ≈ 0 atol=0.1
+        @test norm(0p) == 0
+        @test norm(p) ≈ 0 atol=0.01
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test !(p<p)
         @test (p ≳ p)
         @test eps(typeof(p)) == eps(Float64)
+        A = randn(2,2)
+        B = A .± 0
+        @test sum(abs, exp(A) .- exp(B)) < 1e-9
+    end
 
+    @testset "plotting" begin
+        p = 0 ± 1
+        v = [p,p]
         @test_nowarn Plots.plot(p)
-        @test_nowarn errorbarplot(1:2,[p,p])
-        @test_nowarn mcplot(1:2,[p,p])
-        @test_nowarn ribbonplot(1:2,[p,p])
+        @test_nowarn Plots.plot(v)
+        @test_nowarn Plots.plot(x->x^2,v)
+        @test_nowarn Plots.plot(v,v)
+        @test_nowarn Plots.plot(v,ones(2))
+        @test_nowarn Plots.plot(1:2,v)
+
+        @test_nowarn errorbarplot(1:2,v)
+        @test_nowarn mcplot(1:2,v)
+        @test_nowarn ribbonplot(1:2,v)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end

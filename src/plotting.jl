@@ -4,7 +4,7 @@
     @series p.particles
 end
 
-@recipe f(::Type{<:AbstractParticles}, p::AbstractParticles) = p.particles
+# @recipe f(::Type{<:AbstractParticles}, p::AbstractParticles) = p.particles # Does not seem to be needed
 
 function handle_args(p)
     length(p.args) < 2 && throw(ArgumentError("This function is called with at least two arguments (x, y, ..."))

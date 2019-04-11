@@ -33,29 +33,27 @@ function print_functions_to_extend()
         end
     end
 end
+function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
+    sPT = string(typeof(p))
+    if ndims(T) < 1
+        print(io, "(", N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3),")")
+    else
+        print(io, "(", N, " $sPT with mean ", round.(mean(p), digits=3), " and std ", round.(sqrt.(diag(cov(p))), digits=3),")")
+    end
+end
+for mime in (MIME"text/x-tex", MIME"text/x-latex")
+    @eval function Base.show(io::IO, ::$mime, p::AbstractParticles)
+        print(io, "\$")
+        show(io, p)
+        print("\$")
+    end
+end
 
 for PT in (:Particles, :StaticParticles)
     @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin
-        function Base.show(io::IO, p::$(PT){T,N}) where {T,N}
-            sPT = string($PT)
-            if ndims(T) < 1
-                print(io, "(", N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3),")")
-            else
-                print(io, "(", N, " $sPT with mean ", round.(mean(p), digits=3), " and std ", round.(sqrt.(diag(cov(p))), digits=3),")")
-            end
-        end
-
-        for mime in (MIME"text/x-tex", MIME"text/x-latex")
-            function Base.show(io::IO, ::mime, p::$(PT))
-                print(io, "\$")
-                show(io, p)
-                print("\$")
-            end
-        end
-
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
         function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
@@ -97,8 +95,6 @@ for PT in (:Particles, :StaticParticles)
     end
     # end
     @eval begin
-        Base.length(p::$PT{T,N}) where {T,N} = N
-        Base.ndims(p::$PT{T,N}) where {T,N} = ndims(T)
 
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = T
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
@@ -128,7 +124,8 @@ for PT in (:Particles, :StaticParticles)
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
     end
 
-    for ff in (*,+,-,/,exp,sin,cos,tan,zero,sign,abs,sqrt,asin,acos,atan,log,log10,log2,log1p,rad2deg)
+    for ff in (*,+,-,/,exp,sin,cos,tan,zero,sign,abs,sqrt,
+                asin,acos,atan,log,log10,log2,log1p,rad2deg)
         f = nameof(ff)
         @eval function (Base.$f)(p::$PT)
             $PT(map($f, p.particles))
@@ -136,6 +133,9 @@ for PT in (:Particles, :StaticParticles)
     end
 
 end
+
+Base.length(p::AbstractParticles{T,N}) where {T,N} = N
+Base.ndims(p::AbstractParticles{T,N}) where {T,N} = ndims(T)
 Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(p::AbstractParticles, H) = p.particles\H
 # Base.:\(p::MvParticles, H) = Matrix(p)\H
