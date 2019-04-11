@@ -48,11 +48,11 @@ for PT in (:Particles, :StaticParticles)
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(N=500, d::Distribution=Normal(0,1); permute=true)
-            if invfun(d) === nothing
-                v = rand(d, N)
-            else
+        function $PT(N=500, d::Distribution=Normal(0,1); permute=true, systematic=true)
+            if systematic
                 v = systematic_sample(N,d; permute=permute)
+            else
+                v = rand(d, N)
             end
             $PT{eltype(v),N}(v)
         end
