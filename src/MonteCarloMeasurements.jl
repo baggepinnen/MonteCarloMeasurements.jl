@@ -11,6 +11,7 @@ import Base: add_sum
 
 
 using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
+import StatsBase: ProbabilityWeights
 using Lazy: @forward
 
 @reexport using Distributions
@@ -19,8 +20,10 @@ include("sampling.jl")
 include("particles.jl")
 include("diff.jl")
 include("plotting.jl")
+include("optimize.jl")
 
 end
 
 
 # TODO: Mutation, test on ControlSystems
+# TODO: ifelse?

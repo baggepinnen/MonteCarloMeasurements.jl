@@ -1,6 +1,6 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
-import MonteCarloMeasurements: ±, ∓, ⊗, gradient
+import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
 import Plots
 
 Random.seed!(0)
@@ -254,6 +254,17 @@ Random.seed!(0)
         @test_nowarn ribbonplot(1:2,v)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
+    end
+
+    @testset "optimize" begin
+        function rosenbrock2d(x)
+            return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+        end
+        @test any(1:10) do i
+            p = -1ones(2) .+ 2 .*Particles.(200) # Optimum is in [1,1]
+            popt = optimize(rosenbrock2d, deepcopy(p))
+            all(popt .≈ [1,1])
+        end
     end
 end
 
