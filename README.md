@@ -89,7 +89,7 @@ The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
-- We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(500)`
+- We don't export the ± operator so as to not mess with [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), but you can import it by `import MonteCarloMeasurements.±`. We then have `μ ± σ = μ + σ*Particles(DEFAUL_NUM_PARTICLES)`, where the global constant `DEFAUL_NUM_PARTICLES = 500`. You can change this if you would like, or simply define your own `±` operator like `±(μ,σ) = μ + σ*Particles(my_default_number, my_default_distribution)`. The upside-down operator ∓ instead creates a `StaticParticles(100)`.
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
@@ -101,6 +101,10 @@ One can also call (`Particles/StaticParticles`)
 The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
 
 A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`.
+
+Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles(N)`.
+
+Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗. 
 
 ## Plotting
 An instance of `p::Particle` can be plotted using `plot(p)`, that creates a histogram by default. If `StatsPlots.jl` is available, once can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
@@ -180,10 +184,12 @@ This defines the one-argument method for both `Particles` and `StaticParticles`.
 
 ### ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
-- `exp : ℝ² → ℝ²`
+- `exp : ℝ² → ℝ²`  
+
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 
 ### ℂ → ℂ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
 - `sqrt`
+
 The function `ℂ2ℂ_function(f::Function, p::AbstractArray{T})` applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.

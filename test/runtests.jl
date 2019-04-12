@@ -1,6 +1,6 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
-import MonteCarloMeasurements: ±, gradient
+import MonteCarloMeasurements: ±, ∓, ⊗, gradient
 import Plots
 
 Random.seed!(0)
@@ -26,6 +26,8 @@ Random.seed!(0)
 
             p = PT(1000)
             @test 0 ± 1 ≈ p
+            @test 0 ∓ 1 ≈ p
+            @test 0 ∓ 1 isa StaticParticles
             @test sum(p) ≈ 0
             @test cov(p) ≈ 1 atol=0.2
             @test std(p) ≈ 1 atol=0.2
@@ -207,6 +209,36 @@ Random.seed!(0)
         @test length(union(p, 1+p)) == 2length(p)
     end
 
+    @testset "mutation" begin
+        function adder!(x)
+            for i = eachindex(x)
+                x[i] += 1
+            end
+            x
+        end
+        x = (1:5) .± 1
+        adder!(x)
+        @test all(x .≈ (2:6) .± 1)
+    end
+
+    @testset "outer_product" begin
+        d = 2
+        μ = zeros(d)
+        σ = ones(d)
+        p = μ ⊗ σ
+        @test length(p) == 2
+        @test length(p[1]) <= 100_000
+        @test cov(p) ≈ I atol=1e-1
+        p = μ ⊗ 1
+        @test length(p) == 2
+        @test length(p[1]) <= 100_000
+        @test cov(p) ≈ I atol=1e-1
+        p = 0 ⊗ σ
+        @test length(p) == 2
+        @test length(p[1]) <= 100_000
+        @test cov(p) ≈ I atol=1e-1
+    end
+
     @testset "plotting" begin
         p = 0 ± 1
         v = [p,p]
@@ -224,6 +256,7 @@ Random.seed!(0)
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
 end
+
 
 
 # Integration tests and bechmarks
@@ -294,3 +327,8 @@ end
 # p2 = 1.0 ± 0.1
 # rosenbrock(x) =  (p2 - x[1])^2 + p * (x[2] - x[1]^2)^2
 # result = optimize(rosenbrock, zeros(2) .± 0, SimulatedAnnealing())
+
+
+
+# using StatsPlots
+# corrplot(Matrix(p))

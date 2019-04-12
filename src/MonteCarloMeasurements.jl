@@ -1,6 +1,9 @@
 module MonteCarloMeasurements
 
-export Particles,StaticParticles, ≲,≳, systematic_sample, meanstd, meanvar, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function
+const DEFAUL_NUM_PARTICLES = 500
+const DEFAUL_STATIC_NUM_PARTICLES = 100
+
+export Particles,StaticParticles, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function
 export mean, std, cov, var, quantile, median
 export errorbarplot, mcplot, ribbonplot
 
@@ -21,9 +24,3 @@ end
 
 
 # TODO: Mutation, test on ControlSystems
-# TODO: InplaceParticles: maintains an output workspace
-# struct InplaceParticles
-#     particles::Vector
-#     output::ImmutableVector
-# end
-# This output should ideally be some kind of immutable vector since it could be unsafe to mutate it. Unclear how the map!(f, output, particles) would be done if output is immutable though.

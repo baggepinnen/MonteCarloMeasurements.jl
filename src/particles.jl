@@ -12,10 +12,39 @@ end
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
-±(μ::Real,σ) = μ + σ*Particles(500)
-±(μ::AbstractVector,σ) = Particles(500, MvNormal(μ, σ))
+±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
+±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
+∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
+∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
-# StaticParticles(N::Integer = 500; permute=true) = StaticParticles{Float64,N}(SVector{N,Float64}(systematic_sample(N, permute=permute)))
+"""
+⊗(μ,σ) = outer_product(Normal.(μ,σ))
+
+See also `outer_product`
+"""
+⊗(μ,σ) = outer_product(Normal.(μ,σ))
+
+"""
+    p = outer_product(dists::Vector{<:Distribution}, N=100_000)
+
+Creates a multivariate systematic sample where each dimension is sampled according to the corresponding univariate distribution in `dists`. Returns `p::Vector{Particles}` where each Particles has a length approximately equal to `N`.
+The particles form the outer product between `d` systematically sampled vectors with length given by the d:th root of N, where `d` is the length of `dists`, All particles will be independent and have marginal distributions given by `dists`.
+
+See also `MonteCarloMeasurements.⊗`
+"""
+function outer_product(dists::AbstractVector{<:Distribution}, N=100_000)
+    d = length(dists)
+    N = floor(Int,N^(1/d))
+    dims = map(dists) do dist
+        v = systematic_sample(N,dist; permute=true)
+    end
+    cart_prod = vec(collect(Iterators.product(dims...)))
+    p = map(1:d) do i
+        Particles(getindex.(cart_prod,i))
+    end
+end
+
+# StaticParticles(N::Integer = DEFAUL_NUM_PARTICLES; permute=true) = StaticParticles{Float64,N}(SVector{N,Float64}(systematic_sample(N, permute=permute)))
 
 Base.Broadcast.broadcastable(p::Particles) = Ref(p)
 Base.getindex(p::AbstractParticles, I::Integer...) = getindex(p.particles, I...)
@@ -61,7 +90,7 @@ for PT in (:Particles, :StaticParticles)
             $PT{T,N}(v)
         end
 
-        function $PT(N::Integer=500, d::Distribution=Normal(0,1); permute=true, systematic=true)
+        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
             if systematic
                 v = systematic_sample(N,d; permute=permute)
             else
