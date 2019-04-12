@@ -177,3 +177,13 @@ for ParticlesType in (:Particles, :StaticParticles)
 end
 ```
 This defines the one-argument method for both `Particles` and `StaticParticles`. For two-argument methods, see [the source](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/src/particles.jl#L80). If the function is from base or stdlib, you can just add it to the appropriate list in the source and submit a PR :)
+
+### ℝⁿ → ℝⁿ functions
+These functions do not work with `Particles` out of the box. Special cases are currently implemented for
+- `exp : ℝ² → ℝ²`
+The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
+
+### ℂ → ℂ functions
+These functions do not work with `Particles` out of the box. Special cases are currently implemented for
+- `sqrt`
+The function `ℂ2ℂ_function(f::Function, p::AbstractArray{T})` applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.

@@ -223,27 +223,35 @@ function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Intege
     throw(ArgumentError("Cannot take $(p)-norm of particles"))
 end
 
-function Base.sqrt(z::Complex{T}) where T <: AbstractParticles
+"""
+ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
+applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
+"""
+function ℂ2ℂ_function(f::F, z::Complex{T}) where {F,T<:AbstractParticles}
     rz,iz = z.re,z.im
     s = map(1:length(rz.particles)) do i
-        sqrt(complex(rz[i], iz[i]))
+        f(complex(rz[i], iz[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
 
-function Base.exp(p::AbstractMatrix{T}) where T <:AbstractParticles
-    exps = map(1:length(p[1])) do i
-        exp(getindex.(p,i))
+
+Base.sqrt(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function(sqrt, z)
+
+"""
+    ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
+Applies  `f : ℝⁿ → ℝⁿ` to an array of particles.
+"""
+function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}) where {F,T<:AbstractParticles}
+    individuals = map(1:length(p[1])) do i
+        f(getindex.(p,i))
     end
     out = similar(p)
     map(1:length(p)) do i
-        out[i] = T(getindex.(exps,i))
+        out[i] = T(getindex.(individuals,i))
     end
     reshape(out, size(p))
 end
 
 
-# function Base.union(p1::T{F,NT},p2::S{F,NS}) where T <: AbstractParticles where S <: AbstractParticles{F,NS} where F where NT where NS
-#
-#     T([p1.particles; p2.particles])
-# end
+Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
