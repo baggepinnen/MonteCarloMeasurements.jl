@@ -132,6 +132,27 @@ for PT in (:Particles, :StaticParticles)
             return T(p[1])
         end
 
+        """
+        union(p1::AbstractParticles, p2::AbstractParticles)
+
+        A `Particles` containing all particles from both `p1` and `p2`. Note, this will be twice as long as `p1` or `p2` and thus of a different type.
+        `pu = Particles([p1.particles; p2.particles])`
+        """
+        function Base.union(p1::$PT{T,NT},p2::$PT{T,NS}) where {T,NT,NS}
+            $PT([p1.particles; p2.particles])
+        end
+
+        """
+        intersect(p1::AbstractParticles, p2::AbstractParticles)
+
+        A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
+        """
+        function Base.intersect(p1::$PT,p2::$PT)
+            mi = max(minimum(p1),minimum(p2))
+            ma = min(maximum(p1),maximum(p2))
+            f = x-> mi <= x <= ma
+            $PT([filter(f, p1.particles); filter(f, p2.particles)])
+        end
 
         Base.:^(p::$PT, i::Integer) = $PT(p.particles.^i) # Resolves ambiguity
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
@@ -220,3 +241,9 @@ function Base.exp(p::AbstractMatrix{T}) where T <:AbstractParticles
     end
     reshape(out, size(p))
 end
+
+
+# function Base.union(p1::T{F,NT},p2::S{F,NS}) where T <: AbstractParticles where S <: AbstractParticles{F,NS} where F where NT where NS
+#
+#     T([p1.particles; p2.particles])
+# end

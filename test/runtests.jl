@@ -30,6 +30,8 @@ Random.seed!(0)
             @test cov(p) ≈ 1 atol=0.2
             @test std(p) ≈ 1 atol=0.2
             @test var(p) ≈ 1 atol=0.2
+            @test meanvar(p) ≈ 1/(length(p)) rtol=5e-3
+            @test meanstd(p) ≈ 1/sqrt(length(p)) rtol=5e-3
             @test p <= p
             @test p >= p
             @test !(p < p)
@@ -199,6 +201,10 @@ Random.seed!(0)
         A = randn(2,2)
         B = A .± 0
         @test sum(abs, exp(A) .- exp(B)) < 1e-9
+
+        @test intersect(p,p) == union(p,p)
+        @test length(intersect(p, 1+p)) < 2length(p)
+        @test length(union(p, 1+p)) == 2length(p)
     end
 
     @testset "plotting" begin
