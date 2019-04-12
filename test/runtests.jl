@@ -32,6 +32,10 @@ Random.seed!(0)
             @test var(p) ≈ 1 atol=0.2
             @test p <= p
             @test p >= p
+            @test !(p < p)
+            @test !(p > p)
+            @test (p < 1+p)
+            @test (p+1 > p)
             @test !(p ≲ p)
             @test !(p ≳ p)
             @test (p ≲ 2.1)
@@ -46,6 +50,7 @@ Random.seed!(0)
             @test p ≈ 0
             @test 0 ≈ p
             @test p != 0
+            @test p != 2p
             @test p ≈ 1.9std(p)
             @test !(p ≈ 2.1std(p))
             @test p ≉ 2.1std(p)
@@ -70,6 +75,7 @@ Random.seed!(0)
             @test !(f(p) ≲ 1)
             @test f(p) ≲ 4
             @test -2.2 ≲ f(p)
+            @test MvNormal([f(p),p]) isa MvNormal
 
 
             # plot(sin(0.1p)*sin(0.1p))
@@ -180,12 +186,16 @@ Random.seed!(0)
         @test isfinite(p)
         @test iszero(0p)
         @test !iszero(p)
+        @test !(!p)
+        @test !(0p)
         @test round(p) ≈ 0 atol=0.1
         @test norm(0p) == 0
         @test norm(p) ≈ 0 atol=0.01
         @test norm(p,Inf) > 0
+        @test_throws ArgumentError norm(p,1)
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test eps(typeof(p)) == eps(Float64)
+        @test eps(p) == eps(Float64)
         A = randn(2,2)
         B = A .± 0
         @test sum(abs, exp(A) .- exp(B)) < 1e-9

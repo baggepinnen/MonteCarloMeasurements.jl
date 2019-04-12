@@ -76,21 +76,34 @@ for PT in (:Particles, :StaticParticles)
         end
     end
     # @eval begin
-
-    for f in (:+,:-,:*,:/,://,:^, :max,:min,:minmax,:mod,:mod1,:atan,:add_sum)
+    # Two-argument functions
+    for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
+        f = nameof(ff)
         @eval begin
-            function Base.$f(p::$PT{T,N},a::Real...) where {T,N}
+            function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
                 $PT{T,N}(map(x->$f(x,a...), p.particles))
             end
-            function Base.$f(a::Real,p::$PT{T,N}) where {T,N}
+            function (Base.$f)(a::Real,p::$PT{T,N}) where {T,N}
                 $PT{T,N}(map(x->$f(a,x), p.particles))
             end
-            function Base.$f(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
+            function (Base.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
                 $PT{T,N}(map($f, p1.particles, p2.particles))
             end
-            function Base.$f(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
+            function (Base.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
                 $PT{promote_type(T,S),N}(map($f, p1.particles, p2.particles))
             end
+        end
+    end
+    # One-argument functions
+    for ff in [*,+,-,/,
+        exp,exp2,exp10,expm1,
+        log,log10,log2,log1p,
+        sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
+        asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
+        zero,sign,abs,sqrt,rad2deg,deg2rad]
+        f = nameof(ff)
+        @eval function (Base.$f)(p::$PT)
+            $PT(map($f, p.particles))
         end
     end
     # end
@@ -124,13 +137,6 @@ for PT in (:Particles, :StaticParticles)
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
     end
 
-    for ff in (*,+,-,/,exp,sin,cos,tan,zero,sign,abs,sqrt,
-                asin,acos,atan,log,log10,log2,log1p,rad2deg)
-        f = nameof(ff)
-        @eval function (Base.$f)(p::$PT)
-            $PT(map($f, p.particles))
-        end
-    end
 
 end
 

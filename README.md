@@ -7,11 +7,14 @@ This package provides two types `Particles <: Real` and `StaticParticles <: Real
 
 ## Basic Examples
 ```julia
-julia> p = StaticParticles(100)
-100 StaticParticles: -0.006 ± 1.069
+using MonteCarloMeasurements
+using MonteCarloMeasurements: ±
 
-julia> cov(p)
-1.142303346809804
+julia> 1 ± 0.1
+(500 Particles{Float64,500}: 1.001 ± 0.1)
+
+julia> p = StaticParticles(100)
+(100 StaticParticles: -0.006 ± 1.069)
 
 julia> std(p)
 1.0687859218804316
@@ -39,6 +42,14 @@ Normal{Float64}(μ=9.9872274542161, σ=2.1375718437608633)
 
 julia> fit(Normal, f(p)) # Same as above
 Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
+
+julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
+(100 Particles{Float64,100}: 1.008 ± 0.58)
+
+julia> Particles(100, MvNormal(2,1)) # Multivariate create vectors of correlated particles
+2-element Array{Particles{Float64,100},1}:
+ (100 Particles{Float64,100}: 0.103 ± 0.975)
+ (100 Particles{Float64,100}: 0.008 ± 1.024)
 ```
 
 ## Why
@@ -106,15 +117,15 @@ import MonteCarloMeasurements: ±
 p = 1 ± 0.1
 ζ = 0.3 ± 0.1
 ω = 1 ± 0.1
-G = tf([p*ω], [1, 2ζ*ω, ω^2])
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) # Transfer function with uncertain parameters
 
 dc = dcgain(G)[]
 # 500 Particles: 1.012 ± 0.149
-density(dc)
+density(dc, title="Probability density of DC-gain")
 ```
 ![window](figs/dens.svg)
 ```julia
-w = exp10.(LinRange(-1,1,200))
+w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
@@ -131,7 +142,8 @@ ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 
 ### Control systems benchmark
 ```julia
-using BenchmarkTools, Printf
+using MonteCarloMeasurements, ControlSystems, BenchmarkTools, Printf
+w  = exp10.(LinRange(-1,1,200)) # Frequency vector
 p  = 1 ± 0.1
 ζ  = 0.3 ± 0.1
 ω  = 1 ± 0.1
@@ -151,4 +163,17 @@ t2 = @belapsed bode($G,$w)
 ```
 
 ## Differential Equations
-[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. In the second pendulum example, I had to call `solve(..., dt=0.01, adaptive=false)`, otherwise the solver tried to estimate a suitable `dt` using the uncertain state, which created some problems. 
+[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. In the second pendulum example, I had to call `solve(..., dt=0.01, adaptive=false)`, otherwise the solver tried to estimate a suitable `dt` using the uncertain state, which created some problems.
+
+
+## Overloading a new function
+If a method for `Particles` is not implemented for your function `yourfunc` in module `Mod`, the pattern looks like this
+```julia
+f = nameof(yourfunc)
+for ParticlesType in (:Particles, :StaticParticles)
+  @eval function (Mod.$f)(p::$ParticlesType)
+      $ParticlesType(map($f, p.particles))
+  end
+end
+```
+This defines the one-argument method for both `Particles` and `StaticParticles`. For two-argument methods, see [the source](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/src/particles.jl#L80). If the function is from base or stdlib, you can just add it to the appropriate list in the source and submit a PR :)
