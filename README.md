@@ -104,7 +104,7 @@ A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` 
 
 Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles(N)`.
 
-Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗. 
+Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗.
 
 ## Plotting
 An instance of `p::Particle` can be plotted using `plot(p)`, that creates a histogram by default. If `StatsPlots.jl` is available, once can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
@@ -184,7 +184,7 @@ This defines the one-argument method for both `Particles` and `StaticParticles`.
 
 ### ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
-- `exp : ℝ² → ℝ²`  
+- `exp : ℝ(n×n) → ℝ(n×n)`  
 
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 
