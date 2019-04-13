@@ -108,7 +108,7 @@ Independent multivariate systematic samples can be created using the function `o
 
 ## Plotting
 An instance of `p::Particle` can be plotted using `plot(p)`, that creates a histogram by default. If `StatsPlots.jl` is available, once can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
-- `errorbarplot(x,y,[q=0.05])`: `q` determines the quantiles, set to `0` for max/min.
+- `errorbarplot(x,y,[q=0.025])`: `q` determines the quantiles, set to `0` for max/min.
 - `mcplot(x,y)`: Plots all trajectories
 - `ribbonplot(x,y,[k=2])`: Plots with `k` standard deviations shaded area around mean.
 
@@ -184,7 +184,7 @@ This defines the one-argument method for both `Particles` and `StaticParticles`.
 
 ### ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
-- `exp : ℝ(n×n) → ℝ(n×n)`  
+- `exp : ℝ(n×n) → ℝ(n×n)`   exponential matrix
 
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 

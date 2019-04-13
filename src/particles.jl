@@ -46,8 +46,6 @@ end
 
 # StaticParticles(N::Integer = DEFAUL_NUM_PARTICLES; permute=true) = StaticParticles{Float64,N}(SVector{N,Float64}(systematic_sample(N, permute=permute)))
 
-Base.Broadcast.broadcastable(p::Particles) = Ref(p)
-Base.getindex(p::AbstractParticles, I::Integer...) = getindex(p.particles, I...)
 
 function print_functions_to_extend()
     excluded_functions = [fill, |>, <, display, show, promote, promote_rule, promote_type, size, length, ndims, convert, isapprox, ≈, <, (<=), (==), zeros, zero, eltype, getproperty, fieldtype, rand, randn]
@@ -197,6 +195,9 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(p::MvParticles, H) = Matrix(p)\H
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
+Base.Broadcast.broadcastable(p::Particles) = Ref(p)
+Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
+Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i]
 
 Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
 Statistics.mean(v::MvParticles) = mean.(v)

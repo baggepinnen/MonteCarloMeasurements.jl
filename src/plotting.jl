@@ -15,7 +15,7 @@ end
 @userplot Errorbarplot
 @recipe function plt(p::Errorbarplot)
     x,y = handle_args(p)
-    q = length(p.args) >= 3 ? p.args[3] : 0.05
+    q = length(p.args) >= 3 ? p.args[3] : 0.025
     m = mean.(y)
     lower = -(quantile.(y,q)-m)
     upper = quantile.(y,1-q)-m
@@ -48,7 +48,7 @@ Plots a vector of particles with error bars at quantile `q`
 errorbarplot
 
 """
-    mcplot(x,y,[q=0.05])
+    mcplot(x,y,[q=0.025])
 
 Plots all trajectories represented by a vector of particles
 """
@@ -75,9 +75,16 @@ end
     mean.(x), mean.(y)
 end
 
-@recipe function plt(x::MvParticles, y::MvParticles)
-    xerror := std.(x)
-    yerror := std.(y)
+@recipe function plt(x::MvParticles, y::MvParticles, q=0.025)
+    my = mean.(y)
+    mx = mean.(x)
+    lowery = -(quantile.(y,q)-my)
+    uppery = quantile.(y,1-q)-my
+    lowerx = -(quantile.(x,q)-mx)
+    upperx = quantile.(x,1-q)-mx
+    yerror := (lowery,uppery)
+    xerror := (lowerx,upperx)
+    x,m
     mean.(x), mean.(y)
 end
 

@@ -81,9 +81,6 @@ Random.seed!(0)
             @test -2.2 ≲ f(p)
             @test MvNormal([f(p),p]) isa MvNormal
 
-
-            # plot(sin(0.1p)*sin(0.1p))
-
             A = randn(3,3) .+ [PT(100) for i = 1:3, j = 1:3]
             a = [PT(100) for i = 1:3]
             b = [PT(100) for i = 1:3]
@@ -277,69 +274,3 @@ end
 # B = similar(A, Float64)
 # @btime qr($(copy(A)))
 # @btime map(_->qr($B), 1:100);
-
-# using ControlSystems, MonteCarloMeasurements
-# using Test, LinearAlgebra, Statistics
-# import MonteCarloMeasurements: ±, gradient
-# ##
-# p = 1 ± 0.1
-# ζ = 0.3 ± 0.1
-# ω = 1 ± 0.1
-# G = tf([p*ω], [1, 2ζ*ω, ω^2])
-#
-# dc = dcgain(G)
-# w = exp10.(LinRange(-1,1,200))
-# @time mag, phase = bode(G,w) .|> vec
-#
-# errorbarplot(w,mag, yscale=:log10, xscale=:log10)
-# mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
-# ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
-
-## bode benchmark =========================================
-# using BenchmarkTools, Printf
-# p = 1 ± 0.1
-# ζ = 0.3 ± 0.1
-# ω = 1 ± 0.1
-# G = tf([p*ω], [1, 2ζ*ω, ω^2])
-# t1 = @belapsed bode($G,$w)
-# p = 1
-# ζ = 0.3
-# ω = 1
-# G = tf([p*ω], [1, 2ζ*ω, ω^2])
-# t2 = @belapsed bode($G,$w)
-#
-# @printf("Time with 500 particles: %16.4fms \nTime with regular floating point: %7.4fms\n500×floating point time: %16.4fms\nSpeedup factor: %22.1fx\n", 1000*t1, 1000*t2, 1000*500t2, 500t2/t1)
-
-
-## lsim etc. ==============================================
-# using ControlSystems, MonteCarloMeasurements
-# import MonteCarloMeasurements.±
-# p = 1 ± 0.1
-# ζ = 0.3 ± 0.1
-# ω = 1 ± 0.1
-# G = tf([p*ω], [1, 2ζ*ω, ω^2])
-# # MonteCarloMeasurements.eval(:(Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = !(p1 ≈ p2))) # Hotpatch
-# # Pd = c2d(G, 0.1)
-#
-# nyquist(G) .|> vec
-# bode(G) .|> vec
-# ss(G)
-#
-# y,t,x = step(Pd, 20)
-# errorbarplot(t,y[:], 0.00, layout=3, subplot=1)
-# errorbarplot!(t,y[:], 0.05, subplot=1)
-# errorbarplot!(t,y[:], 0.1, subplot=1)
-# mcplot!(t,y[:], subplot=2)
-# ribbonplot!(t,y[:], subplot=3)
-
-## Optim not working ===================================================
-# using MonteCarloMeasurements, Optim
-# p = 100.0 ± 10
-# p2 = 1.0 ± 0.1
-# rosenbrock(x) =  (p2 - x[1])^2 + p * (x[2] - x[1]^2)^2
-# result = optimize(rosenbrock, zeros(2) .± 0, SimulatedAnnealing())
-
-
-
-# using StatsPlots
-# corrplot(Matrix(p))
