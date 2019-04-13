@@ -102,7 +102,7 @@ The constructors can be called with multivariate distributions, returning `v::Ve
 
 A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`.
 
-Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles(N)`.
+Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles.(N)`.
 
 Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗.
 
