@@ -99,7 +99,9 @@ for PT in (:Particles, :StaticParticles)
 
         function $PT(N::Integer, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality
-            map($PT{eltype(v),N}, eachcol(v))
+            map(1:size(v,2)) do i
+                $PT{eltype(v),N}(@view(v[:,i]))
+            end
         end
     end
     # @eval begin
