@@ -274,3 +274,30 @@ end
 # B = similar(A, Float64)
 # @btime qr($(copy(A)))
 # @btime map(_->qr($B), 1:100);
+
+#
+# # Benchmark and comparison to Measurements.jl
+# using BenchmarkTools, Printf, ControlSystems
+# using MonteCarloMeasurements, Measurements
+# using Measurements: ±
+# using MonteCarloMeasurements: ∓
+# w = exp10.(LinRange(-0.7,0.3,50))
+#
+# p = 1 ± 0.1
+# ζ = 0.3 ± 0.1
+# ω = 1 ± 0.1
+# Gm = tf([p*ω], [1, 2ζ*ω, ω^2])
+# # tm = @belapsed bode($Gm,$w)
+#
+# p = 1 ∓ 0.1
+# ζ = 0.3 ∓ 0.1
+# ω = 1 ∓ 0.1
+# Gmm = tf([p*ω], [1, 2ζ*ω, ω^2])
+# # tmm = @belapsed bode($Gmm,$w)
+#
+# σquant = 1-(cdf(Normal(0,1), 1)-cdf(Normal(0,1), -1))
+#
+# magm = bode(Gm,w)[1][:]
+# magmm = bode(Gmm,w)[1][:]
+# errorbarplot(w,magmm, σquant/2, xscale=:log10, yscale=:log10, lab="Particles", linewidth=2)
+# plot!(w,magm, lab="Measurements")
