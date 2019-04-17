@@ -227,7 +227,10 @@ Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) wh
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-Base.:≉(a,b,lim=2) = !(≈(a,b,lim))
+Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
+Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
+Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
+
 
 Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
