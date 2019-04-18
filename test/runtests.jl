@@ -1,7 +1,10 @@
+println("Running tests")
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
+println("import Plots")
 import Plots
+println("import Plots done")
 
 Random.seed!(0)
 
