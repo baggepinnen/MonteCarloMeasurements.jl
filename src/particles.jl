@@ -10,6 +10,22 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+"""
+Particles with weights.
+To weight the particles `p`, modify the field `p.logweights`. You can resample the particles using `resample!(p)`, where each particles is resampled with a probability proportional to its weight.
+"""
+struct WeightedParticles{T,N} <: AbstractParticles{T,N}
+    particles::Vector{T}
+    weights::Vector{T}
+    logweights::Vector{T}
+    function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
+        weights = fill(1/N, N)
+        logweights = fill(-log(N), N)
+        new{T,N}(v,weights,logweights)
+    end
+end
+
+
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
@@ -76,7 +92,7 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
     end
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :WeightedParticles)
     @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 

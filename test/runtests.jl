@@ -1,10 +1,10 @@
-println("Running tests")
+@info "Running tests"
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
-println("import Plots")
+@info "import Plots"
 import Plots
-println("import Plots done")
+@info "import Plots done"
 
 Random.seed!(0)
 
@@ -28,7 +28,7 @@ Random.seed!(0)
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
         @info "Done"
-        for PT = (Particles, StaticParticles)
+        for PT = (Particles, StaticParticles, WeightedParticles)
             @info "Running tests for $PT"
             p = PT(100)
             @test 0 ± 1 ≈ p
@@ -102,7 +102,7 @@ Random.seed!(0)
 
 
     @testset "Multivariate Particles" begin
-        for PT = (Particles, StaticParticles)
+        for PT = (Particles, StaticParticles, WeightedParticles)
             @info "Running tests for multivariate $PT"
             p = PT(100, MvNormal(2,1))
             @test_nowarn sum(p)
@@ -269,6 +269,20 @@ Random.seed!(0)
             popt = optimize(rosenbrock2d, deepcopy(p))
             all(popt .≈ [1,1])
         end
+    end
+
+    @testset "WeightedParticles" begin
+        p = WeightedParticles(100)
+        @test sum(p.weights) ≈ 1
+        @test sum(exp,p.logweights) ≈ 1
+        p.logweights .= randn.()
+        resample!(p)
+        @test sum(p.weights) ≈ 1
+        @test sum(exp,p.logweights) ≈ 1
+        p = WeightedParticles(100)
+        p.logweights .+= logpdf.(Normal(0,1), 1 .-p.particles)
+        resample!(p)
+        @test mean(p) > 0
     end
 end
 
