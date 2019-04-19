@@ -16,17 +16,18 @@ To weight the particles `p`, modify the field `p.logweights`. You can resample t
 """
 struct WeightedParticles{T,N} <: AbstractParticles{T,N}
     particles::Vector{T}
-    weights::Vector{T}
+    # weights::Vector{T}
     logweights::Vector{T}
-    function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
-        weights = fill(1/N, N)
-        logweights = fill(-log(N), N)
-        new{T,N}(v,weights,logweights)
-    end
+end
+function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
+    # weights = fill(1/N, N)
+    logweights = fill(-log(N), N)
+    WeightedParticles{T,N}(v,logweights)
 end
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
+const MvWParticles = Vector{WeightedParticles}
 
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
@@ -41,7 +42,7 @@ See also `outer_product`
 ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
 """
-    p = outer_product(dists::Vector{<:Distribution}, N=100_000)
+p = outer_product(dists::Vector{<:Distribution}, N=100_000)
 
 Creates a multivariate systematic sample where each dimension is sampled according to the corresponding univariate distribution in `dists`. Returns `p::Vector{Particles}` where each Particles has a length approximately equal to `N`.
 The particles form the outer product between `d` systematically sampled vectors with length given by the d:th root of N, where `d` is the length of `dists`, All particles will be independent and have marginal distributions given by `dists`.
@@ -92,35 +93,15 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
     end
 end
 
-for PT in (:Particles, :StaticParticles, :WeightedParticles)
-    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
-    @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
-
+for PT in (:Particles, :StaticParticles)
+    # Constructors
     @eval begin
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
-        $PT{T,N}(p::$PT{T,N}) where {T,N} = p
         function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
             v = fill(n,N)
             $PT{T,N}(v)
         end
-
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
-            if systematic
-                v = systematic_sample(N,d; permute=permute)
-            else
-                v = rand(d, N)
-            end
-            $PT{eltype(v),N}(v)
-        end
-
-        function $PT(N::Integer, d::MultivariateDistribution)
-            v = rand(d,N)' |> copy # For cache locality
-            map(1:size(v,2)) do i
-                $PT{eltype(v),N}(@view(v[:,i]))
-            end
-        end
     end
-    # @eval begin
     # Two-argument functions
     for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
         f = nameof(ff)
@@ -151,6 +132,88 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
             $PT(map($f, p.particles))
         end
     end
+    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
+end
+
+for PT in (:WeightedParticles,)
+    # Constructors
+    @eval begin
+        $PT(v::Vector, w=fill(-log(length(v)), length(v))) = $PT{eltype(v),length(v)}(v,w)
+        function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
+            v = fill(n,N)
+            w = fill(-log(N),N)
+            $PT{T,N}(v,w)
+        end
+    end
+    # Two-argument functions
+    for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
+        f = nameof(ff)
+        @eval begin
+            function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
+                $PT{T,N}(map(x->$f(x,a...), p.particles),p.logweights)
+            end
+            function (Base.$f)(a::Real,p::$PT{T,N}) where {T,N}
+                $PT{T,N}(map(x->$f(a,x), p.particles),p.logweights)
+            end
+            function (Base.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
+                $PT{T,N}(map($f, p1.particles, p2.particles),p1.logweights+p2.logweights)
+            end
+            function (Base.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
+                $PT{promote_type(T,S),N}(map($f, p1.particles, p2.particles),p1.logweights+p2.logweights)
+            end
+        end
+    end
+    # One-argument functions
+    for ff in [*,+,-,/,
+        exp,exp2,exp10,expm1,
+        log,log10,log2,log1p,
+        sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
+        asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
+        zero,sign,abs,sqrt,rad2deg,deg2rad]
+        f = nameof(ff)
+        @eval function (Base.$f)(p::$PT)
+            $PT(map($f, p.particles), p.logweights)
+        end
+    end
+    for ff in [mean, median, quantile]
+        f = nameof(ff)
+        @eval function (Statistics.$f)(p::$PT,args...;kwargs...)
+            $f(p.particles, Weights(exp.(p.logweights)), args...;kwargs...)
+        end
+    end
+    for ff in [var, std]
+        f = nameof(ff)
+        @eval function (Statistics.$f)(p::$PT,args...;kwargs...)
+            $f(p.particles, AnalyticWeights(exp.(p.logweights)), args...;kwargs...)
+        end
+    end
+    @eval Statistics.cov(p::$PT,args...;kwargs...) = var(p,args...;kwargs...)
+end
+
+for PT in (:Particles, :StaticParticles, :WeightedParticles)
+    @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
+
+    @eval begin
+        $PT{T,N}(p::$PT{T,N}) where {T,N} = p
+
+        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
+            if systematic
+                v = systematic_sample(N,d; permute=permute)
+            else
+                v = rand(d, N)
+            end
+            $PT{eltype(v),N}(v)
+        end
+
+        function $PT(N::Integer, d::MultivariateDistribution)
+            v = rand(d,N)' |> copy # For cache locality
+            map(1:size(v,2)) do i
+                $PT{eltype(v),N}(@view(v[:,i]))
+            end
+        end
+    end
+    # @eval begin
+
     # end
     @eval begin
 
@@ -213,27 +276,35 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(p::MvParticles, H) = Matrix(p)\H
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
-Base.Broadcast.broadcastable(p::Particles) = Ref(p)
+Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i]
 
 Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
-Statistics.mean(v::MvParticles) = mean.(v)
-Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
 #     s2 = map(1:length(v[1])) do i
 #         var(getindex.(v,i))
 #     end
 #     eltype(v)(s2)
 # end
-meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
-meanvar(p::AbstractParticles) = var(p)/length(p)
 
+Statistics.mean(v::MvParticles) = mean.(v)
+Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
+Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
+Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
+check_similar_weights(v) = all(v[i].logweights ≈ v[1].logweights for i in 2:length(v))
+function Statistics.cov(v::MvWParticles,args...;kwargs...)
+    check_similar_weights(v)
+    cov(Matrix(v), AnalyticWeights(v[1].logweights; kwargs...)
+end
+Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvWParticles) = error("Not implemented for weighted particles yet")
+Distributions.fit(d::Type{<:Distribution}, p::WeightedParticles) = error("Not implemented for weighted particles yet")
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
-Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
-Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
+
+meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
+meanvar(p::AbstractParticles) = var(p)/length(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
@@ -290,7 +361,7 @@ end
 Base.sqrt(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function(sqrt, z)
 
 """
-    ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
+ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
 Applies  `f : ℝⁿ → ℝⁿ` to an array of particles.
 """
 function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}) where {F,T<:AbstractParticles}

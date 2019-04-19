@@ -10,11 +10,11 @@ export errorbarplot, mcplot, ribbonplot
 import Base: add_sum
 
 
-using LinearAlgebra, Statistics, Random, StaticArrays, Reexport, RecipesBase, GenericLinearAlgebra
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra
 import StatsBase: ProbabilityWeights
 using Lazy: @forward
 
-@reexport using Distributions
+using Distributions, StatsBase
 
 include("sampling.jl")
 include("particles.jl")

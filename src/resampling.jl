@@ -5,11 +5,10 @@ Resample the particles based on the `p.logweights`. After a call to this functio
 function resample!(p::WeightedParticles)
     N = length(p)
     offset = maximum(p.logweights)
-    p.weights .= exp.(p.logweights .- offset)
+    p.logweights .= exp.(p.logweights .- offset)
     s = _resample!(p)
-    fill!(p.weights, 1/N)
+    # fill!(p.weights, 1/N)
     fill!(p.logweights, -log(N))
-    # TODO: return log likelihood
     log(s/exp(-offset)) - log(N)
 end
 
@@ -17,7 +16,7 @@ end
 In-place systematic resampling of `p`, returns the sum of weights.
 """
 function _resample!(p::WeightedParticles)
-    x,w = p.particles, p.weights
+    x,w = p.particles, p.logweights
     N = length(w)
     bin = w[1]
     s = rand()/N

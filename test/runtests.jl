@@ -1,5 +1,5 @@
 @info "Running tests"
-using MonteCarloMeasurements
+using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
 @info "import Plots"
@@ -108,7 +108,9 @@ Random.seed!(0)
             @test_nowarn sum(p)
             @test cov(p) ≈ I atol=0.6
             @test mean(p) ≈ [0,0] atol=0.2
-            @test size(Matrix(p)) == (100,2)
+            m = Matrix(p)
+            @test size(m) == (100,2)
+            @test m[1,2] == p[1,2]
 
             p = PT(100, MvNormal(2,2))
             @test cov(p) ≈ 4I atol=2
@@ -123,6 +125,7 @@ Random.seed!(0)
         end
     end
     @testset "gradient" begin
+        @info "Testing gradient"
         e = 0.001
         p = 3 ± e
         f = x -> x^2
@@ -148,6 +151,7 @@ Random.seed!(0)
         @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
     end
     @testset "leastsquares" begin
+        @info "Testing leastsquares"
         n, m = 10000, 3
         A = randn(n,m)
         x = randn(m)
@@ -165,6 +169,7 @@ Random.seed!(0)
     end
 
     @testset "misc" begin
+        @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
         @test_nowarn display(p)
@@ -214,6 +219,7 @@ Random.seed!(0)
     end
 
     @testset "mutation" begin
+        @info "Testing mutation"
         function adder!(x)
             for i = eachindex(x)
                 x[i] += 1
@@ -226,6 +232,7 @@ Random.seed!(0)
     end
 
     @testset "outer_product" begin
+        @info "Testing outer product"
         d = 2
         μ = zeros(d)
         σ = ones(d)
@@ -244,12 +251,14 @@ Random.seed!(0)
     end
 
     @testset "plotting" begin
+        @info "Testing plotting"
         p = 0 ± 1
         v = [p,p]
         @test_nowarn Plots.plot(p)
         @test_nowarn Plots.plot(v)
         @test_nowarn Plots.plot(x->x^2,v)
         @test_nowarn Plots.plot(v,v)
+        @test_nowarn Plots.plot(v,v; points=true)
         @test_nowarn Plots.plot(v,ones(2))
         @test_nowarn Plots.plot(1:2,v)
 
@@ -261,6 +270,7 @@ Random.seed!(0)
     end
 
     @testset "optimize" begin
+        @info "Testing optimization"
         function rosenbrock2d(x)
             return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
         end
@@ -272,12 +282,13 @@ Random.seed!(0)
     end
 
     @testset "WeightedParticles" begin
+        @info "Testing weighted particles"
         p = WeightedParticles(100)
-        @test sum(p.weights) ≈ 1
+        # @test sum(p.weights) ≈ 1
         @test sum(exp,p.logweights) ≈ 1
         p.logweights .= randn.()
         resample!(p)
-        @test sum(p.weights) ≈ 1
+        # @test sum(p.weights) ≈ 1
         @test sum(exp,p.logweights) ≈ 1
         p = WeightedParticles(100)
         p.logweights .+= logpdf.(Normal(0,1), 1 .-p.particles)
