@@ -14,23 +14,25 @@ end
 
 """
 In-place systematic resampling of `p`, returns the sum of weights.
+`p.logweights` should be exponentiated before calling this function.
 """
 function _resample!(p::WeightedParticles)
     x,w = p.particles, p.logweights
+    Σ = sum(w)
     N = length(w)
     bin = w[1]
-    s = rand()/N
+    s = rand()*Σ/N
     bo = 1
     for i = 1:N
-        s += 1/N
         @inbounds for b = bo:N
-            bin = bin + w[b]
             if s < bin
                 x[i] = x[b]
                 bo = b
                 break
             end
+            bin += w[b+1] # should never reach here when b==N
         end
+        s += Σ/N
     end
-    bin
+    Σ
 end

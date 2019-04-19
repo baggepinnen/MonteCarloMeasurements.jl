@@ -295,7 +295,7 @@ Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.parti
 check_similar_weights(v) = all(v[i].logweights ≈ v[1].logweights for i in 2:length(v))
 function Statistics.cov(v::MvWParticles,args...;kwargs...)
     check_similar_weights(v)
-    cov(Matrix(v), AnalyticWeights(v[1].logweights; kwargs...)
+    cov(Matrix(v), AnalyticWeights(v[1].logweights); kwargs...)
 end
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvWParticles) = error("Not implemented for weighted particles yet")
 Distributions.fit(d::Type{<:Distribution}, p::WeightedParticles) = error("Not implemented for weighted particles yet")

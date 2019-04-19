@@ -74,7 +74,7 @@ Random.seed!(0)
             @test f(p) ≲ 15
             @test 5 ≲ f(p)
             @test Normal(f(p)).μ ≈ mean(f(p))
-            @test fit(Normal, f(p)).μ ≈ mean(f(p))
+            !isa(p, WeightedParticles) && @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
             f = x -> x^2
             p = PT(100)
@@ -291,9 +291,11 @@ Random.seed!(0)
         # @test sum(p.weights) ≈ 1
         @test sum(exp,p.logweights) ≈ 1
         p = WeightedParticles(100)
-        p.logweights .+= logpdf.(Normal(0,1), 1 .-p.particles)
+        p.logweights .+= logpdf.(Normal(0,1), 2 .-p.particles)
         resample!(p)
         @test mean(p) > 0
+        v = [WeightedParticles(1000), WeightedParticles(1000)]
+        @test cov(v) ≈ I atol=0.15
     end
 end
 
