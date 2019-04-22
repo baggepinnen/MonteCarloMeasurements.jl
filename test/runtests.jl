@@ -11,7 +11,8 @@ Random.seed!(0)
 @testset "MonteCarloMeasurements.jl" begin
 
     # σ/√N = σm
-    @testset "sampling" begin
+    @time @testset "sampling" begin
+        @info "Testing sampling"
         for _ = 1:10
             @test -3 < mean(systematic_sample(100))*sqrt(100) < 3
             @test -3 < mean(systematic_sample(10000))*sqrt(10000) < 3
@@ -24,7 +25,7 @@ Random.seed!(0)
         @test systematic_sample(10000, Beta(1,1)) |> Base.Fix1(fit, Beta) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
 
     end
-    @testset "Particles" begin
+    @time @testset "Particles" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
         @info "Done"
@@ -101,7 +102,7 @@ Random.seed!(0)
 
 
 
-    @testset "Multivariate Particles" begin
+    @time @testset "Multivariate Particles" begin
         for PT = (Particles, StaticParticles, WeightedParticles)
             @info "Running tests for multivariate $PT"
             p = PT(100, MvNormal(2,1))
@@ -124,7 +125,7 @@ Random.seed!(0)
             @info "Tests for multivariate $PT done"
         end
     end
-    @testset "gradient" begin
+    @time @testset "gradient" begin
         @info "Testing gradient"
         e = 0.001
         p = 3 ± e
@@ -150,7 +151,7 @@ Random.seed!(0)
         @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
         @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
     end
-    @testset "leastsquares" begin
+    @time @testset "leastsquares" begin
         @info "Testing leastsquares"
         n, m = 10000, 3
         A = randn(n,m)
@@ -168,7 +169,7 @@ Random.seed!(0)
         @test norm(cov(xhp) .- C1) < 1e-7
     end
 
-    @testset "misc" begin
+    @time @testset "misc" begin
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
@@ -218,7 +219,7 @@ Random.seed!(0)
         @test length(union(p, 1+p)) == 2length(p)
     end
 
-    @testset "mutation" begin
+    @time @testset "mutation" begin
         @info "Testing mutation"
         function adder!(x)
             for i = eachindex(x)
@@ -231,7 +232,7 @@ Random.seed!(0)
         @test all(x .≈ (2:6) .± 1)
     end
 
-    @testset "outer_product" begin
+    @time @testset "outer_product" begin
         @info "Testing outer product"
         d = 2
         μ = zeros(d)
@@ -250,7 +251,7 @@ Random.seed!(0)
         @test cov(p) ≈ I atol=1e-1
     end
 
-    @testset "plotting" begin
+    @time @testset "plotting" begin
         @info "Testing plotting"
         p = 0 ± 1
         v = [p,p]
@@ -269,7 +270,7 @@ Random.seed!(0)
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
 
-    @testset "optimize" begin
+    @time @testset "optimize" begin
         @info "Testing optimization"
         function rosenbrock2d(x)
             return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
@@ -281,7 +282,7 @@ Random.seed!(0)
         end
     end
 
-    @testset "WeightedParticles" begin
+    @time @testset "WeightedParticles" begin
         @info "Testing weighted particles"
         p = WeightedParticles(100)
         # @test sum(p.weights) ≈ 1
@@ -296,6 +297,10 @@ Random.seed!(0)
         @test mean(p) > 0
         v = [WeightedParticles(1000), WeightedParticles(1000)]
         @test cov(v) ≈ I atol=0.15
+        p = WeightedParticles(100)
+        p.logweights .= randn.()
+        log∑exp = log(sum(exp, p.logweights))
+        @test log∑exp ≈ MonteCarloMeasurements.logsumexp!(p)[1]
     end
 end
 
