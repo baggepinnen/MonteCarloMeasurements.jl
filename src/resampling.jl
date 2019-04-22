@@ -1,7 +1,7 @@
 """
-    logΣexp, Σ = logsumexp!(p::WeightedParticles)
+    logΣexp, Σexp = logsumexp!(p::WeightedParticles)
 Return log(∑exp(w)). Modifies the weight vector to `w = exp(w-offset)`
-Uses a numerically stable algorithm with offset to control for overflow and `log1p` to control for underflow.
+Uses a numerically stable algorithm with offset to control for overflow and `log1p` to control for underflow. `Σexp` is the sum of the weifhts in the state they are left, i.e., `sum(exp.(w).-offset)`.
 
 References:
 https://arxiv.org/pdf/1412.8695.pdf eq 3.8 for p(y)
@@ -36,8 +36,6 @@ function resample!(p::WeightedParticles)
     fill!(w, -log(N))
     logΣexp - log(N)
 end
-
-
 
 """
 In-place systematic resampling of `p`, returns the sum of weights.

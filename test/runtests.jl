@@ -301,6 +301,10 @@ Random.seed!(0)
         p.logweights .= randn.()
         log∑exp = log(sum(exp, p.logweights))
         @test log∑exp ≈ MonteCarloMeasurements.logsumexp!(p)[1]
+        # Test numerical stability
+        p = WeightedParticles(2)
+        p.logweights .= [1e-20, log(1e-20)]
+        @test MonteCarloMeasurements.logsumexp!(p)[1] ≈ 2e-20
     end
 end
 
