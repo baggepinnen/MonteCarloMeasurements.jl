@@ -78,7 +78,7 @@ function print_functions_to_extend()
     end
 end
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
-    sPT = string(typeof(p))
+    sPT = string(typeof(p).name)
     if ndims(T) < 1
         print(io, "(", N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3),")")
     else
