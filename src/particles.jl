@@ -101,6 +101,11 @@ for PT in (:Particles, :StaticParticles)
             v = fill(n,N)
             $PT{T,N}(v)
         end
+        function $PT(m::Matrix)
+            map(1:size(m,2)) do i
+                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+            end
+        end
     end
     # Two-argument functions
     for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
@@ -207,16 +212,14 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
 
         function $PT(N::Integer, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality
-            map(1:size(v,2)) do i
-                $PT{eltype(v),N}(@view(v[:,i]))
-            end
+            $PT(v)
         end
     end
     # @eval begin
 
     # end
     @eval begin
-
+        Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = T
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         Base.promote_rule(::Type{Complex}, ::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}

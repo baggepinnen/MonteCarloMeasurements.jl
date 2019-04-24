@@ -306,6 +306,44 @@ Random.seed!(0)
         p.logweights .= [1e-20, log(1e-20)]
         @test MonteCarloMeasurements.logsumexp!(p)[1] ≈ 2e-20
     end
+
+
+    @time @testset "bymap" begin
+        @info "Testing bymap"
+
+        @test MonteCarloMeasurements.Ngetter(Particles(50)) == 50
+        @test_throws ArgumentError MonteCarloMeasurements.Ngetter(Particles(30), Particles(10))
+        p = 0 ± 1
+
+        @test MonteCarloMeasurements.Ngetter([p,p],p) == 500
+        @test MonteCarloMeasurements.Ngetter([p,p]) == 500
+
+        f(x) = 2x
+        f(x,y) = 2x + y
+
+        @test f(p) ≈ @bymap f(p)
+        @test f(p,p) ≈ @bymap f(p,p)
+        @test f(p,10) ≈ @bymap f(p,10)
+        @test !(f(p,10) ≈ @bymap f(p,-10))
+
+        @test f(p) ≈ @bypmap f(p)
+        @test f(p,p) ≈ @bypmap f(p,p)
+        @test f(p,10) ≈ @bypmap f(p,10)
+        @test !(f(p,10) ≈ @bypmap f(p,-10))
+
+        g(x,y) = sum(x) + sum(y)
+        @test g([p,p], [p,p]) ≈ @bymap g([p,p], [p,p])
+        @test g([p,p], p) ≈ @bymap g([p,p], p)
+
+        h(x,y) = x .* y'
+        Base.Cartesian.@nextract 4 p d-> 0±1
+        @test h([p_1,p_2], [p_3,p_4]) ≈ @bymap  h([p_1,p_2], [p_3,p_4])
+        @test h([p_1,p_2], [p_3,p_4]) ≈ @bypmap h([p_1,p_2], [p_3,p_4])
+
+
+
+    end
+
 end
 
 
