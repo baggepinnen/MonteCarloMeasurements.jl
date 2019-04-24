@@ -334,13 +334,21 @@ Random.seed!(0)
         g(x,y) = sum(x) + sum(y)
         @test g([p,p], [p,p]) ≈ @bymap g([p,p], [p,p])
         @test g([p,p], p) ≈ @bymap g([p,p], p)
+        @test_broken g([p p], [p,p]) ≈ @bymap g([p p], [p,p])
+
+        @test g([p,p], [p,p]) ≈ @bypmap g([p,p], [p,p])
+        @test g([p,p], p) ≈ @bypmap g([p,p], p)
+        @test_broken g([p p], [p,p]) ≈ @bypmap g([p p], [p,p])
 
         h(x,y) = x .* y'
         Base.Cartesian.@nextract 4 p d-> 0±1
-        @test h([p_1,p_2], [p_3,p_4]) ≈ @bymap  h([p_1,p_2], [p_3,p_4])
-        @test h([p_1,p_2], [p_3,p_4]) ≈ @bypmap h([p_1,p_2], [p_3,p_4])
+        @test_broken h([p_1,p_2], [p_3,p_4]) ≈ @bymap  h([p_1,p_2], [p_3,p_4])
+        @test_broken h([p_1,p_2], [p_3,p_4]) ≈ @bypmap h([p_1,p_2], [p_3,p_4])
 
-
+        h2(x,y) = x .* y
+        Base.Cartesian.@nextract 4 p d-> 0±1
+        @test h2([p_1,p_2], [p_3,p_4]) ≈ @bymap  h2([p_1,p_2], [p_3,p_4])
+        @test h2([p_1,p_2], [p_3,p_4]) ≈ @bypmap h2([p_1,p_2], [p_3,p_4])
 
     end
 

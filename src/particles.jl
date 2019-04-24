@@ -26,6 +26,7 @@ function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
 end
 
 
+
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 const MvWParticles = Vector{WeightedParticles}
 
@@ -101,11 +102,6 @@ for PT in (:Particles, :StaticParticles)
             v = fill(n,N)
             $PT{T,N}(v)
         end
-        function $PT(m::Matrix)
-            map(1:size(m,2)) do i
-                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
-            end
-        end
     end
     # Two-argument functions
     for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
@@ -148,6 +144,11 @@ for PT in (:WeightedParticles,)
             v = fill(n,N)
             w = fill(-log(N),N)
             $PT{T,N}(v,w)
+        end
+        function $PT(m::Matrix)
+            map(1:size(m,2)) do i
+                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+            end
         end
     end
     # Two-argument functions
@@ -319,6 +320,7 @@ Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) wh
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
+Base.:≈(p::MvParticles, a::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))

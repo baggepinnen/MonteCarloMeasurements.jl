@@ -43,9 +43,9 @@ macro bymap(ex)
             $(esc(f))(argsi...)
         end
         if ndims(individuals[1]) == 0
-            return Particles(individuals)
+            Particles(individuals)
         else
-            return Particles(copy(reduce(hcat,individuals)'))
+            Particles(copy(reduce(hcat,individuals)'))
         end
     end
 end
@@ -59,9 +59,9 @@ macro bypmap(ex)
             $(esc(f))(argsi...)
         end
         if ndims(individuals[1]) == 0
-            return Particles(individuals)
+            Particles(individuals)
         else
-            return Particles(copy(reduce(hcat,individuals)'))
+            Particles(copy(reduce(hcat,individuals)'))
         end
     end
 end
