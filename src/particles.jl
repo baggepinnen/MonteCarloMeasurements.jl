@@ -145,11 +145,6 @@ for PT in (:WeightedParticles,)
             w = fill(-log(N),N)
             $PT{T,N}(v,w)
         end
-        function $PT(m::Matrix)
-            map(1:size(m,2)) do i
-                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
-            end
-        end
     end
     # Two-argument functions
     for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
@@ -201,6 +196,12 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
 
     @eval begin
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
+
+        function $PT(m::Matrix)
+            map(1:size(m,2)) do i
+                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+            end
+        end
 
         function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
             if systematic
