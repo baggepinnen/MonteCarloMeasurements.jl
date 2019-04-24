@@ -195,7 +195,7 @@ These functions do not work with `Particles` out of the box. Special cases are c
 The function `ℂ2ℂ_function(f::Function, p::AbstractArray{T})` applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 
 ## Weighted particles
-The type `WeighteParticles` contains an additional field `logweights`. You may modify this field as you see fit, e.g.
+The type `WeightedParticles` contains an additional field `logweights`. You may modify this field as you see fit, e.g.
 ```julia
 reweight(p,y) = (p.logweights .+= logpdf.(Normal(0,1), y .- p.particles))
 ```
