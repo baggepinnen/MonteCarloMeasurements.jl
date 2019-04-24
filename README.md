@@ -127,22 +127,22 @@ dc = dcgain(G)[]
 # 500 Particles: 1.012 ± 0.149
 density(dc, title="Probability density of DC-gain")
 ```
-![window](figs/dens.svg)
+![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
 ```julia
 w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 ```
-![window](figs/errorbar.svg)
+![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
 ```julia
 mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![window](figs/mc.svg)
+![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
 ```julia
 ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 ```
-![window](figs/rib.svg)
+![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
 
 ### Control systems benchmark
 ```julia
