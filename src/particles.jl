@@ -26,6 +26,7 @@ function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
 end
 
 
+
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 const MvWParticles = Vector{<:WeightedParticles}
 
@@ -196,6 +197,12 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
     @eval begin
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
+        function $PT(m::Matrix)
+            map(1:size(m,2)) do i
+                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+            end
+        end
+
         function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
             if systematic
                 v = systematic_sample(N,d; permute=permute)
@@ -207,16 +214,14 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
 
         function $PT(N::Integer, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality
-            map(1:size(v,2)) do i
-                $PT{eltype(v),N}(@view(v[:,i]))
-            end
+            $PT(v)
         end
     end
     # @eval begin
 
     # end
     @eval begin
-
+        Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = T
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         Base.promote_rule(::Type{Complex}, ::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}
@@ -318,6 +323,7 @@ Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) wh
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
+Base.:≈(p::MvParticles, a::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
