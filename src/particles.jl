@@ -27,7 +27,7 @@ end
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
-const MvWParticles = Vector{WeightedParticles}
+const MvWParticles = Vector{<:WeightedParticles}
 
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
@@ -299,6 +299,8 @@ function Statistics.cov(v::MvWParticles,args...;kwargs...)
 end
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvWParticles) = error("Not implemented for weighted particles yet")
 Distributions.fit(d::Type{<:Distribution}, p::WeightedParticles) = error("Not implemented for weighted particles yet")
+Distributions.fit(d::Type{<:MvNormal}, p::MvWParticles) = MvNormal(p)
+Distributions.fit(d::Type{<:Normal}, p::WeightedParticles) = Normal(p)
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
