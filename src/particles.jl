@@ -10,6 +10,10 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+struct CuParticles{T,N} <: AbstractParticles{T,N}
+    particles::CuVector{T}
+end
+
 """
 Particles with weights.
 To weight the particles `p`, modify the field `p.logweights`. You can resample the particles using `resample!(p)`, where each particles is resampled with a probability proportional to its weight.
@@ -32,6 +36,7 @@ const MvWParticles = Vector{<:WeightedParticles}
 
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
+±(μ::CuVector,σ) = CuParticles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
 ∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
@@ -94,7 +99,7 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
     end
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :CuParticles, :StaticParticles)
     # Constructors
     @eval begin
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
@@ -191,7 +196,7 @@ for PT in (:WeightedParticles,)
     @eval Statistics.cov(p::$PT,args...;kwargs...) = var(p,args...;kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles, :WeightedParticles)
+for PT in (:Particles, :CuParticles, :StaticParticles, :WeightedParticles)
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin

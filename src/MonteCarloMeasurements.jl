@@ -16,7 +16,7 @@ export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit
 import Base: add_sum
 
 
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
+using LinearAlgebra, CuArrays, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
 using Distributed: pmap
 import StatsBase: ProbabilityWeights
 using Lazy: @forward
