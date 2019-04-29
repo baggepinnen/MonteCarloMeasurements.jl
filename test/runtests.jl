@@ -28,6 +28,9 @@ Random.seed!(0)
     @time @testset "Particles" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
+        @test [0,0] ∓ 1 isa MonteCarloMeasurements.MvParticles
+        @test [0,0] ∓ [1,1] isa MonteCarloMeasurements.MvParticles
+
         @info "Done"
         for PT = (Particles, StaticParticles, WeightedParticles)
             @info "Running tests for $PT"
@@ -63,6 +66,8 @@ Random.seed!(0)
             @test p != 2p
             @test p ≈ 1.9std(p)
             @test !(p ≈ 2.1std(p))
+            @test !(p ≉ p)
+            @test !(mean(p) ≉ p)
             @test p ≉ 2.1std(p)
             @test !(p ≉ 1.9std(p))
 
@@ -97,6 +102,10 @@ Random.seed!(0)
             @test_nowarn qr(A)
             @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
             @info "Tests for $PT done"
+
+            p = PT{Float64,10}(2)
+            @test p isa PT{Float64,10}
+            @test all(p.particles .== 2)
         end
     end
 
