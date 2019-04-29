@@ -181,8 +181,8 @@ Random.seed!(0)
         @test length(Particles(100, MvNormal(2,1))) == 2
         @test length(p) == 500
         @test ndims(p) == 0
-        @test eltype(typeof(p)) == Float64
-        @test eltype(p) == Float64
+        @test eltype(typeof(p)) == typeof(p)
+        @test eltype(p) == typeof(p)
         @test convert(Int, 0p) == 0
         @test promote_type(Particles{Float64,10}, Float64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, Int64) == Particles{Float64,10}
