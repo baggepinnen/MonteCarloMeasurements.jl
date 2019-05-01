@@ -80,12 +80,12 @@ function print_functions_to_extend()
 end
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     sPT = string(typeof(p).name)
-    if ndims(T) < 1
-        print(io, "(", N, " $sPT: ", round(mean(p), digits=3), " ± ", round(std(p), digits=3),")")
-    else
-        print(io, "(", N, " $sPT with mean ", round.(mean(p), digits=3), " and std ", round.(sqrt.(diag(cov(p))), digits=3),")")
-    end
+    print(io, "(", N, " $sPT: ", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
 end
+# function Base.show(io::IO, p::MvParticles)
+#     sPT = string(typeof(p).name)
+#     print(io, "(", N, " $sPT with mean ", round.(mean(p), sigdigits=3), " and std ", round.(sqrt.(diag(cov(p))), sigdigits=3),")")
+# end
 for mime in (MIME"text/x-tex", MIME"text/x-latex")
     @eval function Base.show(io::IO, ::$mime, p::AbstractParticles)
         print(io, "\$")
@@ -283,7 +283,7 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 
 Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
-Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i]
+# Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
 Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
