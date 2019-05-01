@@ -5,7 +5,15 @@ function perturb(p, Cp)
     Particles(length(p[1]), d)
 end
 
+
+
+"""
+    res = optimize(f,p,τ=1)
+
+Find the minimum of Function `f`, starting with initial distribution described by `p::Vector{Particles}`. `τ` is the initial temperature.
+"""
 function optimize(f,p,τ=1)
+    p = deepcopy(p)
     N = length(p[1])
     we = zeros(N)
     for i = 1:10000
