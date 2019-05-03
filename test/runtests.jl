@@ -134,6 +134,24 @@ Random.seed!(0)
             @info "Tests for multivariate $PT done"
         end
     end
+
+    @testset "sigmapoints" begin
+        @info "Testing sigmapoints"
+        m = 1
+        Σ = 3
+        s = sigmapoints(m,Σ)
+        @test var(s) ≈ Σ
+        @test mean(s) == m
+        @test sigmapoints(Normal(m,√(Σ))) == s
+
+        m = [1,2]
+        Σ = [3. 1; 1 4]
+        s = sigmapoints(m,Σ)
+        @test cov(s) ≈ Σ
+        @test mean(s, dims=1)' ≈ m
+        @test sigmapoints(MvNormal(m,Σ)) == s
+    end
+
     @time @testset "gradient" begin
         @info "Testing gradient"
         e = 0.001

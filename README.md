@@ -93,8 +93,25 @@ One can also call (`Particles/StaticParticles`)
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
+### Sigma points
+The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points to propagate the first and second moments of a probability density, called *sigma points*. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
+```julia
+julia> m = [1,2]
 
+julia> Σ = [3. 1; 1 4]
 
+julia> p = StaticParticles(sigmapoints(m,Σ))
+2-element Array{StaticParticles{Float64,5},1}:
+ (5 StaticParticles: 1.0 ± 1.73)
+ (5 StaticParticles: 2.0 ± 2.0)
+
+julia> cov(p) ≈ Σ
+true
+
+julia> mean(p) ≈ m
+true
+```
+`sigmapoints` also accepts a `Normal/MvNormal` object as input.
 
 
 ## Multivariate particles
@@ -213,3 +230,12 @@ We further provide the macro `@bypmap` which does exactly the same thing, but wi
 These macros will map the function `f` over each element of `p::Particles{T,N}`, such that `f` is only called with arguments of type `T`, e.g., `Float64`. This handles arguments that are multivaiate particles `<: Vector{<:AbstractParticles}` as well.
 
 These macros will typically be slower than calling `f(p)`, but allow for Monte-Carlo simulation of things like calls to `Optim.optimize` etc., which fail if called like `optimize(f,p)`. If `f` is very expensive, `@bypmap` might prove prove faster than calling `f` with `p`, it's worth a try. The usual caveats for distributed computing applies, all code must be loaded on all workers etc.
+
+
+## Notes
+The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
+| Uncertainty propagation | Dynamic filtering       | Method              |
+| ------------------------|-------------------------|---------------------|
+| Measurements.jl         | Extended Kalman filter  | Linearization       |
+| `Particles(sigmapoints)`| Unscented Kalman Filter | Unscented transform |
+| `Particles`             | Particle Filter         | Monte Carlo         |
