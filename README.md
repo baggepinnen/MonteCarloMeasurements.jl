@@ -234,8 +234,9 @@ These macros will typically be slower than calling `f(p)`, but allow for Monte-C
 
 ## Notes
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
-| Uncertainty propagation | Dynamic filtering       | Method              |
-| ------------------------|-------------------------|---------------------|
-| Measurements.jl         | Extended Kalman filter  | Linearization       |
-| `Particles(sigmapoints)`| Unscented Kalman Filter | Unscented transform |
-| `Particles`             | Particle Filter         | Monte Carlo         |
+
+| Uncertainty propagation  | Dynamic filtering       | Method              |
+| -------------------------|-------------------------|---------------------|
+| Measurements.jl          | Extended Kalman filter  | Linearization       |
+| `Particles(sigmapoints)` | Unscented Kalman Filter | Unscented transform |
+| `Particles`              | Particle Filter         | Monte Carlo         |
