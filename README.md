@@ -3,7 +3,11 @@
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 
-This package provides three types `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`, that represent a distribution of a floating point number, kind of like the type `Measurement` from [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handles nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). The goal is to have a number of this type behave just as any other number while partaking in calculations. After a calculation, the `mean`, `std` etc. can be extracted from the number using the corresponding functions. `Particles` also interact with Distributions.jl, so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
+This package facilitates nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty) by means of Monte-Carlo methods. A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide three core types to represent uncertainty: `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
+
+The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl).
+
+The goal is to have a number of this type behave just as any other `Number` while partaking in calculations. After a calculation, an approximation to the complete distribution of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. 
 
 ## Basic Examples
 ```julia
@@ -46,10 +50,10 @@ Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
 julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
 (100 Particles{Float64,100}: 1.008 ± 0.58)
 
-julia> Particles(100, MvNormal(2,1)) # Multivariate create vectors of correlated particles
-2-element Array{Particles{Float64,100},1}:
- (100 Particles{Float64,100}: 0.103 ± 0.975)
- (100 Particles{Float64,100}: 0.008 ± 1.024)
+julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
+2-element Array{Particles{Float64,1000},1}:
+ (1000 Particles: 0.00466 ± 1.42)
+ (1000 Particles: 0.0819 ± 2.0) 
 ```
 
 ## Why
@@ -122,6 +126,52 @@ A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` 
 Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles.(N)`.
 
 Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗ (`\otimes`).
+
+### Examples
+The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independet and uncorrelated and have the covariance matrix `C = Diagonal([1^2, 2^2])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `ACA'`, which we can verify be asking for the covariance matrix of the output particles.
+```julia
+julia> p = [1 ± 1, 5 ± 2]
+2-element Array{Particles{Float64,500},1}:
+ (500 Particles: 1.0 ± 1.0) 
+ (500 Particles: 4.99 ± 2.0)
+
+julia> A = randn(2,2)
+2×2 Array{Float64,2}:
+  0.119307   0.791648
+ -0.332829  -0.524872
+
+julia> y = A*p
+2-element Array{Particles{Float64,500},1}:
+ (500 Particles: 4.07 ± 1.6)  
+ (500 Particles: -2.95 ± 1.12)
+
+julia> cov(y)
+2×2 Array{Float64,2}:
+  2.55287  -1.74549
+ -1.74549   1.25673
+
+julia> A*Diagonal([1^2, 2^2])*A'
+2×2 Array{Float64,2}:
+  2.52106  -1.70176
+ -1.70176   1.21274
+```
+To create particles that exhibit a known covariance/correlation, use the appropriate constructor, e.g.,
+```julia
+julia> p = Particles(10000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
+2-element Array{Particles{Float64,10000},1}:
+ (10000 Particles: 19.2 ± 39.8)
+ (10000 Particles: 13.0 ± 81.2)
+
+julia> cov(log.(p))
+2×2 Array{Float64,2}:
+ 1.99736  1.00008
+ 1.00008  3.00562
+ 
+ julia> mean(log.(p))
+2-element Array{Float64,1}:
+ 1.9965950667561836
+ 1.002177825027592 
+```
 
 ## Plotting
 An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
