@@ -105,6 +105,8 @@ One can also call (`Particles/StaticParticles`)
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
+Construction of `Particles` as [sigma points](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) or by [latin hypercube sampling](https://en.wikipedia.org/wiki/Latin_hypercube_sampling) is detailed [below](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points).
+
 
 
 ## Multivariate particles
@@ -183,7 +185,7 @@ true
 `sigmapoints` also accepts a `Normal/MvNormal` object as input.
 
 ## Latin hypercube sampling
-We do not provide functionality for this, rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.
+We do not provide functionality for [latin hypercube sampling](https://en.wikipedia.org/wiki/Latin_hypercube_sampling), rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.
 ```julia
 # import Pkg; Pkg.add("LatinHypercubeSampling")
 using MonteCarloMeasurements, LatinHypercubeSampling
@@ -196,6 +198,7 @@ X    ./= std(X,dims=1)
 m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
 particles = Matrix((m .+ cholesky(Σ).L * X')') # Transform sample
 p         = Particles(particles)
+plot(scatter(eachcol(particles)..., title="Sample"), plot(fit, title="Fitness vs. iteration"))
 
 julia> mean(p)
 2-element Array{Float64,1}:
@@ -208,7 +211,8 @@ julia> cov(p)
  0.937557  2.93756
 ```
 Latin hypercube sampling creates an approximately uniform sample in `ndims` dimensions. The applied transformation gives the particles the desired mean and covariance. The statistics of the sample can be visualized:
-```
+```julia
+using StatsPlots
 corrplot(particles)
 plot(density(p[1]), density(p[2]))
 ```
