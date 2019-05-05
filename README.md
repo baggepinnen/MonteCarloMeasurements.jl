@@ -5,11 +5,15 @@
 
 This package facilitates nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty) by means of Monte-Carlo methods. A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide three core types to represent uncertainty: `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
 
-The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). Below, we show an example where an input uncertainty is propagate through `σ(x)`
+The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl).
 
-![window](figs/transformed_densities.svg)
+A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
 
-The goal is to have a number of this type behave just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
+Below, we show an example where an input uncertainty is propagated through `σ(x)`
+
+![transformed densities](figs/transformed_densities.svg)
+
+In the figure above, we see the probability-density function of the input `p(x)` depicted on the x-axis. The density of the output `p(y) = f(x)` is shown on the y-axis. Linear uncertainty propagation does this by linearizing `f(x)` and using the equations for an affine transformation of a Gaussian distribution, and hence produces a Gaussian approximation to the output density. The particles form a sampled approximation of the input density `p(x)`. After propagating them through `f(x)`, they form a sampled approximation to `p(y)` which correspond very well to the true output density, even though only 20 particles were used in this example. The figure can be reproduced by `examples/transformed_densities.jl`.
 
 ## Basic Examples
 ```julia
@@ -196,22 +200,22 @@ dc = dcgain(G)[]
 # 500 Particles: 1.012 ± 0.149
 density(dc, title="Probability density of DC-gain")
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
+![A density](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
 ```julia
 w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
+![A bodeplot with errorbars](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
 ```julia
 mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
+![A bodeplot with lots of lines](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
 ```julia
 ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
+![A bodeplot with a ribbon](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
 
 ### Control systems benchmark
 ```julia
