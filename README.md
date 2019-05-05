@@ -5,9 +5,17 @@
 
 This package facilitates nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty) by means of Monte-Carlo methods. A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide three core types to represent uncertainty: `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
 
-The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl).
+The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl).
 
-The goal is to have a number of this type behave just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. 
+A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
+
+Below, we show an example where an input uncertainty is propagated through `σ(x)`
+
+![transformed densities](figs/transformed_densities.svg)
+
+In the figure above, we see the probability-density function of the input `p(x)` depicted on the x-axis. The density of the output `p(y) = f(x)` is shown on the y-axis. Linear uncertainty propagation does this by linearizing `f(x)` and using the equations for an affine transformation of a Gaussian distribution, and hence produces a Gaussian approximation to the output density. The particles form a sampled approximation of the input density `p(x)`. After propagating them through `f(x)`, they form a sampled approximation to `p(y)` which correspond very well to the true output density, even though only 20 particles were used in this example. The figure can be reproduced by `examples/transformed_densities.jl`.
+
+For a comparison of uncertainty propagation and nonlinear filtering, see [notes](https://github.com/baggepinnen/MonteCarloMeasurements.jl#notes) below.
 
 ## Basic Examples
 ```julia
@@ -53,22 +61,22 @@ julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
 2-element Array{Particles{Float64,1000},1}:
  (1000 Particles: 0.00466 ± 1.42)
- (1000 Particles: 0.0819 ± 2.0) 
+ (1000 Particles: 0.0819 ± 2.0)
 ```
 
-## Why
-Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on a `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. A benchmark example (more further down)
+## Why a package
+Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional benchmarks further down) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
 ```julia
 using BenchmarkTools
 A = [Particles(1000) for i = 1:3, j = 1:3]
 B = similar(A, Float64)
 @btime qr($A)
   119.243 μs (257 allocations: 456.58 KiB)
-@btime foreach(_->qr($B), 1:1000)
+@btime foreach(_->qr($B), 1:1000) # Manually do qr 1000 times
   3.916 ms (4000 allocations: 500.00 KiB)
 ```
-that's about a 30-fold reduction in time, and the repeated `qr` didn't even store or handle the statistics of the result.
-The type `StaticParticles` contains a statically sized, stack-allocated vector from StaticArrays.jl. This type is suitable if the number of particles is small, say < 500 ish (but expect long compilation times if > 100, especially on julia < v1.1).
+that's about a 30-fold reduction in time, and the repeated `qr` didn't even bother to sample new input points or store and handle the statistics of the result.
+The type `StaticParticles` contains a statically sized, stack-allocated vector from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl). This type is suitable if the number of particles is small, say < 500 ish (but expect long compilation times if > 100, especially on julia < v1.1).
 ```julia
 A = [StaticParticles(100) for i = 1:3, j = 1:3]
 B = similar(A, Float64)
@@ -86,7 +94,7 @@ B = similar(A, Float64)
   75.068 ms (403 allocations: 2.11 MiB)
 # 40 times faster
 ```
-`StaticParticles` allocate much less memory than regular `Partricles`, but are more stressful for the compiler to handle.
+`StaticParticles` allocate much less memory than regular `Particles`, but are more stressful for the compiler to handle.
 
 ## Constructors
 The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(N, Normal(μ,σ))`. This last constructor works with any distribution from which one can sample.
@@ -98,7 +106,7 @@ One can also call (`Particles/StaticParticles`)
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
 ### Sigma points
-The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points to propagate the first and second moments of a probability density, called *sigma points*. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
+The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points called *sigma points* to propagate the first and second moments of a probability density. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
 ```julia
 julia> m = [1,2]
 
@@ -106,7 +114,7 @@ julia> Σ = [3. 1; 1 4]
 
 julia> p = StaticParticles(sigmapoints(m,Σ))
 2-element Array{StaticParticles{Float64,5},1}:
- (5 StaticParticles: 1.0 ± 1.73)
+ (5 StaticParticles: 1.0 ± 1.73) # 2n+1 = 5 particles
  (5 StaticParticles: 2.0 ± 2.0)
 
 julia> cov(p) ≈ Σ
@@ -119,20 +127,20 @@ true
 
 
 ## Multivariate particles
-The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
+The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by, e.g., asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
 
-A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`. ~~You can also index into `v` like it was already a matrix.~~
+A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`. ~~You can also index into `v` like it was already a matrix.~~([This was a bad idea](https://discourse.julialang.org/t/show-for-vector-type-that-defines-matrix-getindex/23732/2?u=baggepinnen))
 
-Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of independent particles, so does `zeros(3) .+ Particles.(N)`.
+Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of *independent* particles, so does `zeros(3) .+ Particles.(N)`.
 
 Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗ (`\otimes`).
 
 ### Examples
-The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independet and uncorrelated and have the covariance matrix `C = Diagonal([1^2, 2^2])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `ACA'`, which we can verify be asking for the covariance matrix of the output particles.
+The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
 2-element Array{Particles{Float64,500},1}:
- (500 Particles: 1.0 ± 1.0) 
+ (500 Particles: 1.0 ± 1.0)
  (500 Particles: 4.99 ± 2.0)
 
 julia> A = randn(2,2)
@@ -166,11 +174,11 @@ julia> cov(log.(p))
 2×2 Array{Float64,2}:
  1.99736  1.00008
  1.00008  3.00562
- 
+
  julia> mean(log.(p))
 2-element Array{Float64,1}:
- 1.9965950667561836
- 1.002177825027592 
+ 1.99659
+ 1.00218
 ```
 
 ## Plotting
@@ -194,22 +202,22 @@ dc = dcgain(G)[]
 # 500 Particles: 1.012 ± 0.149
 density(dc, title="Probability density of DC-gain")
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
+![A density](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
 ```julia
 w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
+![A bodeplot with errorbars](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
 ```julia
 mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
+![A bodeplot with lots of lines](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
 ```julia
 ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 ```
-![window](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
+![A bodeplot with a ribbon](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
 
 ### Control systems benchmark
 ```julia
