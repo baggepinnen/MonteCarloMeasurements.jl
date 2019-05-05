@@ -105,25 +105,6 @@ One can also call (`Particles/StaticParticles`)
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
-### Sigma points
-The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points called *sigma points* to propagate the first and second moments of a probability density. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
-```julia
-julia> m = [1,2]
-
-julia> Σ = [3. 1; 1 4]
-
-julia> p = StaticParticles(sigmapoints(m,Σ))
-2-element Array{StaticParticles{Float64,5},1}:
- (5 StaticParticles: 1.0 ± 1.73) # 2n+1 = 5 particles
- (5 StaticParticles: 2.0 ± 2.0)
-
-julia> cov(p) ≈ Σ
-true
-
-julia> mean(p) ≈ m
-true
-```
-`sigmapoints` also accepts a `Normal/MvNormal` object as input.
 
 
 ## Multivariate particles
@@ -135,7 +116,7 @@ Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gi
 
 Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗ (`\otimes`).
 
-### Examples
+#### Examples
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
@@ -179,6 +160,57 @@ julia> cov(log.(p))
 2-element Array{Float64,1}:
  1.99659
  1.00218
+```
+
+## Sigma points
+The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points called *sigma points* to propagate the first and second moments of a probability density. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
+```julia
+julia> m = [1,2]
+
+julia> Σ = [3. 1; 1 4]
+
+julia> p = StaticParticles(sigmapoints(m,Σ))
+2-element Array{StaticParticles{Float64,5},1}:
+ (5 StaticParticles: 1.0 ± 1.73) # 2n+1 = 5 particles
+ (5 StaticParticles: 2.0 ± 2.0)
+
+julia> cov(p) ≈ Σ
+true
+
+julia> mean(p) ≈ m
+true
+```
+`sigmapoints` also accepts a `Normal/MvNormal` object as input.
+
+## Latin hypercube sampling
+We do not provide functionality for this, rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.
+```julia
+# import Pkg; Pkg.add("LatinHypercubeSampling")
+using MonteCarloMeasurements, LatinHypercubeSampling
+ndims  = 2
+N      = 120  # Number of particles
+ngen   = 1000 # How long to run optimization
+X, fit = LHCoptim(N,ndims,ngenerations)
+X      = X .- mean(X,dims=1) # Normalize the sample
+X    ./= std(X,dims=1)
+m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
+particles = Matrix((m .+ cholesky(Σ).L * X')') # Transform sample
+p         = Particles(particles)
+
+julia> mean(p)
+2-element Array{Float64,1}:
+ 1.0
+ 2.0
+
+julia> cov(p)
+2×2 Array{Float64,2}:
+ 2.0       0.937557
+ 0.937557  2.93756
+```
+Latin hypercube sampling creates an approximately uniform sample in `ndims` dimensions. The applied transformation gives the particles the desired mean and covariance. The statistics of the sample can be visualized:
+```
+corrplot(particles)
+plot(density(p[1]), density(p[2]))
 ```
 
 ## Plotting
