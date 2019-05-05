@@ -5,9 +5,11 @@
 
 This package facilitates nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty) by means of Monte-Carlo methods. A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide three core types to represent uncertainty: `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
 
-The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl).
+The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). Below, we show an example where an input uncertainty is propagate through `σ(x)`
 
-The goal is to have a number of this type behave just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. 
+![window](figs/transformed_densities.svg)
+
+The goal is to have a number of this type behave just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl.
 
 ## Basic Examples
 ```julia
@@ -53,7 +55,7 @@ julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
 2-element Array{Particles{Float64,1000},1}:
  (1000 Particles: 0.00466 ± 1.42)
- (1000 Particles: 0.0819 ± 2.0) 
+ (1000 Particles: 0.0819 ± 2.0)
 ```
 
 ## Why
@@ -132,7 +134,7 @@ The following example creates a vector of two `Particles`. Since they were creat
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
 2-element Array{Particles{Float64,500},1}:
- (500 Particles: 1.0 ± 1.0) 
+ (500 Particles: 1.0 ± 1.0)
  (500 Particles: 4.99 ± 2.0)
 
 julia> A = randn(2,2)
@@ -166,11 +168,11 @@ julia> cov(log.(p))
 2×2 Array{Float64,2}:
  1.99736  1.00008
  1.00008  3.00562
- 
+
  julia> mean(log.(p))
 2-element Array{Float64,1}:
  1.9965950667561836
- 1.002177825027592 
+ 1.002177825027592
 ```
 
 ## Plotting
