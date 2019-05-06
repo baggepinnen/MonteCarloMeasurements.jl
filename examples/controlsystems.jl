@@ -75,8 +75,8 @@ ynv = yv + randn(size(yv));
 # Identification parameters
 na,nb,nc = 2,1,1
 
-Gls,Σls     = arx(Δt,yn,u,na,nb)                                    # Regular least-squares estimation
-Gtls,Σtls   = arx(Δt,yn,u,na,nb, estimator=tls)                     # Total least-squares estimation
+Gls,Σls     = arx(Δt,yn,u,na,nb) # Regular least-squares estimation
+Gtls,Σtls   = arx(Δt,yn,u,na,nb, estimator=tls) # Total least-squares estimation
 Gwtls,Σwtls = arx(Δt,yn,u,na,nb, estimator=wtls_estimator(y,na,nb)) # Weighted Total least-squares estimation
 
 # Next, we create transfer functions with uncertainty, the first argument is the particle type we want to use
@@ -102,16 +102,47 @@ errorbarplot!(w,mag,0.01; scales..., subplot=3, lab="wtls")
 plot!(w,magG, subplot=3)
 
 ## bode benchmark =========================================
-# using BenchmarkTools, Printf #src
-# p = 1 ± 0.1 #src
-# ζ = 0.3 ± 0.1 #src
-# ω = 1 ± 0.1 #src
-# G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-# t1 = @belapsed bode($G,$w) #src
-# p = 1 #src
-# ζ = 0.3 #src
-# ω = 1 #src
-# G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-# t2 = @belapsed bode($G,$w) #src
-# #src
-# @printf("Time with 500 particles: %16.4fms \nTime with regular floating point: %7.4fms\n500×floating point time: %16.4fms\nSpeedup factor: %22.1fx\n", 1000*t1, 1000*t2, 1000*500t2, 500t2/t1) #src
+using BenchmarkTools, Printf #src
+using MonteCarloMeasurements: ∓
+p = 1 ± 0.1 #src
+ζ = 0.3 ± 0.1 #src
+ω = 1 ± 0.1 #src
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
+t1 = @belapsed bode($G,$w) #src
+p = 1 #src
+ζ = 0.3 #src
+ω = 1 #src
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
+t2 = @belapsed bode($G,$w) #src
+using Measurements
+p = Measurements.:(±)(1, 0.1) #src
+ζ = Measurements.:(±)(0.3, 0.1) #src
+ω = Measurements.:(±)(1, 0.1) #src
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
+t3 = @belapsed bode($G,$w) #src
+
+p = 1 ∓ 0.1 #src
+ζ = 0.3 ∓ 0.1 #src
+ω = 1 ∓ 0.1 #src
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
+t4 = @belapsed bode($G,$w) #src
+
+p = StaticParticles(sigmapoints(1, 0.1^2))[] #src
+ζ = StaticParticles(sigmapoints(0.3, 0.1^2))[] #src
+ω = StaticParticles(sigmapoints(1, 0.1^2))[] #src
+G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
+t5 = @belapsed bode($G,$w) #src
+#src
+##
+@printf("
+Time with 500 particles: %16.4fms
+Time with regular floating point: %7.4fms
+Time with Measurements: %17.4fms
+Time with 100 static part.: %13.4fms
+Time with static sigmapoints.: %10.4fms
+500×floating point time: %16.4fms
+Speedup factor vs. Manual: %11.1fx
+Slowdown factor vs. Measurements: %4.1fx
+Slowdown static vs. Measurements: %4.1fx
+Slowdown sigma vs. Measurements: %5.1fx\n",
+1000*t1, 1000*t2, 1000*t3, 1000*t4, 1000*t5, 1000*500t2, 500t2/t1, t1/t3, t4/t3, t5/t3) #src

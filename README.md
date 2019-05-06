@@ -15,7 +15,7 @@ Below, we show an example where an input uncertainty is propagated through `σ(x
 
 In the figure above, we see the probability-density function of the input `p(x)` depicted on the x-axis. The density of the output `p(y) = f(x)` is shown on the y-axis. Linear uncertainty propagation does this by linearizing `f(x)` and using the equations for an affine transformation of a Gaussian distribution, and hence produces a Gaussian approximation to the output density. The particles form a sampled approximation of the input density `p(x)`. After propagating them through `f(x)`, they form a sampled approximation to `p(y)` which correspond very well to the true output density, even though only 20 particles were used in this example. The figure can be reproduced by `examples/transformed_densities.jl`.
 
-For a comparison of uncertainty propagation and nonlinear filtering, see [notes](https://github.com/baggepinnen/MonteCarloMeasurements.jl#notes) below.
+For a comparison of uncertainty propagation and nonlinear filtering, see [notes](https://github.com/baggepinnen/MonteCarloMeasurements.jl#comparison-to-nonlinear-filtering) below.
 
 ## Basic Examples
 ```julia
@@ -257,27 +257,6 @@ ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 ```
 ![A bodeplot with a ribbon](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
 
-### Control systems benchmark
-```julia
-using MonteCarloMeasurements, ControlSystems, BenchmarkTools, Printf
-w  = exp10.(LinRange(-1,1,200)) # Frequency vector
-p  = 1 ± 0.1
-ζ  = 0.3 ± 0.1
-ω  = 1 ± 0.1
-G  = tf([p*ω], [1, 2ζ*ω, ω^2])
-t1 = @belapsed bode($G,$w)
-p  = 1
-ζ  = 0.3
-ω  = 1
-G  = tf([p*ω], [1, 2ζ*ω, ω^2])
-t2 = @belapsed bode($G,$w)
-
-@printf("Time with 500 particles: %16.4fms \nTime with regular floating point: %7.4fms\n500×floating point time: %16.4fms\nSpeedup factor: %22.1fx\n", 1000*t1, 1000*t2, 1000*500t2, 500t2/t1)
-  # Time with 500 particles:          14.9095ms
-  # Time with regular floating point:  0.5517ms
-  # 500×floating point time:         275.8640ms
-  # Speedup factor:                   18.5x
-```
 
 ## Differential Equations
 [The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well.
@@ -328,11 +307,66 @@ These macros will map the function `f` over each element of `p::Particles{T,N}`,
 These macros will typically be slower than calling `f(p)`, but allow for Monte-Carlo simulation of things like calls to `Optim.optimize` etc., which fail if called like `optimize(f,p)`. If `f` is very expensive, `@bypmap` might prove prove faster than calling `f` with `p`, it's worth a try. The usual caveats for distributed computing applies, all code must be loaded on all workers etc.
 
 
-## Notes
+## When to use what?
+
+| Situation       | Action       |
+|-----------------|--------------|
+| Linear functions | Use linear uncertainty propagation, i.e., Measurements.jl |
+| Highly nonlinear/discountinuous functions | Use MonteCarloMeasurements |
+| Large uncertainties in input | Use MonteCarloMeasurements |
+| Small uncertainties in input in relation to the curvature of the function | Use Measurements |
+| Interested in low probability events / extremas  | Use MonteCarloMeasurements |
+| Limited computational budget | Use Measurements or `StaticParticles` with  [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
+| Non-Gaussian input distribution  | Use MonteCarloMeasurements |
+
+Due to [Jensen's inequality](https://en.wikipedia.org/wiki/Jensen%27s_inequality), linear uncertainty propagation will always underestimate the mean of nonlinear convex functions and overestimate the mean of concave functions. From wikipedia
+> In its simplest form the inequality states that the convex transformation of a mean is less than or equal to the mean applied after convex transformation; it is a simple corollary that the opposite is true of concave transformations.
+
+Linear uncertainty propagation does thus not allow you to upperbound/lowerbound the output uncertainty of a convex/concave function, and will be conservative in the reverse case.
+
+The benchmark results below comes from [`examples/controlsystems.jl`](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl) The benchmark consists of calculating the Bode curves for a linear system with uncertain parameters
+```julia
+w  = exp10.(LinRange(-1,1,200)) # Frequency vector
+p  = 1 ± 0.1
+ζ  = 0.3 ± 0.1
+ω  = 1 ± 0.1
+G  = tf([p*ω], [1, 2ζ*ω, ω^2])
+t1 = @belapsed bode($G,$w)
+   ⋮
+```
+
+| Benchmark | Results |
+| ------------------------|-----------|
+| Time with 500 particles | 11.5937ms |
+| Time with regular floating point | 0.3456ms |
+| Time with Measurements | 0.5794ms |
+| Time with 100 static particles | 1.8212ms |
+| Time with static sigmapoints | 0.7252ms |
+| 500×floating point time | 172.7780ms |
+| Speedup particles vs. Manual | 14.9x |
+| Slowdown particles vs. Measurements | 20.0x |
+| Slowdown static vs. Measurements | 3.1x |
+| Slowdown sigma vs. Measurements | 1.3x |
+
+### Comparison to nonlinear filtering
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
 
-| Uncertainty propagation  | Dynamic filtering       | Method              |
-| -------------------------|-------------------------|---------------------|
-| Measurements.jl          | Extended Kalman filter  | Linearization       |
-| `Particles(sigmapoints)` | Unscented Kalman Filter | Unscented transform |
-| `Particles`              | Particle Filter         | Monte Carlo         |
+| Uncertainty propagation  | Dynamic filtering       | Method                 |
+| -------------------------|-------------------------|------------------------|
+| Measurements.jl          | Extended Kalman filter  | Linearization          |
+| `Particles(sigmapoints)` | Unscented Kalman Filter | Unscented transform    |
+| `Particles`              | Particle Filter         | Monte Carlo (sampling) |
+
+
+## Examples
+### [Control systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)
+This example shows how to simulate control systems (using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
+[](ControlSystems.jl)) with uncertain parameters. We calculate and display with uncertain parameters. We calculate and display Bode diagrams, Nyquist diagrams and time-domain responses. We also illustrate how the package [ControlSystemIdentification.jl](https://github.com/baggepinnen/ControlSystemIdentification.jl) interacts with MonteCarloMeasurements to facilitate the creation and analysis of uncertain systems.
+
+We also perform some limited benchmarks.
+
+### [Lantin Hypercube Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)
+We show how to initialize particles with LHS and how to make sure the sample gets the desired moments. We also visualize the statistics of the sample.
+
+### [How MC uncertainty propagation works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)
+We produce the first figure in this readme and explain in visual detail how different forms of uncertainty propagation propagates a probability distribution through a nonlinear function.
