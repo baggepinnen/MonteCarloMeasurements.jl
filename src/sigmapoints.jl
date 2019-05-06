@@ -20,6 +20,7 @@ true
 julia> mean(p) ≈ m
 true
 ```
+Make sure to pass the variance (not std) as second argument in case `μ` and `Σ` are scalars.
 """
 function sigmapoints(m, Σ)
     n = length(m)

@@ -212,11 +212,13 @@ Random.seed!(0)
         # xh = A\y
         C1 = σ^2*inv(A'A)
 
-        yp = y .+ σ.*Particles.(2000)
-        xhp = (A'A)\A'yp
+        yp = yn .+ σ.*Particles.(2000)
+        xhp = (A'A)\(A'yp)
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
+        @test all(xhp .≈ x)
+        @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
     end
 
     @time @testset "misc" begin
