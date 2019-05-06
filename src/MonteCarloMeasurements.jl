@@ -3,7 +3,7 @@ module MonteCarloMeasurements
 const DEFAUL_NUM_PARTICLES = 500
 const DEFAUL_STATIC_NUM_PARTICLES = 100
 
-export Particles,StaticParticles, WeightedParticles, sigmapoints, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!, @bymap, @bypmap
+export Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!, @bymap, @bypmap
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 

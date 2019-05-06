@@ -190,14 +190,12 @@ We do not provide functionality for [latin hypercube sampling](https://en.wikipe
 # import Pkg; Pkg.add("LatinHypercubeSampling")
 using MonteCarloMeasurements, LatinHypercubeSampling
 ndims  = 2
-N      = 120  # Number of particles
+N      = 100  # Number of particles
 ngen   = 1000 # How long to run optimization
-X, fit = LHCoptim(N,ndims,ngenerations)
-X      = X .- mean(X,dims=1) # Normalize the sample
-X    ./= std(X,dims=1)
+X, fit = LHCoptim(N,ndims,ngen)
 m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
-particles = Matrix((m .+ cholesky(Σ).L * X')') # Transform sample
-p         = Particles(particles)
+particle_matrix = transform_moments(X,m,Σ)
+p      = Particles(particle_matrix) # These are our LHS particles with correct moments
 plot(scatter(eachcol(particles)..., title="Sample"), plot(fit, title="Fitness vs. iteration"))
 
 julia> mean(p)
@@ -207,15 +205,19 @@ julia> mean(p)
 
 julia> cov(p)
 2×2 Array{Float64,2}:
- 2.0       0.937557
- 0.937557  2.93756
+ 2.0  1.0
+ 1.0  4.0
 ```
-Latin hypercube sampling creates an approximately uniform sample in `ndims` dimensions. The applied transformation gives the particles the desired mean and covariance. The statistics of the sample can be visualized:
+Latin hypercube sampling creates an approximately uniform sample in `ndims` dimensions. The applied transformation gives the particles the desired mean and covariance.
+*Caveat:* Unfortunately, endowing the sampled latin hypercube with a desired *non-diagonal* covariance matrix destroys the latin properties for all dimensions but the first. This does not happen for diagonal covariance matrices.
+
+ The statistics of the sample can be visualized:
 ```julia
 using StatsPlots
 corrplot(particles)
 plot(density(p[1]), density(p[2]))
 ```
+see also `examples/lhs.jl`.
 
 ## Plotting
 An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of

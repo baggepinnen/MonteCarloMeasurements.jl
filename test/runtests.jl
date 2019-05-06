@@ -166,6 +166,15 @@ Random.seed!(0)
         @test sigmapoints(MvNormal(m,Σ)) == s
     end
 
+    @testset "transform_moments" begin
+        m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
+        C = randn(2,2)
+        C = cholesky(C'C).L
+        particles = transform_moments((C*randn(2,500))', m, Σ)
+        @test mean(particles, dims=1)[:] ≈ m
+        @test cov(particles) ≈ Σ
+    end
+
     @time @testset "gradient" begin
         @info "Testing gradient"
         e = 0.001
@@ -346,6 +355,8 @@ Random.seed!(0)
         p = WeightedParticles(2)
         p.logweights .= [1e-20, log(1e-20)]
         @test MonteCarloMeasurements.logsumexp!(p)[1] ≈ 2e-20
+
+        @test WeightedParticles(100) + WeightedParticles(randn(Float32, 100)) isa WeightedParticles{Float64,100}
     end
 
 
