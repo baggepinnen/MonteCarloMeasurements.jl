@@ -94,6 +94,11 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
     end
 end
 
+@inline maybe_particles(x) = x
+@inline maybe_particles(p::AbstractParticles) = p.particles
+@inline maybe_logweights(x) = 0
+@inline maybe_logweights(p::WeightedParticles) = p.logweights
+
 for PT in (:Particles, :StaticParticles)
     # Constructors
     @eval begin
@@ -108,7 +113,7 @@ for PT in (:Particles, :StaticParticles)
         f = nameof(ff)
         @eval begin
             function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
-                $PT{T,N}(map(x->$f(x,a...), p.particles))
+                $PT{T,N}($f.(p.particles, maybe_particles.(a)...)) # maybe_particles introduced to handle >2 arg operators
             end
             function (Base.$f)(a::Real,p::$PT{T,N}) where {T,N}
                 $PT{T,N}(map(x->$f(a,x), p.particles))
@@ -151,12 +156,15 @@ for PT in (:WeightedParticles,)
         f = nameof(ff)
         @eval begin
             function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
-                $PT{T,N}(map(x->$f(x,a...), p.particles),p.logweights)
+                # $PT{T,N}(map(x->$f(x,a...), p.particles),p.logweights)
+                $PT{T,N}($f.(p.particles, maybe_particles.(a)...), .+(p.logweights, maybe_logweights.(a)...))
             end
             function (Base.$f)(a::Real,p::$PT{T,N}) where {T,N}
                 $PT{T,N}(map(x->$f(a,x), p.particles),p.logweights)
             end
-            function (Base.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
+            function (Base.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N} # TODO: add logweights for multiplication but not for addition
+                sf = string($f)
+                $f == Base.:(*) || @warn("p1 $sf p2 not yet fully supported for WeightedParticles")
                 $PT{T,N}(map($f, p1.particles, p2.particles),p1.logweights+p2.logweights)
             end
             function (Base.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/

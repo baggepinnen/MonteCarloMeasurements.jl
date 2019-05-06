@@ -25,7 +25,7 @@ Random.seed!(0)
         @test systematic_sample(10000, Beta(1,1)) |> Base.Fix1(fit, Beta) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
 
     end
-    @time @testset "Particles" begin
+    @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
         @test [0,0] ∓ 1 isa MonteCarloMeasurements.MvParticles
@@ -33,93 +33,99 @@ Random.seed!(0)
 
         @info "Done"
         for PT = (Particles, StaticParticles, WeightedParticles)
-            @info "Running tests for $PT"
-            p = PT(100)
-            @test 0 ± 1 ≈ p
-            @test 0 ∓ 1 ≈ p
-            @test sum(p) ≈ 0
-            @test cov(p) ≈ 1 atol=0.2
-            @test std(p) ≈ 1 atol=0.2
-            @test var(p) ≈ 1 atol=0.2
-            @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
-            @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
-            @test p <= p
-            @test p >= p
-            @test !(p < p)
-            @test !(p > p)
-            @test (p < 1+p)
-            @test (p+1 > p)
-            @test !(p ≲ p)
-            @test !(p ≳ p)
-            @test (p ≲ 2.1)
-            @test !(p ≲ 1.9)
-            @test (p ≳ -2.1)
-            @test !(p ≳ -1.9)
-            @test (-2.1 ≲ p)
-            @test !(-1.9 ≲ p)
-            @test (2.1 ≳ p)
-            @test !(1.9 ≳ p)
-            @test p ≈ p
-            @test p ≈ 0
-            @test 0 ≈ p
-            @test p != 0
-            @test p != 2p
-            @test p ≈ 1.9std(p)
-            @test !(p ≈ 2.1std(p))
-            @test !(p ≉ p)
-            @test !(mean(p) ≉ p)
-            @test p ≉ 2.1std(p)
-            @test !(p ≉ 1.9std(p))
+            @testset "$(repr(PT))" begin
+                @info "Running tests for $PT"
+                p = PT(100)
+                @test (p+p+p).particles ≈ 3p.particles # Test 3arg operator
+                @test (p+p+1).particles ≈ 1 .+ 2p.particles # Test 3arg operator
+                @test (1+p+1).particles ≈ 2 .+ p.particles # Test 3arg operator
+                @test (p+1+p).particles ≈ 1 .+ 2p.particles # Test 3arg operator
+                @test 0 ± 1 ≈ p
+                @test 0 ∓ 1 ≈ p
+                @test sum(p) ≈ 0
+                @test cov(p) ≈ 1 atol=0.2
+                @test std(p) ≈ 1 atol=0.2
+                @test var(p) ≈ 1 atol=0.2
+                @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
+                @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
+                @test p <= p
+                @test p >= p
+                @test !(p < p)
+                @test !(p > p)
+                @test (p < 1+p)
+                @test (p+1 > p)
+                @test !(p ≲ p)
+                @test !(p ≳ p)
+                @test (p ≲ 2.1)
+                @test !(p ≲ 1.9)
+                @test (p ≳ -2.1)
+                @test !(p ≳ -1.9)
+                @test (-2.1 ≲ p)
+                @test !(-1.9 ≲ p)
+                @test (2.1 ≳ p)
+                @test !(1.9 ≳ p)
+                @test p ≈ p
+                @test p ≈ 0
+                @test 0 ≈ p
+                @test p != 0
+                @test p != 2p
+                @test p ≈ 1.9std(p)
+                @test !(p ≈ 2.1std(p))
+                @test !(p ≉ p)
+                @test !(mean(p) ≉ p)
+                @test p ≉ 2.1std(p)
+                @test !(p ≉ 1.9std(p))
 
 
-            f = x -> 2x + 10
-            @test 9.6 < mean(f(p)) < 10.4
-            @test 9.6 < f(p) < 10.4
-            @test f(p) ≈ 10
-            @test !(f(p) ≲ 11)
-            @test f(p) ≲ 15
-            @test 5 ≲ f(p)
-            @test Normal(f(p)).μ ≈ mean(f(p))
-            !isa(p, WeightedParticles) && @test fit(Normal, f(p)).μ ≈ mean(f(p))
+                f = x -> 2x + 10
+                @test 9.6 < mean(f(p)) < 10.4
+                @test 9.6 < f(p) < 10.4
+                @test f(p) ≈ 10
+                @test !(f(p) ≲ 11)
+                @test f(p) ≲ 15
+                @test 5 ≲ f(p)
+                @test Normal(f(p)).μ ≈ mean(f(p))
+                !isa(p, WeightedParticles) && @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
 
-            f = x -> x^2
-            p = PT(100)
-            @test 0.9 < mean(f(p)) < 1.1
-            @test 0.9 < mean(f(p)) < 1.1
-            @test f(p) ≈ 1
-            @test !(f(p) ≲ 1)
-            @test f(p) ≲ 5
-            @test -3 ≲ f(p)
-            @test MvNormal([f(p),p]) isa MvNormal
+                f = x -> x^2
+                p = PT(100)
+                @test 0.9 < mean(f(p)) < 1.1
+                @test 0.9 < mean(f(p)) < 1.1
+                @test f(p) ≈ 1
+                @test !(f(p) ≲ 1)
+                @test f(p) ≲ 5
+                @test -3 ≲ f(p)
+                @test MvNormal([f(p),p]) isa MvNormal
 
-            A = randn(3,3) .+ [PT(100) for i = 1:3, j = 1:3]
-            a = [PT(100) for i = 1:3]
-            b = [PT(100) for i = 1:3]
-            @test sum(a.*b) ≈ 0
-            @test all(A*b .≈ [0,0,0])
+                A = randn(3,3) .+ [PT(100) for i = 1:3, j = 1:3]
+                a = [PT(100) for i = 1:3]
+                b = [PT(100) for i = 1:3]
+                @test sum(a.*b) ≈ 0
+                @test all(A*b .≈ [0,0,0])
 
-            @test all(A\b .≈ zeros(3))
-            @test_nowarn qr(A)
-            @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
-            pn = Particles(100, Normal(2,1), systematic=false)
-            @test pn ≈ 2
-            @test !issorted(pn.particles)
-            @test !issorted(p.particles)
+                @test all(A\b .≈ zeros(3))
+                @test_nowarn qr(A)
+                @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
+                pn = Particles(100, Normal(2,1), systematic=false)
+                @test pn ≈ 2
+                @test !issorted(pn.particles)
+                @test !issorted(p.particles)
 
-            pn = Particles(100, Normal(2,1), systematic=true, permute=false)
-            @test pn ≈ 2
-            @test issorted(pn.particles)
+                pn = Particles(100, Normal(2,1), systematic=true, permute=false)
+                @test pn ≈ 2
+                @test issorted(pn.particles)
 
-            @info "Tests for $PT done"
+                @info "Tests for $PT done"
 
-            p = PT{Float64,10}(2)
-            @test p isa PT{Float64,10}
-            @test all(p.particles .== 2)
+                p = PT{Float64,10}(2)
+                @test p isa PT{Float64,10}
+                @test all(p.particles .== 2)
 
-            @test Particles(100) + Particles(randn(Float32, 100)) ≈ 0
-            @test_throws MethodError p + Particles(randn(Float32, 200)) # Npart and Float type differ
-            @test_throws MethodError p + Particles(200) # Npart differ
+                @test Particles(100) + Particles(randn(Float32, 100)) ≈ 0
+                @test_throws MethodError p + Particles(randn(Float32, 200)) # Npart and Float type differ
+                @test_throws MethodError p + Particles(200) # Npart differ
+            end
         end
     end
 
@@ -127,25 +133,27 @@ Random.seed!(0)
 
     @time @testset "Multivariate Particles" begin
         for PT = (Particles, StaticParticles, WeightedParticles)
-            @info "Running tests for multivariate $PT"
-            p = PT(100, MvNormal(2,1))
-            @test_nowarn sum(p)
-            @test cov(p) ≈ I atol=0.6
-            @test mean(p) ≈ [0,0] atol=0.2
-            m = Matrix(p)
-            @test size(m) == (100,2)
-            # @test m[1,2] == p[1,2]
+            @testset "$(repr(PT))" begin
+                @info "Running tests for multivariate $PT"
+                p = PT(100, MvNormal(2,1))
+                !isa(p,MonteCarloMeasurements.MvWParticles) && @test_nowarn sum(p)
+                @test cov(p) ≈ I atol=0.6
+                @test mean(p) ≈ [0,0] atol=0.2
+                m = Matrix(p)
+                @test size(m) == (100,2)
+                # @test m[1,2] == p[1,2]
 
-            p = PT(100, MvNormal(2,2))
-            @test cov(p) ≈ 4I atol=2
-            @test mean(p) ≈ [0,0] atol=1
-            @test size(Matrix(p)) == (100,2)
+                p = PT(100, MvNormal(2,2))
+                @test cov(p) ≈ 4I atol=2
+                @test mean(p) ≈ [0,0] atol=1
+                @test size(Matrix(p)) == (100,2)
 
-            p = PT(100, MvNormal(2,2))
-            @test fit(MvNormal, p).μ ≈ mean(p)
-            @test MvNormal(p).μ ≈ mean(p)
-            @test cov(MvNormal(p)) ≈ cov(p)
-            @info "Tests for multivariate $PT done"
+                p = PT(100, MvNormal(2,2))
+                @test fit(MvNormal, p).μ ≈ mean(p)
+                @test MvNormal(p).μ ≈ mean(p)
+                @test cov(MvNormal(p)) ≈ cov(p)
+                @info "Tests for multivariate $PT done"
+            end
         end
     end
 
@@ -337,6 +345,7 @@ Random.seed!(0)
     @time @testset "WeightedParticles" begin
         @info "Testing weighted particles"
         p = WeightedParticles(100)
+
         # @test sum(p.weights) ≈ 1
         @test sum(exp,p.logweights) ≈ 1
         p.logweights .= randn.()
@@ -359,6 +368,12 @@ Random.seed!(0)
         @test MonteCarloMeasurements.logsumexp!(p)[1] ≈ 2e-20
 
         @test WeightedParticles(100) + WeightedParticles(randn(Float32, 100)) isa WeightedParticles{Float64,100}
+
+        p = WeightedParticles(100)
+        p.logweights .= randn.()
+        @test (p*p*p).logweights ≈ 3*p.logweights
+        msg = r"not yet fully supported for WeightedParticles"
+        @test_logs (:warn, msg) p+p
     end
 
 
