@@ -262,18 +262,14 @@ ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 [The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well.
 
 # Limitations
-One major limitation is functions that contains control flow where the branch is decided by an uncertain value. Consider the following case
+One major limitation is functions that contains control flow, where the branch is decided by an uncertain value. Consider the following case
 ```julia
 function negsquare(x)
-    if x > 0
-        return x^2
-    else
-        return -x^2
-    end
+    x > 0 ? x^2 : -x^2
 end
 p = 0 ± 1
 ```
-Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` will use the mean of the particles to decide the branch and execute this branch for all particles. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below.
+Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` will use the mean of the particles to decide the branch and execute this branch for all particles. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below. Common such functions from `Base`, such as `max/min` etc. are already registered.
 
 # Overloading a new function
 If a method for `Particles` is not implemented for your function `yourfunc`, the pattern looks like this

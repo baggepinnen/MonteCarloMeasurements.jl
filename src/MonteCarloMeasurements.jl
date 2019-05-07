@@ -23,6 +23,7 @@ using Lazy: @forward
 
 using Distributions, StatsBase
 
+include("types.jl")
 include("register_primitive.jl")
 include("sampling.jl")
 include("particles.jl")

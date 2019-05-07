@@ -1,34 +1,3 @@
-const ConcreteFloat = Union{Float64,Float32,Float16,BigFloat}
-const ConcreteInt = Union{Int8,Int16,Int32,Int64,Int128,BigInt}
-
-abstract type AbstractParticles{T,N} <: Real end
-struct Particles{T,N} <: AbstractParticles{T,N}
-    particles::Vector{T}
-end
-
-struct StaticParticles{T,N} <: AbstractParticles{T,N}
-    particles::SArray{Tuple{N}, T, 1, N}
-end
-
-"""
-Particles with weights.
-To weight the particles `p`, modify the field `p.logweights`. You can resample the particles using `resample!(p)`, where each particles is resampled with a probability proportional to its weight.
-"""
-struct WeightedParticles{T,N} <: AbstractParticles{T,N}
-    particles::Vector{T}
-    # weights::Vector{T}
-    logweights::Vector{T}
-end
-function WeightedParticles{T,N}(v::AbstractVector) where {T,N}
-    # weights = fill(1/N, N)
-    logweights = fill(-log(N), N)
-    WeightedParticles{T,N}(v,logweights)
-end
-
-
-
-const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
-const MvWParticles = Vector{<:WeightedParticles}
 
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
@@ -94,14 +63,11 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
     end
 end
 
-@inline maybe_particles(x) = x
-@inline maybe_particles(p::AbstractParticles) = p.particles
-@inline maybe_logweights(x) = 0
-@inline maybe_logweights(p::WeightedParticles) = p.logweights
+
 # Two-argument functions
 foreach(register_primitive_multi, (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum))
 # One-argument functions
-foreach(register_primitive_single,[*,+,-,/,
+foreach(register_primitive_single, [*,+,-,/,
 exp,exp2,exp10,expm1,
 log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
