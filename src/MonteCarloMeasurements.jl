@@ -3,7 +3,7 @@ module MonteCarloMeasurements
 const DEFAUL_NUM_PARTICLES = 500
 const DEFAUL_STATIC_NUM_PARTICLES = 100
 
-export Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!, @bymap, @bypmap
+export Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!, @bymap, @bypmap
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -23,6 +23,8 @@ using Lazy: @forward
 
 using Distributions, StatsBase
 
+include("types.jl")
+include("register_primitive.jl")
 include("sampling.jl")
 include("particles.jl")
 include("sigmapoints.jl")

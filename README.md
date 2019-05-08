@@ -261,18 +261,22 @@ ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
 # Differential Equations
 [The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well.
 
+# Limitations
+One major limitation is functions that contains control flow, where the branch is decided by an uncertain value. Consider the following case
+```julia
+function negsquare(x)
+    x > 0 ? x^2 : -x^2
+end
+p = 0 ± 1
+```
+Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` will use the mean of the particles to decide the branch and execute this branch for all particles. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below. Common such functions from `Base`, such as `max/min` etc. are already registered.
 
 # Overloading a new function
-If a method for `Particles` is not implemented for your function `yourfunc` in module `Mod`, the pattern looks like this
+If a method for `Particles` is not implemented for your function `yourfunc`, the pattern looks like this
 ```julia
-f = nameof(yourfunc)
-for ParticlesType in (:Particles, :StaticParticles)
-  @eval function (Mod.$f)(p::$ParticlesType)
-      $ParticlesType(map($f, p.particles))
-  end
-end
+register_primitive(yourfunc)
 ```
-This defines the one-argument method for both `Particles` and `StaticParticles`. For two-argument methods, see [the source](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/src/particles.jl#L80). If the function is from base or stdlib, you can just add it to the appropriate list in the source and submit a PR :)
+This defines both a one-argument method and a multi-arg methodfor both `Particles` and `StaticParticles`. If you only want to define one of these, see `register_primitive_single`/`register_primitive_multi`. If the function is from base or stdlib, you can just add it to the appropriate list in the source and submit a PR :)
 
 ## ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
