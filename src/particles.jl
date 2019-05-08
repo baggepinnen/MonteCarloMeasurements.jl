@@ -330,7 +330,7 @@ function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}) where {F,T<:AbstractP
         f(getindex.(p,i))
     end
     out = similar(p)
-    map(1:length(p)) do i
+    for i = 1:length(p)
         out[i] = T(getindex.(individuals,i))
     end
     reshape(out, size(p))

@@ -1,5 +1,5 @@
 const ConcreteFloat = Union{Float64,Float32,Float16,BigFloat}
-const ConcreteInt = Union{Int8,Int16,Int32,Int64,Int128,BigInt}
+const ConcreteInt = Union{Bool,Int8,Int16,Int32,Int64,Int128,BigInt}
 
 abstract type AbstractParticles{T,N} <: Real end
 struct Particles{T,N} <: AbstractParticles{T,N}
