@@ -51,3 +51,5 @@ for params = (params, res.minimizer)
 end
 hline!([Msc], l=(:black, :dash), subplot=2)
 fig
+
+# Other things that could potentially be relevant is adding a probabilistic constraint on the time-domain output, such as the probability of having the step response go above 1.5 must be < 0.05 etc.
