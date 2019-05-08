@@ -65,7 +65,8 @@ end
 
 
 # Two-argument functions
-foreach(register_primitive_multi, (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum))
+foreach(register_primitive_multi, [+,-,*,/,//,^,
+max,min,minmax,mod,mod1,atan,atand,add_sum,hypot])
 # One-argument functions
 foreach(register_primitive_single, [*,+,-,/,
 exp,exp2,exp10,expm1,
@@ -268,10 +269,28 @@ meanvar(p::AbstractParticles) = var(p)/length(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
-Base.:<(a::Real,p::AbstractParticles) = a < mean(p)
-Base.:<(p::AbstractParticles,a::Real) = mean(p) < a
-Base.:<(p::AbstractParticles, a::AbstractParticles, lim=2) = mean(p) < mean(a)
-Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}, lim::Real=2) where {T,N} = mean(p) <= mean(a)
+
+
+_comparioson_operator() = USE_UNSAFE_COMPARIONS[] || error("Comparison operators are not well defined for uncertain values and are currently turned off. Call `unsafe_comparisons(true)` to enable comparison operators for particles using the current reduction function $(COMPARISON_FUNCTION[]). Change this function using `set_comparison_function(f)`.")
+
+function Base.:<(a::Real,p::AbstractParticles)
+    _comparioson_operator()
+    a < COMPARISON_FUNCTION[](p)
+end
+function Base.:<(p::AbstractParticles,a::Real)
+    _comparioson_operator()
+    COMPARISON_FUNCTION[](p) < a
+end
+function Base.:<(p::AbstractParticles, a::AbstractParticles)
+    _comparioson_operator()
+    COMPARISON_FUNCTION[](p) < COMPARISON_FUNCTION[](a)
+end
+function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where {T,N}
+    _comparioson_operator()
+    COMPARISON_FUNCTION[](p) <= COMPARISON_FUNCTION[](a)
+end
+
+
 
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
@@ -320,6 +339,27 @@ end
 
 
 Base.sqrt(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function(sqrt, z)
+
+function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
+    are = real(a); aim = imag(a); bre = real(b); bim = imag(b)
+    if mean(abs(bre)) <= mean(abs(bim))
+        if isinf(bre) && isinf(bim)
+            r = sign(bre)/sign(bim)
+        else
+            r = bre / bim
+        end
+        den = bim + r*bre
+        Complex((are*r + aim)/den, (aim*r - are)/den)
+    else
+        if isinf(bre) && isinf(bim)
+            r = sign(bim)/sign(bre)
+        else
+            r = bim / bre
+        end
+        den = bre + r*bim
+        Complex((are + aim*r)/den, (aim - are*r)/den)
+    end
+end
 
 """
 ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})

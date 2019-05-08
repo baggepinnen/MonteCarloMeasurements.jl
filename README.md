@@ -40,9 +40,6 @@ julia> mean(p)
 julia> f = x -> 2x + 10
 #104 (generic function with 1 method)
 
-julia> 9.6 < f(p) < 10.4 # Comparisons are using the mean
-true
-
 julia> f(p) ≈ 10 # ≈ determines if f(p) is within 2σ of 10
 true
 
@@ -191,7 +188,7 @@ We do not provide functionality for [latin hypercube sampling](https://en.wikipe
 using MonteCarloMeasurements, LatinHypercubeSampling
 ndims  = 2
 N      = 100  # Number of particles
-ngen   = 1000 # How long to run optimization
+ngen   = 2000 # How long to run optimization
 X, fit = LHCoptim(N,ndims,ngen)
 m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
 particle_matrix = transform_moments(X,m,Σ)
@@ -209,7 +206,7 @@ julia> cov(p)
  1.0  4.0
 ```
 Latin hypercube sampling creates an approximately uniform sample in `ndims` dimensions. The applied transformation gives the particles the desired mean and covariance.
-*Caveat:* Unfortunately, endowing the sampled latin hypercube with a desired *non-diagonal* covariance matrix destroys the latin properties for all dimensions but the first. This does not happen for diagonal covariance matrices.
+*Caveat:* Unfortunately, endowing the sampled latin hypercube with a desired *non-diagonal* covariance matrix destroys the latin properties for all dimensions but the first. This is less of a problem for diagonal covariance matrices provided that the latin optimizer was run sufficiently long.
 
  The statistics of the sample can be visualized:
 ```julia
@@ -269,7 +266,10 @@ function negsquare(x)
 end
 p = 0 ± 1
 ```
-Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` will use the mean of the particles to decide the branch and execute this branch for all particles. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below. Common such functions from `Base`, such as `max/min` etc. are already registered.
+Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` is not defined for uncertain values. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below. Particles will then be propagated one by one through the entire function `negsquare`. Common such functions from `Base`, such as `max/min` etc. are already registered.
+
+Sometimes, defining a primitive function can be difficult, such as when the uncertain parameters are baked into some object. In such cases, we can call the function `unsafe_comparisons(true)`, which defines all comparison operators for uncertain values to compare using the `mean`. Note however that this enabling this is somewhat *unsafe* as this corresponds to a fallback to linear uncertainty propagation, why it's turned off by default. We also provide the macro
+`@unsafe_comparisons ex` to enable mean comparisons only locally in the expression `ex`.
 
 # Overloading a new function
 If a method for `Particles` is not implemented for your function `yourfunc`, the pattern looks like this
@@ -339,18 +339,18 @@ t1 = @belapsed bode($G,$w)
    ⋮
 ```
 
-| Benchmark | Results |
-| ------------------------|-----------|
-| Time with 500 particles | 11.5937ms |
-| Time with regular floating point | 0.3456ms |
-| Time with Measurements | 0.5794ms |
-| Time with 100 static particles | 1.8212ms |
-| Time with static sigmapoints | 0.7252ms |
-| 500×floating point time | 172.7780ms |
-| Speedup particles vs. Manual | 14.9x |
-| Slowdown particles vs. Measurements | 20.0x |
-| Slowdown static vs. Measurements | 3.1x |
-| Slowdown sigma vs. Measurements | 1.3x |
+| Benchmark | Result |
+|-----------|--------|
+| Time with 500 particles |           2.6953ms |
+| Time with regular floating point |  0.1174ms |
+| Time with Measurements |            0.1957ms |
+| Time with 100 static part. |        0.5641ms |
+| Time with static sigmapoints. |     0.2371ms |
+| 500×floating point time |          58.6930ms |
+| Speedup factor vs. Manual |        21.8x |
+| Slowdown factor vs. Measurements | 13.8x |
+| Slowdown static vs. Measurements |  2.9x |
+| Slowdown sigma vs. Measurements |   1.2x|
 
 ## Comparison to nonlinear filtering
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.

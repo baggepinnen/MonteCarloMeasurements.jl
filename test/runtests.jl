@@ -48,12 +48,7 @@ Random.seed!(0)
                 @test var(p) ≈ 1 atol=0.2
                 @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
                 @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
-                @test p <= p
-                @test p >= p
-                @test !(p < p)
-                @test !(p > p)
-                @test (p < 1+p)
-                @test (p+1 > p)
+
                 @test !(p ≲ p)
                 @test !(p ≳ p)
                 @test (p ≲ 2.1)
@@ -76,10 +71,29 @@ Random.seed!(0)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
 
+                @testset "mean comparisons" begin
+                    @test_throws ErrorException p<p
+                    @test_throws ErrorException p>p
+                    @test_throws ErrorException p>=p
+                    @test_throws ErrorException p<=p
+                    MonteCarloMeasurements.@unsafe_comparisons begin
+                        @test p <= p
+                        @test p >= p
+                        @test !(p < p)
+                        @test !(p > p)
+                        @test (p < 1+p)
+                        @test (p+1 > p)
+                    end
+                    @test_throws ErrorException p<p
+                    @test_throws ErrorException p>p
+                    @test_throws ErrorException p>=p
+                    @test_throws ErrorException p<=p
+                end
+
 
                 f = x -> 2x + 10
                 @test 9.6 < mean(f(p)) < 10.4
-                @test 9.6 < f(p) < 10.4
+                # @test 9.6 < f(p) < 10.4
                 @test f(p) ≈ 10
                 @test !(f(p) ≲ 11)
                 @test f(p) ≲ 15
@@ -105,7 +119,7 @@ Random.seed!(0)
                 @test all(A*b .≈ [0,0,0])
 
                 @test all(A\b .≈ zeros(3))
-                @test_nowarn qr(A)
+                @test_nowarn @unsafe_comparisons qr(A)
                 @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
                 pn = Particles(100, Normal(2,1), systematic=false)
                 @test pn ≈ 2
@@ -272,7 +286,7 @@ Random.seed!(0)
         @test eps(p) == eps(Float64)
         A = randn(2,2)
         B = A .± 0
-        @test sum(abs, exp(A) .- exp(B)) < 1e-9
+        @test sum(mean, exp(A) .- exp(B)) < 1e-9
 
         @test intersect(p,p) == union(p,p)
         @test length(intersect(p, 1+p)) < 2length(p)
@@ -411,7 +425,7 @@ Random.seed!(0)
 
         h(x,y) = x .* y'
         Base.Cartesian.@nextract 4 p d-> 0±1
-        @test_broken h([p_1,p_2], [p_3,p_4]) ≈ @bymap  h([p_1,p_2], [p_3,p_4])
+        @test_broken h([p_1,p_2], [p_3,p_4]) ≈ @bymap h([p_1,p_2], [p_3,p_4])
         @test_broken h([p_1,p_2], [p_3,p_4]) ≈ @bypmap h([p_1,p_2], [p_3,p_4])
 
         h2(x,y) = x .* y

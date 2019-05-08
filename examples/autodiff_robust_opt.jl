@@ -25,7 +25,7 @@ Base.:(*)(p::StaticParticles, d::ForwardDiff.Dual) = StaticParticles(p.particles
 function solvemany()
     algos = [NelderMead(), SimulatedAnnealing(), BFGS(), Newton()]
     map(algos) do algo
-        res = optimize(cost, params, algo, autodiff=:forward)
+        res = Optim.optimize(cost, params, algo, autodiff=:forward)
         m = res.minimizer
         cost(m)
     end
