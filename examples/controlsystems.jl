@@ -3,6 +3,7 @@
 using ControlSystems, MonteCarloMeasurements, StatsPlots
 using Test, LinearAlgebra, Statistics
 import MonteCarloMeasurements: ±,⊗
+unsafe_comparisons(true, verbose=false) # This file requires mean comparisons for displaying transfer functions in text form as well as for discretizing a LTIsystem
 default(size=(2000,1200))
 
 p = 1 ± 0.1
@@ -47,7 +48,7 @@ hline!([0], l=(:dash, :black), primary=false)
 
 # ## Time Simulations
 # We start by sampling the system to obtain a discrete-time model.
-Pd = c2d(G, 0.1)
+@unsafe_comparisons Pd = c2d(G, 0.1)
 # We then simulate an plot the results
 y,t,x = step(Pd, 20)
 errorbarplot(t,y[:], 0.00, layout=3, subplot=1, alpha=0.5)
@@ -102,47 +103,48 @@ errorbarplot!(w,mag,0.01; scales..., subplot=3, lab="wtls")
 plot!(w,magG, subplot=3)
 
 ## bode benchmark =========================================
-using BenchmarkTools, Printf #src
+using BenchmarkTools, Printf
 using MonteCarloMeasurements: ∓
-p = 1 ± 0.1 #src
-ζ = 0.3 ± 0.1 #src
-ω = 1 ± 0.1 #src
-G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-t1 = @belapsed bode($G,$w) #src
-p = 1 #src
-ζ = 0.3 #src
-ω = 1 #src
-G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-t2 = @belapsed bode($G,$w) #src
+p = 1 ± 0.1
+ζ = 0.3 ± 0.1
+ω = 1 ± 0.1
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+t1 = @belapsed bode($G,$w)
+p = 1
+ζ = 0.3
+ω = 1
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+t2 = @belapsed bode($G,$w)
 using Measurements
-p = Measurements.:(±)(1, 0.1) #src
-ζ = Measurements.:(±)(0.3, 0.1) #src
-ω = Measurements.:(±)(1, 0.1) #src
-G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-t3 = @belapsed bode($G,$w) #src
+p = Measurements.:(±)(1, 0.1)
+ζ = Measurements.:(±)(0.3, 0.1)
+ω = Measurements.:(±)(1, 0.1)
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+t3 = @belapsed bode($G,$w)
 
-p = 1 ∓ 0.1 #src
-ζ = 0.3 ∓ 0.1 #src
-ω = 1 ∓ 0.1 #src
-G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-t4 = @belapsed bode($G,$w) #src
+p = 1 ∓ 0.1
+ζ = 0.3 ∓ 0.1
+ω = 1 ∓ 0.1
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+t4 = @belapsed bode($G,$w)
 
-p = StaticParticles(sigmapoints(1, 0.1^2))[] #src
-ζ = StaticParticles(sigmapoints(0.3, 0.1^2))[] #src
-ω = StaticParticles(sigmapoints(1, 0.1^2))[] #src
-G = tf([p*ω], [1, 2ζ*ω, ω^2]) #src
-t5 = @belapsed bode($G,$w) #src
-#src
+p = StaticParticles(sigmapoints(1, 0.1^2))[]
+ζ = StaticParticles(sigmapoints(0.3, 0.1^2))[]
+ω = StaticParticles(sigmapoints(1, 0.1^2))[]
+G = tf([p*ω], [1, 2ζ*ω, ω^2])
+t5 = @belapsed bode($G,$w)
 ##
 @printf("
-Time with 500 particles: %16.4fms
-Time with regular floating point: %7.4fms
-Time with Measurements: %17.4fms
-Time with 100 static part.: %13.4fms
-Time with static sigmapoints.: %10.4fms
-500×floating point time: %16.4fms
-Speedup factor vs. Manual: %11.1fx
-Slowdown factor vs. Measurements: %4.1fx
-Slowdown static vs. Measurements: %4.1fx
-Slowdown sigma vs. Measurements: %5.1fx\n",
+| Benchmark | Result |
+|-----------|--------|
+| Time with 500 particles | %16.4fms |
+| Time with regular floating point | %7.4fms |
+| Time with Measurements | %17.4fms |
+| Time with 100 static part. | %13.4fms |
+| Time with static sigmapoints. | %10.4fms |
+| 500×floating point time | %16.4fms |
+| Speedup factor vs. Manual | %11.1fx |
+| Slowdown factor vs. Measurements | %4.1fx |
+| Slowdown static vs. Measurements | %4.1fx |
+| Slowdown sigma vs. Measurements | %5.1fx|\n",
 1000*t1, 1000*t2, 1000*t3, 1000*t4, 1000*t5, 1000*500t2, 500t2/t1, t1/t3, t4/t3, t5/t3) #src

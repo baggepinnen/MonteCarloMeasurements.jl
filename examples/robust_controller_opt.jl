@@ -18,7 +18,7 @@ function cost(params)
     S = 1/(1 + P*C)   # Sensitivity function
     local Gd
     try
-        Gd = c2d(G,0.1) # Discretize the system. This might fail for some parameters, so we catch these cases and return a high value
+        @unsafe_comparisons Gd = c2d(G,0.1) # Discretize the system. This might fail for some parameters, so we catch these cases and return a high value
     catch
         return 1000
     end
@@ -42,7 +42,7 @@ for params = (params, res.minimizer)
     C  = pid(kp =kp,ki =ki,kd =kd)
     G  = feedback(P*C)
     S  = 1/(1 + P*C)
-    Gd = c2d(G,0.1)
+    @unsafe_comparisons Gd = c2d(G,0.1)
     y,t,_ = step(Gd,15)
     y     = y[:]
     mag   = bode(S, w)[1][:]
