@@ -71,12 +71,12 @@ Random.seed!(0)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
 
-                @testset "mean comparisons" begin
+                @testset "unsafe comparisons" begin
                     @test_throws ErrorException p<p
                     @test_throws ErrorException p>p
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
-                    MonteCarloMeasurements.@unsafe_comparisons begin
+                    @unsafe_comparisons begin
                         @test p <= p
                         @test p >= p
                         @test !(p < p)
@@ -86,8 +86,15 @@ Random.seed!(0)
                     end
                     @test_throws ErrorException p<p
                     @test_throws ErrorException p>p
+                    @test_throws ErrorException @unsafe_comparisons error("") # Should still be safe after error
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
+                    @unsafe_comparisons testvar = 2
+                    @test testvar == 2
+                    @unsafe_comparisons testvar1,testvar2 = 1,2
+                    @test (testvar1,testvar2) == (1,2)
+                    # TODO, test more complicated RHS
+                    # TODO, test changing comparison function
                 end
 
 
