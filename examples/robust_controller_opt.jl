@@ -6,9 +6,9 @@ p = 1 ∓ 0.1
 ζ = 0.3 ∓ 0.05
 ω = 1 ∓ 0.1
 P = tf([p*ω], [1, 2ζ*ω, ω^2])
-w = exp10.(LinRange(-2,2,100))
+w = exp10.(LinRange(-2,3,100))
 params = [1,0.1,0.1]
-Msc = 1.5 # Constrint on Ms
+Msc = 1.5 # Constraint on Ms
 
 # We now define the cost function, which includes the constraint on the maximum sensitivity function
 function cost(params)
@@ -18,7 +18,7 @@ function cost(params)
     S = 1/(1 + P*C)   # Sensitivity function
     local Gd
     try
-        @unsafe_comparisons Gd = c2d(G,0.1) # Discretize the system. This might fail for some parameters, so we catch these cases and return a high value
+        @unsafe Gd = c2d(G,0.1) # Discretize the system. This might fail for some parameters, so we catch these cases and return a high value
     catch
         return 1000
     end
@@ -34,7 +34,8 @@ end
 # We are now ready to test the cost function. This will take very long time to compile the first time it's called since we use StaticParticles (~60s on my machine), but should be very fast after that (~6ms)
 @time cost(params)
 #
-res = optimize(cost, params, NelderMead(), Optim.Options(iterations=200, show_trace=false));
+res = Optim.optimize(cost, params, SimulatedAnnealing(), Optim.Options(iterations=200, show_trace=false));
+println("Final cost: ", res.minimum)
 # We can now perform the same computations as above to visualize the found controller
 fig = plot(layout=2)
 for params = (params, res.minimizer)
@@ -42,7 +43,7 @@ for params = (params, res.minimizer)
     C  = pid(kp =kp,ki =ki,kd =kd)
     G  = feedback(P*C)
     S  = 1/(1 + P*C)
-    @unsafe_comparisons Gd = c2d(G,0.1)
+    @unsafe Gd = c2d(G,0.1)
     y,t,_ = step(Gd,15)
     y     = y[:]
     mag   = bode(S, w)[1][:]
