@@ -21,7 +21,7 @@ Toggle the use of a comparison function without warning. By default `mean` is us
 function unsafe_comparisons(onoff=true; verbose=true)
     USE_UNSAFE_COMPARIONS[] = onoff
     if onoff && verbose
-        @info "Unsafe comparisons using the function $(COMPARISON_FUNCTION[]) has been enabled globally. Use `@unsafe_comparisons` to enable in a local expression only or `unsafe_comparisons(false)` to turn off unsafe comparisons"
+        @info "Unsafe comparisons using the function $(COMPARISON_FUNCTION[]) has been enabled globally. Use `@unsafe` to enable in a local expression only or `unsafe_comparisons(false)` to turn off unsafe comparisons"
     end
 end
 """
@@ -34,7 +34,11 @@ function set_comparison_function(f)
     COMPARISON_FUNCTION[] = f
 end
 
-macro unsafe_comparisons(ex)
+"""
+    @unsafe expression
+Activates unsafe comparisons for the provided expression only. The expression is surrounded by a try/catch block to robustly restore unsafe comparisons in case of exception.
+"""
+macro unsafe(ex)
     ex2 = if @capture(ex, assigned_vars__ = y_)
         if length(assigned_vars) == 1
             esc(assigned_vars[1])
@@ -66,7 +70,7 @@ export mean, std, cov, var, quantile, median
 # Distributions reexport
 export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit, logpdf
 
-export unsafe_comparisons, @unsafe_comparisons, set_comparison_function
+export unsafe_comparisons, @unsafe, set_comparison_function
 
 
 

@@ -76,7 +76,7 @@ Random.seed!(0)
                     @test_throws ErrorException p>p
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
-                    @unsafe_comparisons begin
+                    @unsafe begin
                         @test p <= p
                         @test p >= p
                         @test !(p < p)
@@ -86,15 +86,22 @@ Random.seed!(0)
                     end
                     @test_throws ErrorException p<p
                     @test_throws ErrorException p>p
-                    @test_throws ErrorException @unsafe_comparisons error("") # Should still be safe after error
+                    @test_throws ErrorException @unsafe error("") # Should still be safe after error
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
-                    @unsafe_comparisons testvar = 2
-                    @test testvar == 2
-                    @unsafe_comparisons testvar1,testvar2 = 1,2
-                    @test (testvar1,testvar2) == (1,2)
-                    # TODO, test more complicated RHS
-                    # TODO, test changing comparison function
+                    @unsafe tv = 2
+                    @test tv == 2
+                    @unsafe tv1,tv2 = 1,2
+                    @test (tv1,tv2) == (1,2)
+                    @unsafe tv3,tv4 = range(1, stop=3, length=5), range(1, stop=3, length=5)
+                    @test (tv3,tv4) == (range(1, stop=3, length=5),range(1, stop=3, length=5))
+                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == mean
+                    set_comparison_function(median)
+                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == median
+                    cp = PT(10)
+                    cmp = @unsafe p < cp
+                    @test cmp == (median(p) < median(cp))
+                    set_comparison_function(mean)
                 end
 
 
@@ -126,7 +133,7 @@ Random.seed!(0)
                 @test all(A*b .≈ [0,0,0])
 
                 @test all(A\b .≈ zeros(3))
-                @test_nowarn @unsafe_comparisons qr(A)
+                @test_nowarn @unsafe qr(A)
                 @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
                 pn = Particles(100, Normal(2,1), systematic=false)
                 @test pn ≈ 2
@@ -198,10 +205,13 @@ Random.seed!(0)
     @testset "transform_moments" begin
         m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
         C = randn(2,2)
-        C = cholesky(C'C).L
+        C = cholesky(C'C + 5I).L
         particles = transform_moments((C*randn(2,500))', m, Σ)
         @test mean(particles, dims=1)[:] ≈ m
         @test cov(particles) ≈ Σ
+        particles = transform_moments((C*randn(2,500))', m, Σ, preserve_latin=true)
+        @test mean(particles, dims=1)[:] ≈ m
+        @test Diagonal(cov(particles)) ≈ Diagonal(Σ) atol=2
     end
 
     @time @testset "gradient" begin

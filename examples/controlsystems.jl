@@ -48,7 +48,7 @@ hline!([0], l=(:dash, :black), primary=false)
 
 # ## Time Simulations
 # We start by sampling the system to obtain a discrete-time model.
-@unsafe_comparisons Pd = c2d(G, 0.1)
+@unsafe Pd = c2d(G, 0.1)
 # We then simulate an plot the results
 y,t,x = step(Pd, 20)
 errorbarplot(t,y[:], 0.00, layout=3, subplot=1, alpha=0.5)

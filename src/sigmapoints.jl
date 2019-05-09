@@ -33,7 +33,7 @@ sigmapoints(d::MvNormal) = sigmapoints(mean(d), Matrix(cov(d)))
 
 
 """
-    Y = transform_moments(X::Matrix, m, Σ)
+    Y = transform_moments(X::Matrix, m, Σ; preserve_latin=false)
 Transforms `X` such that it get the specified mean and covariance.
 
 ```julia
@@ -43,9 +43,15 @@ julia> cov(particles) ≈ Σ
 true
 ```
 **Note**, if `X` is a latin hypercube and `Σ` is non-diagonal, then the latin property is destroyed for all dimensions but the first.
+We provide a method `preserve_latin=true`) which absolutely preserves the latin property in all dimensions, but if you use this, the covariance of the sample will be slightly wrong
 """
-function transform_moments(X,m,Σ)
+function transform_moments(X,m,Σ; preserve_latin=false)
     X  = X .- mean(X,dims=1) # Normalize the sample
-    xl = cholesky(cov(X)).L
+    if preserve_latin
+        xl = Diagonal(std(X,dims=1)[:])
+        # xl = cholesky(Diagonal(var(X,dims=1)[:])).L
+    else
+        xl = cholesky(cov(X)).L
+    end
     Matrix((m .+ (cholesky(Σ).L/xl)*X')')
 end

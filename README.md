@@ -179,7 +179,7 @@ true
 julia> mean(p) ≈ m
 true
 ```
-`sigmapoints` also accepts a `Normal/MvNormal` object as input.
+`sigmapoints` also accepts a `Normal/MvNormal` object as input. *Caveat:* If you are creating several one-dimensional uncertain values using sigmaopints independently, they will be strongly correlated. Use the multidimensional constructor!
 
 # Latin hypercube sampling
 We do not provide functionality for [latin hypercube sampling](https://en.wikipedia.org/wiki/Latin_hypercube_sampling), rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.
@@ -269,7 +269,7 @@ p = 0 ± 1
 Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` is not defined for uncertain values. To circumvent this, define `negsquare` as a primitive using `register_primitive` described below. Particles will then be propagated one by one through the entire function `negsquare`. Common such functions from `Base`, such as `max/min` etc. are already registered.
 
 Sometimes, defining a primitive function can be difficult, such as when the uncertain parameters are baked into some object. In such cases, we can call the function `unsafe_comparisons(true)`, which defines all comparison operators for uncertain values to compare using the `mean`. Note however that this enabling this is somewhat *unsafe* as this corresponds to a fallback to linear uncertainty propagation, why it's turned off by default. We also provide the macro
-`@unsafe_comparisons ex` to enable mean comparisons only locally in the expression `ex`.
+`@unsafe ex` to enable mean comparisons only locally in the expression `ex`.
 
 # Overloading a new function
 If a method for `Particles` is not implemented for your function `yourfunc`, the pattern looks like this
