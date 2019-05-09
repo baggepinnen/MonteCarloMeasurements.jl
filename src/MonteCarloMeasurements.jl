@@ -33,22 +33,27 @@ Toggle the use of a comparison Function without warning using the Function `unsa
 function set_comparison_function(f)
     COMPARISON_FUNCTION[] = f
 end
-# TODO: have to figure out if new bindings are created in ex and if so, declare them local outside the try block
-using Base.Cartesian: @nexprs
+
 macro unsafe_comparisons(ex)
-    @capture(ex, assigned_vars__ = y_)
-    n = length(assigned_vars)
+    ex2 = if @capture(ex, assigned_vars__ = y_)
+        if length(assigned_vars) == 1
+            esc(assigned_vars[1])
+        else
+            esc.(assigned_vars[1].args)
+        end
+    else
+        :(res)
+    end
     quote
         previous_state = USE_UNSAFE_COMPARIONS[]
         unsafe_comparisons(true, verbose=false)
-        @nexprs $n j->(local $(esc(assigned_vars[j])))
         local res
         try
             res = ($(esc(ex)))
         finally
             unsafe_comparisons(previous_state, verbose=false)
         end
-        res
+        $ex2 = res
     end
 end
 
