@@ -86,6 +86,36 @@ for PT in (:Particles, :StaticParticles)
             v = fill(n,N)
             $PT{T,N}(v)
         end
+
+        """
+            ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
+        Applies  `f : ℝⁿ → ℝⁿ` to an array of particles.
+        """
+        function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
+            individuals = map(1:length(p[1])) do i
+                f(getindex.(p,i))
+            end
+            RT = promote_type(T,eltype(eltype(individuals)))
+            PRT = $PT{RT,N}
+            out = similar(p, PRT)
+            for i = 1:length(p)
+                out[i] = PRT(getindex.(individuals,i))
+            end
+            reshape(out, size(p))
+        end
+
+        function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
+            individuals = map(1:length(p[1])) do i
+                f(getindex.(p,i), getindex.(p2,i))
+            end
+            RT = promote_type(T,eltype(eltype(individuals)))
+            PRT = $PT{RT,N}
+            out = similar(p, PRT)
+            for i = 1:length(p)
+                out[i] = PRT(getindex.(individuals,i))
+            end
+            reshape(out, size(p))
+        end
     end
     @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
 end
@@ -229,6 +259,7 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
     end
 
 
+
 end
 
 Base.length(p::AbstractParticles{T,N}) where {T,N} = N
@@ -365,32 +396,24 @@ function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     end
 end
 
-"""
-ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
-Applies  `f : ℝⁿ → ℝⁿ` to an array of particles.
-"""
-function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}) where {F,T<:AbstractParticles}
-    individuals = map(1:length(p[1])) do i
-        f(getindex.(p,i))
-    end
-    out = similar(p)
-    for i = 1:length(p)
-        out[i] = T(getindex.(individuals,i))
-    end
-    reshape(out, size(p))
-end
 
-function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}, p2::AbstractArray{T}) where {F,T<:AbstractParticles}
-    individuals = map(1:length(p[1])) do i
-        f(getindex.(p,i), getindex.(p2,i))
-    end
-    out = similar(p)
-    for i = 1:length(p)
-        out[i] = T(getindex.(individuals,i))
-    end
-    reshape(out, size(p))
-end
 
 
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
+
+
+# OBS: defining this was a very bad idea, eigvals jump around and get confused with each other etc.
+# function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}) where {T,N} # Special case to propte types differently
+#     individuals = map(1:length(p[1])) do i
+#         eigvals(getindex.(p,i))
+#     end
+#
+#     PRT = Complex{$PT{T,N}}
+#     out = Vector{PRT}(undef, length(individuals[1]))
+#     for i = eachindex(out)
+#         c = getindex.(individuals,i)
+#         out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
+#     end
+#     out
+# end

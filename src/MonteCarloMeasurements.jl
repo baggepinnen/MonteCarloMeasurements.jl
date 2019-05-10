@@ -21,7 +21,7 @@ Toggle the use of a comparison function without warning. By default `mean` is us
 function unsafe_comparisons(onoff=true; verbose=true)
     USE_UNSAFE_COMPARIONS[] = onoff
     if onoff && verbose
-        @info "Unsafe comparisons using the function $(COMPARISON_FUNCTION[]) has been enabled globally. Use `@unsafe` to enable in a local expression only or `unsafe_comparisons(false)` to turn off unsafe comparisons"
+        @info "Unsafe comparisons using the function `$(COMPARISON_FUNCTION[])` has been enabled globally. Use `@unsafe` to enable in a local expression only or `unsafe_comparisons(false)` to turn off unsafe comparisons"
     end
 end
 """
