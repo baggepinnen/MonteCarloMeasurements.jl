@@ -308,6 +308,7 @@ Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
 Base.isinteger(p::AbstractParticles) = all(isinteger, p.particles)
 Base.iszero(p::AbstractParticles) = all(iszero, p.particles)
+Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 
 
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
