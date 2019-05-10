@@ -305,6 +305,9 @@ Random.seed!(0)
         B = A .± 0
         @test sum(mean, exp(A) .- exp(B)) < 1e-9
 
+        pp = [1. 0; 0 1] .± 0.0
+        @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])
+
         @test intersect(p,p) == union(p,p)
         @test length(intersect(p, 1+p)) < 2length(p)
         @test length(union(p, 1+p)) == 2length(p)

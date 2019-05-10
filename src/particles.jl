@@ -380,5 +380,17 @@ function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}) where {F,T<:AbstractP
     reshape(out, size(p))
 end
 
+function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{T}, p2::AbstractArray{T}) where {F,T<:AbstractParticles}
+    individuals = map(1:length(p[1])) do i
+        f(getindex.(p,i), getindex.(p2,i))
+    end
+    out = similar(p)
+    for i = 1:length(p)
+        out[i] = T(getindex.(individuals,i))
+    end
+    reshape(out, size(p))
+end
+
 
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
+LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
