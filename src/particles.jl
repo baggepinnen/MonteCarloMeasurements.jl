@@ -50,9 +50,17 @@ end
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 shortform(p::WeightedParticles) = "WPart"
+function to_num_str(p)
+    s = std(p)
+    if s < eps(p)
+        string(round(mean(p), sigdigits=3))
+    else
+        string(round(mean(p), sigdigits=3), " ± ", round(s, sigdigits=2))
+    end
+end
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     sPT = shortform(p)
-    print(io, "$(sPT){$N}(", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
+    print(io, "$(sPT)$N(", to_num_str(p),")")
 end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
@@ -69,7 +77,7 @@ end
 
 # Two-argument functions
 foreach(register_primitive_multi, [+,-,*,/,//,^,
-max,min,minmax,mod,mod1,atan,atand,add_sum,hypot])
+max,min,mod,mod1,atan,atand,add_sum,hypot])
 # One-argument functions
 foreach(register_primitive_single, [*,+,-,/,
 exp,exp2,exp10,expm1,
@@ -131,7 +139,7 @@ for PT in (:WeightedParticles,)
         end
     end
     # Two-argument functions
-    for ff in (+,-,*,/,//,^, max,min,minmax,mod,mod1,atan,add_sum)
+    for ff in (+,-,*,/,//,^, max,min,mod,mod1,atan,add_sum)
         f = nameof(ff)
         @eval begin
             function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
@@ -334,6 +342,7 @@ Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 
+Base.minmax(x::AbstractParticles,y::AbstractParticles) = (min(x,y), max(x,y))
 
 Base.:!(p::AbstractParticles) = all(p.particles .== 0)
 
