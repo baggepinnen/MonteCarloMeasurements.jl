@@ -52,7 +52,7 @@ shortform(p::StaticParticles) = "SPart"
 shortform(p::WeightedParticles) = "WPart"
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     sPT = shortform(p)
-    print(io, "($(sPT){$N}: ", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
+    print(io, "$(sPT){$N}(", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
 end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
