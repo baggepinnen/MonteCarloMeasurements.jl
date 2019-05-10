@@ -47,12 +47,15 @@ function print_functions_to_extend()
         end
     end
 end
+shortform(p::Particles) = "Part"
+shortform(p::StaticParticles) = "SPart"
+shortform(p::WeightedParticles) = "WPart"
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
-    sPT = string(typeof(p).name)
-    print(io, "(", N, " $sPT: ", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
+    sPT = shortform(p)
+    print(io, "($(sPT){$N}: ", round(mean(p), sigdigits=3), " ± ", round(std(p), sigdigits=3),")")
 end
 # function Base.show(io::IO, p::MvParticles)
-#     sPT = string(typeof(p).name)
+#     sPT = shortform(p)
 #     print(io, "(", N, " $sPT with mean ", round.(mean(p), sigdigits=3), " and std ", round.(sqrt.(diag(cov(p))), sigdigits=3),")")
 # end
 for mime in (MIME"text/x-tex", MIME"text/x-latex")
