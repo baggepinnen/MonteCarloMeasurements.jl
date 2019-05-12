@@ -58,9 +58,13 @@ function to_num_str(p)
         string(round(mean(p), sigdigits=3), " ± ", round(s, sigdigits=2))
     end
 end
-function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
+function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
     sPT = shortform(p)
     print(io, "$(sPT)$N(", to_num_str(p),")")
+end
+
+function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
+    print(io, to_num_str(p))
 end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
@@ -68,9 +72,7 @@ end
 # end
 for mime in (MIME"text/x-tex", MIME"text/x-latex")
     @eval function Base.show(io::IO, ::$mime, p::AbstractParticles)
-        print(io, "\$")
-        show(io, p)
-        print("\$")
+        print(io, "\$"); show(io, p); print("\$")
     end
 end
 
