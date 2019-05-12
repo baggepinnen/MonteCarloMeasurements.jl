@@ -269,9 +269,14 @@ Random.seed!(0)
         @test p[1] == p.particles[1]
         @test_nowarn display(p)
         @test_nowarn println(p)
-        @test_nowarn println(stdout, MIME"text/x-latex"(), p)
+        @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
         @test_nowarn println(0p)
-        @test_nowarn println(stdout, MIME"text/x-latex"(), 0p)
+        @test_nowarn show(stdout, MIME"text/x-latex"(), 0p); println()
+
+        @test_nowarn display([p, p])
+        @test_nowarn println([p, p])
+        @test_nowarn println([p, 0p])
+
         @test Particles{Float64,500}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
