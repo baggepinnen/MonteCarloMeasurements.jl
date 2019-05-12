@@ -36,6 +36,7 @@ Random.seed!(0)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
                 p = PT(100)
+                @test_nowarn println(p)
                 @test (p+p+p).particles ≈ 3p.particles # Test 3arg operator
                 @test (p+p+1).particles ≈ 1 .+ 2p.particles # Test 3arg operator
                 @test (1+p+1).particles ≈ 2 .+ p.particles # Test 3arg operator
@@ -48,6 +49,7 @@ Random.seed!(0)
                 @test var(p) ≈ 1 atol=0.2
                 @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
                 @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
+                @test minmax(1+p,p) == (p, 1+p)
 
                 @test !(p ≲ p)
                 @test !(p ≳ p)
@@ -77,6 +79,7 @@ Random.seed!(0)
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
                     @unsafe begin
+                        @test -10 < p
                         @test p <= p
                         @test p >= p
                         @test !(p < p)
@@ -265,8 +268,10 @@ Random.seed!(0)
         p = 0 ± 1
         @test p[1] == p.particles[1]
         @test_nowarn display(p)
-        @test_nowarn show(p)
-        @test_nowarn show(stdout, MIME"text/x-latex"(), p)
+        @test_nowarn println(p)
+        @test_nowarn println(stdout, MIME"text/x-latex"(), p)
+        @test_nowarn println(0p)
+        @test_nowarn println(stdout, MIME"text/x-latex"(), 0p)
         @test Particles{Float64,500}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
@@ -287,9 +292,9 @@ Random.seed!(0)
         @test_throws ArgumentError AbstractFloat(p)
         @test AbstractFloat(0p) == 0.0
         @test Particles(500) + Particles(randn(Float32, 500)) isa typeof(Particles(500))
-        @test_nowarn sqrt(complex(p,p)) == 1
         @test isfinite(p)
         @test iszero(0p)
+        @test iszero(p, 0.1)
         @test !iszero(p)
         @test !(!p)
         @test !(0p)
@@ -311,6 +316,11 @@ Random.seed!(0)
         @test intersect(p,p) == union(p,p)
         @test length(intersect(p, 1+p)) < 2length(p)
         @test length(union(p, 1+p)) == 2length(p)
+
+        p = 2 ± 0
+        q = 3 ± 0
+        @test sqrt(complex(p,p)) == sqrt(complex(2,2))
+        @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
     end
 
     @time @testset "mutation" begin
