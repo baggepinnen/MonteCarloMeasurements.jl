@@ -194,6 +194,7 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
+        Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
             std(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
             return T(p[1])
