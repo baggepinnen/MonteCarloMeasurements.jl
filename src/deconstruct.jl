@@ -1,9 +1,9 @@
-using Test, MacroTools, MonteCarloMeasurements, ControlSystems
+using MacroTools, MonteCarloMeasurements
 using MonteCarloMeasurements: ∓, ±
 
 unsafe_comparisons()
 # P = tf(1 ∓ 0.1, [1, 1∓0.1])
-P = tf(1 ± 0.1, [1, 1±0.1])
+
 
 function has_particles(P)
     P isa AbstractParticles && (return true)
@@ -20,20 +20,22 @@ end
 
 nakedtypeof(x::Type) = x.name.wrapper
 nakedtypeof(x) = nakedtypeof(typeof(x))
-build_result_container(P) = build_container(P, ) # TODO: we have no idea how to go from a vector of results to a single object with particles. Functions in general might turn an object into an arbitrarily different object (not only tf -> tf). One can perhaps analyze the result vector to see where it differes, but this feels ugly. Let the user provide the answer?
-function build_container(P,condition=P->P isa AbstractParticles,result = P->P[1])
+build_mutable_container(P) = replace_particles(P, P->P isa AbstractParticles,result = P->Particles(Vector(P.particles)))
+build_container(P) = replace_particles(P,P->P isa AbstractParticles,P->P[1])
+
+function replace_particles(P,condition=P->P isa AbstractParticles,result = P->P[1])
     # @show typeof(P)
     condition(P) && (return result(P)) # This replaces a Special with a float
     has_particles(P) || (return P) # No need to carry on
     P isa Number && (return P)
     if P isa AbstractArray # Special handling for arrays
-        return map(P->build_container(P,condition,result), P)
+        return map(P->replace_particles(P,condition,result), P)
     end
     fields = map(fieldnames(typeof(P))) do n
         f = getfield(P,n)
         has_particles(f) || (return f)
         # @show typeof(f), n
-        build_container(f,condition,result)
+        replace_particles(f,condition,result)
     end
     T = nakedtypeof(P)
 
@@ -67,9 +69,13 @@ function particle_paths(P, allpaths=[], path=[])
     ntuple(i->allpaths[i], length(allpaths))
 end
 
+function vecpartind2vec!(v, pv, j)
+    for i in eachindex(v)
+        v[i] = pv[i][j]
+    end
+end
 
-function get_setter_exprs(paths,P,P2)
-    T,T2 = typeof(P), typeof(P2)
+function get_setter_funs(paths)
     exprs = map(paths) do p # for each encountered particle
         get1expr = :(P)
         set1expr = :(P2)
@@ -85,8 +91,8 @@ function get_setter_exprs(paths,P,P2)
         end
         (fn,ft,fs) = p[1][end] # The last element, we've reached the particles
         if ft <: AbstractArray
-            get1expr = :(getindex.($(get1expr).$(fn), partind)) # TODO: base.cartesian to avoid forming the vector from getindex?
-            set1expr = :($(set1expr).$(fn) .= $get1expr) # TODO: not sure about the get1expr here
+            set1expr = :(vecpartind2vec!($(set1expr).$(fn), $(get1expr).$(fn), partind))
+            # get1expr = :(getindex.($(get1expr).$(fn), partind))
 
         else # It was no array, regular field
             get1expr = :($(get1expr).$(fn)[partind])
@@ -105,73 +111,94 @@ function get_setter_exprs(paths,P,P2)
     set2expr = MacroTools.postwalk(set1expr) do x
         x == :P && (return :P2res)
         x == :P2 && (return :Pres)
-        @capture(x, getindex.(y__,z_)) && (return :($(y)))
-        @capture(x, y__ .= z_) && (return :(setindex!.($(y...), $(z...), partind)))
+        @capture(x, vecpartind2vec!(y_,z_, partind)) && (return :(setindex!.($(y), $(z), partind)))
         x
     end
-    # get1expr, set1expr, get2expr, set2expr
-    set1expr, set2expr
+    # display(set1expr)
+    # display(set2expr)
+
+    @eval set1fun = (P,P2,partind)-> $set1expr
+    @eval set2fun = (Pres,P2res,partind)-> $set2expr
+    sleep(0.01)
+    set1fun, set2fun
+
 end
 
 ##
 # We create a two-stage process with the outer function `withbuffer` and an inner macro with the same name. The reason is that the function generates an expression at *runtime* and this should ideally be compiled into the body of the function without a runtime call to eval. The macro allows us to do this
 
-# This seems to be required to splice expressions into the quote returned by a macro
-macro eval2(ex)
-    :($(ex))
-end
 
 macro withbuffer(f,P,P2,setters,setters2,N)
     quote
         $(esc(:(partind = 1))) # Because we need the actual name partind
-        $(esc(@eval2(setters)))
-        # $(esc(Pe)) = $(esc(P))
+        $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
         $(esc(:P2res)) = $(esc(f))($(esc(P2))) # We first to index 1 to peek at the result
-        $(esc(:Pres)) = deepcopy($(esc(P))) #build_result_container(paths, results[1])
-        $(esc(@eval2(setters2)))
+        Pres = @unsafe f(P) # Heuristic, see what the result is if called with particles and unsafe_comparisons
+        $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
         for $(esc(:partind)) = 2:$(esc(N))
-            $(esc(@eval2(setters)))
-            # if $(esc(:partind)) <= 10
-            #     display($(esc(P2)))
-            #     display($(esc(:Pres)))
-            # end
+            $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
             $(esc(:P2res)) = $(esc(f))($(esc(P2)))
-            $(esc(@eval2(setters2)))
+            $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
         end
-        $(esc(:Pres))
+        Pres
     end
 end
 
-function withbufffer(f,P)
+@generated function withbufferg(f,P,P2,N,setters,setters2)
+    ex = Expr(:block)
+    push!(ex.args, quote
+        partind = 1 # Because we need the actual name partind
+    end)
+    push!(ex.args, :(setters(P,P2,partind)))
+    push!(ex.args, quote
+        P2res = f(P2) # We first to index 1 to peek at the result
+        Pres = @unsafe f(P)
+    end) #build_result_container(paths, results[1])
+    push!(ex.args, :(setters2(Pres,P2res,partind)))
+    loopex = Expr(:block, :(setters(P,P2,partind)))
+    push!(loopex.args, :(P2res = f(P2)))
+    push!(loopex.args, :(setters2(Pres,P2res,partind)))
+    push!(ex.args, quote
+        for partind = 2:N
+            $loopex
+        end
+    end)
+    push!(ex.args, :Pres)
+    ex
+
+end
+
+
+
+struct Workspace{T1,T2,T3,T4}
+    P::T1
+    P2::T2
+    setters::T3
+    setters2::T4
+    N::Int
+end
+function Workspace(P)
     paths = particle_paths(P)
     P2 = build_container(P)
-    setters, setters2 = get_setter_exprs(paths,P,P2)
+    setters, setters2 = get_setter_funs(paths)
     @assert all(n == paths[1][3] for n in getindex.(paths,3))
     N = paths[1][3]
+    Workspace(P,P2,Pres,setters,setters2,N)
+end
+
+
+function (w::Workspace)(f)
+    P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
     @withbuffer(f,P,P2,setters,setters2,N)
+    # withbufferg(f,P,P2,N,setters,setters2)
     # ex = @macroexpand @withbuffer(f,P,P2,setters,setters2,N)
     # display(prettify(ex))
 end
 
 
-using BenchmarkTools
-P = tf(1 ± 0.1, [1, 1±0.1])
-@btime code = withbufffer(P2->c2d(P2,0.1), P)
 ##
 
-@btime foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:500)
 
-res = @withbufffer P2->c2d(P2,0.1) P
-##
-
-paths = particle_paths(P)
-P2 = build_container(P)
-setters, setters2 = get_setter_exprs(paths,P,P2)
-@assert all(n == paths[1][3] for n in getindex.(paths,3))
-N = paths[1][3]
-f = P2->c2d(P2,0.1)
-ex = @macroexpand @withbuffer(f,P,P2,setters,setters2,N)
-prettify(ex) |> display
 ##
 
 
@@ -179,17 +206,43 @@ prettify(ex) |> display
 @btime c2d($(tf(1,[1,1])),0.1)
 
 
-ControlSystems.TransferFunction(matrix::Array{ControlSystems.SisoRational{Float64},2}, Ts::Float64, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
 
-@test nakedtypeof(P) == TransferFunction
-@test nakedtypeof(typeof(P)) == TransferFunction
-@test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,100}}}
-P2 = build_container(P)
-@test typeof(P2) == TransferFunction{ControlSystems.SisoRational{Float64}}
-@test has_particles(P)
-@test has_particles(P.matrix)
-@test has_particles(P.matrix[1])
-@test has_particles(P.matrix[1].num)
-@test has_particles(P.matrix[1].num.a)
-@test has_particles(P.matrix[1].num.a[1])
+
+##
+
+function makeexpr(a)
+    return :($a+1)
+end
+
+macro useexpr(ex)
+    # :($(esc(ex)))
+    Expr(:quote, :($(Expr(:$, :ex))))
+    # :($(esc(QuoteNode(ex))))
+    # :($(QuoteNode(ex)))
+    # :($(QuoteNode(esc(ex))))
+    # Expr(:$, :ex)
+end
+
+function runit(a)
+    ex = makeexpr(a)
+    @useexpr ex
+end
+
+runit(2)
+
+
+function makefun(a)
+    return @eval () -> $a+1
+end
+
+macro usefun(ex)
+    :($(esc(ex))())
+end
+
+function runitfun(a)
+    ex = makefun(a)
+    @usefun ex
+end
+
+runitfun(2)
