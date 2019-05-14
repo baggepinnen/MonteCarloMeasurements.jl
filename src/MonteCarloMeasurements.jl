@@ -61,7 +61,7 @@ macro unsafe(ex)
     end
 end
 
-export AbstractParticles,Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!, @bymap, @bypmap
+export AbstractParticles,Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, resample!
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -72,7 +72,7 @@ export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit
 
 export unsafe_comparisons, @unsafe, set_comparison_function
 
-
+export @bymap, @bypmap, Workspace, has_particles
 
 include("types.jl")
 include("register_primitive.jl")
@@ -81,6 +81,7 @@ include("particles.jl")
 include("sigmapoints.jl")
 include("resampling.jl")
 include("bymap.jl")
+include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
