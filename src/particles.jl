@@ -281,6 +281,7 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
 Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
+Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
