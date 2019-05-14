@@ -9,7 +9,7 @@ import Plots
 Random.seed!(0)
 
 @testset "MonteCarloMeasurements.jl" begin
-
+    include("test_deconstruct.jl")
     # σ/√N = σm
     @time @testset "sampling" begin
         @info "Testing sampling"
@@ -74,6 +74,7 @@ Random.seed!(0)
                 @test !(p ≉ 1.9std(p))
 
                 @testset "unsafe comparisons" begin
+                    unsafe_comparisons(false)
                     @test_throws ErrorException p<p
                     @test_throws ErrorException p>p
                     @test_throws ErrorException p>=p

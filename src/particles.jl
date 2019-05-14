@@ -79,7 +79,7 @@ end
 
 # Two-argument functions
 foreach(register_primitive_multi, [+,-,*,/,//,^,
-max,min,minmax,mod,mod1,atan,atand,add_sum,hypot])
+max,min,mod,mod1,atan,atand,add_sum,hypot])
 # One-argument functions
 foreach(register_primitive_single, [*,+,-,/,
 exp,exp2,exp10,expm1,
