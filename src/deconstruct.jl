@@ -134,24 +134,6 @@ end
 ##
 # We create a two-stage process with the outer function `withbuffer` and an inner macro with the same name. The reason is that the function generates an expression at *runtime* and this should ideally be compiled into the body of the function without a runtime call to eval. The macro allows us to do this
 
-
-macro withbuffer(f,P,P2,setters,setters2,N)
-    quote
-        $(esc(:(partind = 1))) # Because we need the actual name partind
-        $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
-        $(esc(:P2res)) = $(esc(f))($(esc(P2))) # We first to index 1 to peek at the result
-        Pres = @unsafe build_mutable_container($(esc(f))($(esc(P)))) # Heuristic, see what the result is if called with particles and unsafe_comparisons
-        $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
-        for $(esc(:partind)) = 2:$(esc(N))
-            $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
-            $(esc(:P2res)) = $(esc(f))($(esc(P2)))
-            $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
-        end
-        Pres
-    end
-end
-
-
 struct Workspace{T1,T2,T3,T4}
     P::T1
     P2::T2
@@ -171,13 +153,35 @@ end
 
 function (w::Workspace)(f)
     P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
-    @withbuffer(f,P,P2,setters,setters2,N)
-    # withbufferg(f,P,P2,N,setters,setters2)
-    # ex = @macroexpand @withbuffer(f,P,P2,setters,setters2,N)
-    # display(prettify(ex))
+    partind = 1 # Because we need the actual name partind
+    setters(P,P2,partind)
+    P2res = f(P2) # We first to index 1 to peek at the result
+    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons
+    setters2(Pres,P2res, partind)
+    for partind = 2:N
+        setters(P,P2, partind)
+        P2res = f(P2)
+        setters2(Pres,P2res, partind)
+    end
+    Pres
 end
 
-
+# macro withbuffer(f,P,P2,setters,setters2,N)
+#     quote
+#         $(esc(:(partind = 1))) # Because we need the actual name partind
+#         $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
+#         $(esc(:P2res)) = $(esc(f))($(esc(P2))) # We first to index 1 to peek at the result
+#         Pres = @unsafe build_mutable_container($(esc(f))($(esc(P)))) # Heuristic, see what the result is if called with particles and unsafe_comparisons
+#         $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
+#         for $(esc(:partind)) = 2:$(esc(N))
+#             $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
+#             $(esc(:P2res)) = $(esc(f))($(esc(P2)))
+#             $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
+#         end
+#         Pres
+#     end
+# end
+#
 # @generated function withbufferg(f,P,P2,N,setters,setters2)
 #     ex = Expr(:block)
 #     push!(ex.args, quote
