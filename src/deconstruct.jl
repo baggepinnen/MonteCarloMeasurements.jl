@@ -1,4 +1,7 @@
-
+"""
+    has_particles(P)
+Determine whether or no the object `P` has some kind of particles inside it. This function examins fields pf `P` recursively and looks inside arrays etc.
+"""
 function has_particles(P)
     P isa AbstractParticles && (return true)
     P isa AbstractArray && (return has_particles(P[1]))
@@ -12,6 +15,10 @@ function has_particles(P)
     end
 end
 
+"""
+    has_mutable_particles(P)
+Similar to `has_particles`, but only returns true if the found particles are mutable, i.e., are not `StaticParticles`
+"""
 function has_mutable_particles(P)
     P isa Particles && (return true)
     P isa StaticParticles && (return false)
@@ -25,13 +32,26 @@ function has_mutable_particles(P)
         end
     end
 end
-
+"""
+    nakedtypeof(x)
+Returns the type of `x` with type parameters removed. Uses internals and should ideally not be used at all. Do not use inside generated function.
+"""
 nakedtypeof(x::Type) = x.name.wrapper
 nakedtypeof(x) = nakedtypeof(typeof(x))
+
+"""
+    build_mutable_container(P)
+Recursively visits all fields of `P` and replaces all instances of `StaticParticles` with `Particles`
+"""
 function build_mutable_container(P)
     has_mutable_particles(P) && (return P)
     replace_particles(P, P->P isa AbstractParticles, P->Particles(Vector(P.particles)))
 end
+
+"""
+    build_container(P)
+Recursively visits all fields of `P` and replaces all instances of `AbstractParticles{T,N}` with `::T`
+"""
 build_container(P) = replace_particles(P,P->P isa AbstractParticles,P->P[1])
 
 """
@@ -77,9 +97,18 @@ function replace_particles(P,condition=P->P isa AbstractParticles,replacer = P->
 
 end
 
+"""
+particletype(p::AbstractParticles{T,N}) = (T,N)
+"""
 particletype(p::AbstractParticles{T,N}) where {T,N} = (T,N)
 particletype(::Type{<:AbstractParticles{T,N}}) where {T,N} = (T,N)
 
+"""
+particle_paths(P)
+
+Figure out all paths down through fields of `P` that lead to an instace of `<: AbstractParticles`. The returned structure is a list where each list element is a tuple. The tuple looks like this: (path, particletype, particlenumber)
+`path in turn looks like this (:fieldname, fieldtype, size)
+"""
 function particle_paths(P, allpaths=[], path=[])
     T = typeof(P)
     if T <: AbstractParticles
@@ -104,6 +133,11 @@ function vecpartind2vec!(v, pv, j)
     end
 end
 
+"""
+    s1,s2 = get_setter_funs(paths)
+Returns two functions that are to be used to update work buffers inside `Workspace`
+This two functions are `@eval`ed and can cause world-age problems unless called with `invokelatest`.
+"""
 function get_setter_funs(paths)
     exprs = map(paths) do p # for each encountered particle
         get1expr = :(P)
@@ -154,6 +188,11 @@ struct Workspace{T1,T2,T3,T4}
     setters2::T4
     N::Int
 end
+
+"""
+    Workspace(P)
+Create a `Workspace` object for inputs of type `P`. Useful if `P` is a structure with fields of type `<: AbstractParticles` (can be deeply nested). See also `with_workspace`.
+"""
 function Workspace(P)
     paths = particle_paths(P)
     P2 = build_container(P)
@@ -163,6 +202,22 @@ function Workspace(P)
     Workspace(P,P2,setters,setters2,N)
 end
 
+"""
+    with_workspace(f,P)
+
+In some cases, defining a primitive function which particles are to be propagate through is not possible but allowing unsafe comparisons are not acceptable. One such case is functions that internally calculate eigenvalues of uncertain matrices. The eigenvalue calculation makes use of comparison operators. If the uncertainty is large, eigenvalues might change place in the sorted list of returned eigenvalues, completely ruining downstream computations. For this we recommend, in order of preference
+1. Use `@bymap` detailed [in the readme](https://github.com/baggepinnen/MonteCarloMeasurements.jl#monte-carlo-simulation-by-mappmap). Applicable if all uncertain values appears as arguments to your entry function.
+2. Create a `Workspace` object and call it using your entry function. Applicable if uncertain parameters appear nested in an object that is an argument to your entry function:
+```julia
+# desired computation: y = f(obj), obj contains uncertain parameters inside
+y = with_workspace(f, obj)
+# or equivalently
+w = Workspace(obj)
+use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of world-age problems if w is created and used in the same function.
+w(f, use_invokelatest)
+```
+"""
+with_workspace(f,P) = Workspace(P)(f, true)
 
 function (w::Workspace)(f)
     P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
@@ -175,6 +230,22 @@ function (w::Workspace)(f)
         setters(P,P2, partind)
         P2res = f(P2)
         setters2(Pres,P2res, partind)
+    end
+    Pres
+end
+
+function (w::Workspace)(f, invlatest::Bool)
+    invlatest || w(f)
+    P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
+    partind = 1 # Because we need the actual name partind
+    Base.invokelatest(setters, P,P2,partind)
+    P2res = f(P2) # We first to index 1 to peek at the result
+    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons
+    Base.invokelatest(setters2, Pres,P2res, partind)
+    for partind = 2:N
+        Base.invokelatest(setters, P,P2, partind)
+        P2res = f(P2)
+        Base.invokelatest(setters2, Pres,P2res, partind)
     end
     Pres
 end
