@@ -11,7 +11,7 @@ vecindex(p::MvParticles,i) = getindex.(p,i)
 
 function indexof_particles(args)
     inds = findall([a <: SomeKindOfParticles for a in args])
-    inds === nothing && throw(ArgumentError("At least one argument should be <: AbstractParticles"))
+    inds === nothing && throw(ArgumentError("At least one argument should be <: AbstractParticles. If particles appear nested as fields inside an argument, see `with_workspace` and `Workspace`"))
     all(nparticles(a) == nparticles(args[inds[1]]) for a in args[inds]) || throw(ArgumentError("All p::Particles must have the same number of particles."))
     (inds...,)
     # TODO: test all same number of particles
