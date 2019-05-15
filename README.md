@@ -276,11 +276,14 @@ In some cases, defining a primitive is not possible but allowing unsafe comparis
 2. Create a `Workspace` object and call it using your entry function. Applicable if uncertain parameters appear nested in an object that is an argument to your entry function:
 ```julia
 # desired computation: y = f(obj), obj contains uncertain parameters inside
+y = with_workspace(f, obj)
+# or equivalently
 w = Workspace(obj)
-y = w(f)
+use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of world-age problems if w is created and used in the same function.
+w(f, use_invokelatest)
 ```
 This interface is so far not tested very well and may throw strange errors. Some care has been taken to make error messages informative.
-Internally, `Workspace` tries to automatically construct an object identical to `obj`, but where all uncertain parameters are replaced by conventional `Real`. If the heurisitcs used fail, an error message is displayed detailing which method you need to implement to make it work. When called, `w` populates the internal buffer object with particle `i`, calls `f` using a `Particle`-free `obj` and stores the result in an output object at particle index  `i`. This is done for `i ∈ 1:N` after which the output is returned. Some caveats include: the workspace can not be created and used in the same function due to world-age problems, `Workspace` must not be created or used inside a `@generated` function.
+Internally, a `w::Workspace` object is created that tries to automatically construct an object identical to `obj`, but where all uncertain parameters are replaced by conventional `Real`. If the heuristics used fail, an error message is displayed detailing which method you need to implement to make it work. When called, `w` populates the internal buffer object with particle `i`, calls `f` using a `Particle`-free `obj` and stores the result in an output object at particle index  `i`. This is done for `i ∈ 1:N` after which the output is returned. Some caveats include: `Workspace` must not be created or used inside a `@generated` function.
 
 # Overloading a new function
 If a method for `Particles` is not implemented for your function `yourfunc`, the pattern looks like this

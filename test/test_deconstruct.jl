@@ -1,4 +1,6 @@
-
+using MonteCarloMeasurements
+using Test, LinearAlgebra, Statistics, Random
+import MonteCarloMeasurements: ±, ∓
 using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths, get_setter_funs
 using ControlSystems, Test
 ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts::Float64, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
@@ -10,6 +12,30 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     w = Workspace(P)
     f = x->c2d(x,0.1)
     @time Pd = w(f)
+    # julia> @benchmark Pd = w(f) # different world age
+    # BenchmarkTools.Trial:
+    #   memory estimate:  1.63 MiB
+    #   allocs estimate:  19178
+    #   --------------
+    #   minimum time:     2.101 ms (0.00% GC)
+    #   median time:      2.199 ms (0.00% GC)
+    #   mean time:        2.530 ms (10.36% GC)
+    #   maximum time:     7.969 ms (53.42% GC)
+    #   --------------
+    #   samples:          1973
+    #   evals/sample:     1
+    
+    #   BenchmarkTools.Trial: # invokelatest
+    # memory estimate:  1.64 MiB
+    # allocs estimate:  19378
+    # --------------
+    # minimum time:     2.204 ms (0.00% GC)
+    # median time:      2.742 ms (0.00% GC)
+    # mean time:        3.491 ms (13.77% GC)
+    # maximum time:     17.103 ms (80.96% GC)
+    # --------------
+    # samples:          1429
+    # evals/sample:     1
 
     tt = function (P)
         w = Workspace(P)
@@ -17,6 +43,12 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
         @time Pd = w(f)
     end
     @test_throws MethodError tt(P) # This causes a world-age problem. If this tests suddenly break, it would be nice and we can get rid of the intermediate workspace object.
+    tt = function (P)
+        w = Workspace(P)
+        f = x->c2d(x,0.1)
+        @time Pd = w(f,true)
+    end
+    @test tt(P) == Pd == with_workspace(f,P)
     p = 1 ± 0.1
     @test mean_object(p) == mean(p)
     @test mean_object([p,p]) == mean.([p,p])
