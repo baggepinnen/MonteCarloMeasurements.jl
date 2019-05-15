@@ -17,6 +17,12 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
         @time Pd = w(f)
     end
     @test_throws MethodError tt(P) # This causes a world-age problem. If this tests suddenly break, it would be nice and we can get rid of the intermediate workspace object.
+    p = 1 ± 0.1
+    @test mean_object(p) == mean(p)
+    @test mean_object([p,p]) == mean.([p,p])
+    @test mean_object(P) ≈ tf(tf(1,[1,1])) atol=1e-2
+
+
 
     @test nakedtypeof(P) == TransferFunction
     @test nakedtypeof(typeof(P)) == TransferFunction

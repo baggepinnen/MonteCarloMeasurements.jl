@@ -34,6 +34,19 @@ function build_mutable_container(P)
 end
 build_container(P) = replace_particles(P,P->P isa AbstractParticles,P->P[1])
 
+"""
+    mean_object(x)
+Returns an object similar to `x`, but where all internal instances of `Particles` are replaced with their mean. The generalization of this function is `replace_particles`.
+"""
+mean_object(p::AbstractParticles) = mean(p)
+mean_object(p::AbstractArray{<:AbstractParticles}) = mean.(p)
+mean_object(P) = replace_particles(P,P->P isa AbstractParticles,P->mean(P))
+
+"""
+    replace_particles(x,condition=P->P isa AbstractParticles,replacer = P->P[1])
+
+This function recursively scans through the structure `x`, every time a field that matches `condition` is found, `replacer` is called on that field and the result is used instead of `P`. See function `mean_object`, which uses this function to replace all instances of `Particles` with their mean.
+"""
 function replace_particles(P,condition=P->P isa AbstractParticles,replacer = P->P[1])
     # @show typeof(P)
     condition(P) && (return replacer(P))
