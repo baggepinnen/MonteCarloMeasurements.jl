@@ -278,7 +278,7 @@ In some cases, defining a primitive is not possible but allowing unsafe comparis
 # desired computation: y = f(obj), obj contains uncertain parameters inside
 y = with_workspace(f, obj)
 # or equivalently
-w = Workspace(obj)
+w = Workspace(obj) # This is somewhat expensive and can be reused
 use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of world-age problems if w is created and used in the same function.
 w(f, use_invokelatest)
 ```

@@ -12,30 +12,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     w = Workspace(P)
     f = x->c2d(x,0.1)
     @time Pd = w(f)
-    # julia> @benchmark Pd = w(f) # different world age
-    # BenchmarkTools.Trial:
-    #   memory estimate:  1.63 MiB
-    #   allocs estimate:  19178
-    #   --------------
-    #   minimum time:     2.101 ms (0.00% GC)
-    #   median time:      2.199 ms (0.00% GC)
-    #   mean time:        2.530 ms (10.36% GC)
-    #   maximum time:     7.969 ms (53.42% GC)
-    #   --------------
-    #   samples:          1973
-    #   evals/sample:     1
-    
-    #   BenchmarkTools.Trial: # invokelatest
-    # memory estimate:  1.64 MiB
-    # allocs estimate:  19378
-    # --------------
-    # minimum time:     2.204 ms (0.00% GC)
-    # median time:      2.742 ms (0.00% GC)
-    # mean time:        3.491 ms (13.77% GC)
-    # maximum time:     17.103 ms (80.96% GC)
-    # --------------
-    # samples:          1429
-    # evals/sample:     1
+    # See benchmarks below
+    # @profiler Workspace(P)
 
     tt = function (P)
         w = Workspace(P)
@@ -69,9 +47,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     @test has_particles(P.matrix[1].num.a)
     @test has_particles(P.matrix[1].num.a[1])
 
-
     # P = tf(1 ± 0.1, [1, 1±0.1])
-    # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:100)
+    # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:100) # 1.7 ms 1.2 Mb
 
     bP  = bode(P, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
     bPd = bode(Pd, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
@@ -96,3 +73,49 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     end
     unsafe_comparisons(false)
 end
+
+
+
+
+
+
+
+
+# julia> @benchmark Pd = w(f) # different world age
+# BenchmarkTools.Trial:
+#   memory estimate:  1.63 MiB
+#   allocs estimate:  19178
+#   --------------
+#   minimum time:     2.101 ms (0.00% GC)
+#   median time:      2.199 ms (0.00% GC)
+#   mean time:        2.530 ms (10.36% GC)
+#   maximum time:     7.969 ms (53.42% GC)
+#   --------------
+#   samples:          1973
+#   evals/sample:     1
+
+# julia> @benchmark Pd = w(f)  # invokelatest
+#   BenchmarkTools.Trial:
+# memory estimate:  1.64 MiB
+# allocs estimate:  19378
+# --------------
+# minimum time:     2.204 ms (0.00% GC)
+# median time:      2.742 ms (0.00% GC)
+# mean time:        3.491 ms (13.77% GC)
+# maximum time:     17.103 ms (80.96% GC)
+# --------------
+# samples:          1429
+# evals/sample:     1
+#
+# julia> @benchmark with_workspace($f,$P) # It seems the majority of the time is spent building the workspace object, so invokelatest really isn't that expensive.
+# BenchmarkTools.Trial:
+#   memory estimate:  7.90 MiB
+#   allocs estimate:  148678
+#   --------------
+#   minimum time:     158.073 ms (0.00% GC)
+#   median time:      165.134 ms (0.00% GC)
+#   mean time:        165.842 ms (1.75% GC)
+#   maximum time:     180.133 ms (4.80% GC)
+#   --------------
+#   samples:          31
+#   evals/sample:     1
