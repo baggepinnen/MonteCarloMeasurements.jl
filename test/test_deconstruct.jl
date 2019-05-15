@@ -11,6 +11,13 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     f = x->c2d(x,0.1)
     @time Pd = w(f)
 
+    tt = function (P)
+        w = Workspace(P)
+        f = x->c2d(x,0.1)
+        @time Pd = w(f)
+    end
+    @test_throws MethodError tt(P) # This causes a world-age problem. If this tests suddenly break, it would be nice and we can get rid of the intermediate workspace object.
+
     @test nakedtypeof(P) == TransferFunction
     @test nakedtypeof(typeof(P)) == TransferFunction
     @test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,100}}}
