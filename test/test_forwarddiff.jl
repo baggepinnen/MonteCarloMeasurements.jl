@@ -28,6 +28,18 @@ const FD = ForwardDiff
     @test mean(mean(r[1])) ≈ params[1] atol=1e-2
     @test mean(mean(r[2])) ≈ params[2] atol=1e-2
 
+    @test FD.jacobian(x -> params+x, params) == I
+    @test FD.jacobian(x -> paramsp+x, params) == I
+    @test FD.jacobian(x -> params+x, paramsp) == I
+
+    @test FD.jacobian(x -> params-x, params) == -I
+    @test FD.jacobian(x -> paramsp-x, params) == -I
+    @test FD.jacobian(x -> params-x, paramsp) == -I
+
+    @test FD.jacobian(x -> x-params, params) == I
+    @test FD.jacobian(x -> x-paramsp, params) == I
+    @test FD.jacobian(x -> x-params, paramsp) == I
+
     function strange(x,y)
         (x.^2)'*(y.^2)
     end
@@ -41,6 +53,6 @@ const FD = ForwardDiff
     @test mean(mean(r[2])) ≈ ref[2] atol=1e-2
     @test mean(mean(r[1])) != ref[1]
     @test mean(mean(r[2])) != ref[2]
-    
+
     unsafe_comparisons(false)
 end

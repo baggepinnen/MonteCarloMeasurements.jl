@@ -35,6 +35,7 @@ Random.seed!(0)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
                 p = PT(100)
+                @test_nowarn shortform(p)
                 @test_nowarn println(p)
                 @test (p+p+p).particles ≈ 3p.particles # Test 3arg operator
                 @test (p+p+1).particles ≈ 1 .+ 2p.particles # Test 3arg operator
@@ -176,7 +177,7 @@ Random.seed!(0)
 
                 p = PT(100, MvNormal(2,2))
                 @test cov(p) ≈ 4I atol=2
-                @test mean(p) ≈ [0,0] atol=1
+                @test [0,0] ≈ mean(p) atol=1
                 @test size(Matrix(p)) == (100,2)
 
                 p = PT(100, MvNormal(2,2))
@@ -267,6 +268,8 @@ Random.seed!(0)
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
+        @test MonteCarloMeasurements.particletype(p) == (Float64, 500)
+        @test MonteCarloMeasurements.particletype(typeof(p)) == (Float64, 500)
         @test_nowarn display(p)
         @test_nowarn println(p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
@@ -276,6 +279,10 @@ Random.seed!(0)
         @test_nowarn display([p, p])
         @test_nowarn println([p, p])
         @test_nowarn println([p, 0p])
+
+        testf(x,y) = sum(x+y)
+        @test_nowarn register_primitive(testf)
+        @test testf(p,p) == sum(p+p)
 
         @test Particles{Float64,500}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
