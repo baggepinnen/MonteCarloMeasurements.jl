@@ -213,6 +213,9 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
             v = rand(d,N)' |> copy # For cache locality
             $PT(v)
         end
+
+        nakedtypeof(p::$PT{T,N}) where {T,N} = $PT
+        nakedtypeof(::Type{$PT{T,N}}) where {T,N} = $PT
     end
     # @eval begin
 

@@ -19,7 +19,6 @@ end
 params = [1., 1] # Initial guess
 cost(params)     # Try the cost function
 
-# If we do not define this method, we'll get a method ambiguity error
 # We now solve the problem using the following list of algorithms
 function solvemany()
     algos = [NelderMead(), SimulatedAnnealing(), BFGS(), Newton()]

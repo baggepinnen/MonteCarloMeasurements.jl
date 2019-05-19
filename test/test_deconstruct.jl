@@ -8,7 +8,7 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
 @testset "deconstruct" begin
     unsafe_comparisons()
-    P = tf(1 ∓ 0.1, [1, 1∓0.1])
+    P = tf(1 +0.1StaticParticles(50), [1, 1+0.1StaticParticles(50)])
     w = Workspace(P)
     f = x->c2d(x,0.1)
     @time Pd = w(f)

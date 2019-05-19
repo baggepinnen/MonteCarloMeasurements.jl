@@ -31,8 +31,6 @@ macro andreverse(ex)
     end
 end
 
-# display(@macroexpand(@andreverse f(p::PT, d::Dual) = PT(p.particles .* Ref(d)))  |> prettify)
-
 for PT in (Particles, StaticParticles)
     @eval begin
         @andreverse function Base.:(*)(p::$PT, d::Dual{T}) where {T}

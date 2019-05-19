@@ -28,7 +28,7 @@ function sigmapoints(m, Σ::AbstractMatrix)
     [X; -X; zeros(1,n)] .+ m'
 end
 
-sigmapoints(m, Σ::Number) = sigmapoints(m, diagm(fill(Σ, length(m))))
+sigmapoints(m, Σ::Number) = sigmapoints(m, diagm(0=>fill(Σ, length(m))))
 sigmapoints(d::Normal) = sigmapoints(mean(d), var(d))
 sigmapoints(d::MvNormal) = sigmapoints(mean(d), Matrix(cov(d)))
 
