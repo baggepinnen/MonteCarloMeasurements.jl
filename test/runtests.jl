@@ -35,7 +35,7 @@ Random.seed!(0)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
                 p = PT(100)
-                @test_nowarn shortform(p)
+                @test_nowarn MonteCarloMeasurements.shortform(p)
                 @test_nowarn println(p)
                 @test (p+p+p).particles ≈ 3p.particles # Test 3arg operator
                 @test (p+p+1).particles ≈ 1 .+ 2p.particles # Test 3arg operator
@@ -280,10 +280,6 @@ Random.seed!(0)
         @test_nowarn println([p, p])
         @test_nowarn println([p, 0p])
 
-        testf(x,y) = sum(x+y)
-        @test_nowarn register_primitive(testf)
-        @test testf(p,p) == sum(p+p)
-
         @test Particles{Float64,500}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
@@ -481,6 +477,12 @@ Random.seed!(0)
     include("test_deconstruct.jl")
 
 end
+
+# These can not be inside a testset, causes "testf not defined"
+testf(x,y) = sum(x+y)
+@test_nowarn register_primitive(testf)
+p = 1 ± 0.1
+@test testf(p,p) == sum(p+p)
 
 
 
