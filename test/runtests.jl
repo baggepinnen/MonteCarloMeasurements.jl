@@ -9,7 +9,6 @@ import Plots
 Random.seed!(0)
 
 @testset "MonteCarloMeasurements.jl" begin
-    include("test_deconstruct.jl")
     # σ/√N = σm
     @time @testset "sampling" begin
         @info "Testing sampling"
@@ -36,6 +35,7 @@ Random.seed!(0)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
                 p = PT(100)
+                @test_nowarn MonteCarloMeasurements.shortform(p)
                 @test_nowarn println(p)
                 @test (p+p+p).particles ≈ 3p.particles # Test 3arg operator
                 @test (p+p+1).particles ≈ 1 .+ 2p.particles # Test 3arg operator
@@ -177,7 +177,7 @@ Random.seed!(0)
 
                 p = PT(100, MvNormal(2,2))
                 @test cov(p) ≈ 4I atol=2
-                @test mean(p) ≈ [0,0] atol=1
+                @test [0,0] ≈ mean(p) atol=1
                 @test size(Matrix(p)) == (100,2)
 
                 p = PT(100, MvNormal(2,2))
@@ -260,7 +260,7 @@ Random.seed!(0)
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
-        @test all(xhp .≈ x)
+        @test xhp ≈ x
         @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
     end
 
@@ -268,6 +268,8 @@ Random.seed!(0)
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
+        @test MonteCarloMeasurements.particletype(p) == (Float64, 500)
+        @test MonteCarloMeasurements.particletype(typeof(p)) == (Float64, 500)
         @test_nowarn display(p)
         @test_nowarn println(p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
@@ -339,7 +341,7 @@ Random.seed!(0)
         end
         x = (1:5) .± 1
         adder!(x)
-        @test all(x .≈ (2:6) .± 1)
+        @test x ≈ ((2:6) .± 1)
     end
 
     @time @testset "outer_product" begin
@@ -388,7 +390,7 @@ Random.seed!(0)
         @test any(1:10) do i
             p = -1ones(2) .+ 2 .*Particles.(200) # Optimum is in [1,1]
             popt = optimize(rosenbrock2d, deepcopy(p))
-            all(popt .≈ [1,1])
+            popt ≈ [1,1]
         end
     end
 
@@ -471,7 +473,16 @@ Random.seed!(0)
 
     end
 
+    include("test_forwarddiff.jl")
+    include("test_deconstruct.jl")
+
 end
+
+# These can not be inside a testset, causes "testf not defined"
+testf(x,y) = sum(x+y)
+@test_nowarn register_primitive(testf)
+p = 1 ± 0.1
+@test testf(p,p) == sum(p+p)
 
 
 
