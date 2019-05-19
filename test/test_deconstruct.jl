@@ -8,7 +8,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
 @testset "deconstruct" begin
     unsafe_comparisons()
-    P = tf(1 +0.1StaticParticles(50), [1, 1+0.1StaticParticles(50)])
+    N = 50
+    P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])
     w = Workspace(P)
     f = x->c2d(x,0.1)
     @time Pd = w(f)
@@ -36,10 +37,10 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
     @test nakedtypeof(P) == TransferFunction
     @test nakedtypeof(typeof(P)) == TransferFunction
-    @test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,100}}}
+    @test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,N}}}
     P2 = build_container(P)
     @test typeof(P2) == TransferFunction{ControlSystems.SisoRational{Float64}}
-    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.SisoRational{Particles{Float64,100}}}
+    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.SisoRational{Particles{Float64,N}}}
     @test has_particles(P)
     @test has_particles(P.matrix)
     @test has_particles(P.matrix[1])
@@ -48,7 +49,7 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     @test has_particles(P.matrix[1].num.a[1])
 
     # P = tf(1 ± 0.1, [1, 1±0.1])
-    # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:100) # 1.7 ms 1.2 Mb
+    # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:N) # 1.7 ms 1.2 Mb
 
     bP  = bode(P, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
     bPd = bode(Pd, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
