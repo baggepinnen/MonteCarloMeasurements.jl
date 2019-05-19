@@ -5,7 +5,7 @@ import StatsBase: ProbabilityWeights
 using Lazy: @forward
 import Base: add_sum
 
-using Distributions, StatsBase
+using Distributions, StatsBase, Requires
 
 
 const DEFAUL_NUM_PARTICLES = 500
@@ -85,6 +85,10 @@ include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
+
+function __init__()
+    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
+end
 
 end
 

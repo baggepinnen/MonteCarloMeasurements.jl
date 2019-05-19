@@ -50,21 +50,21 @@ end
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 shortform(p::WeightedParticles) = "WPart"
-function to_num_str(p)
+function to_num_str(p, d=3)
     s = std(p)
     if s < eps(p)
-        string(round(mean(p), sigdigits=3))
+        string(round(mean(p), sigdigits=d))
     else
-        string(round(mean(p), sigdigits=3), " ± ", round(s, sigdigits=2))
+        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=d-1))
     end
 end
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
     sPT = shortform(p)
-    print(io, "$(sPT)$N(", to_num_str(p),")")
+    print(io, "$(sPT)$N(", to_num_str(p, 4),")")
 end
 
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
-    print(io, to_num_str(p))
+    print(io, to_num_str(p, 3))
 end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
@@ -341,7 +341,9 @@ end
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-Base.:≈(p::MvParticles, a::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
+Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
+Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
+Base.:≈(a::MvParticles, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))

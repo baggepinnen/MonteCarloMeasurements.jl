@@ -20,7 +20,6 @@ params = [1., 1] # Initial guess
 cost(params)     # Try the cost function
 
 # If we do not define this method, we'll get a method ambiguity error
-Base.:(*)(p::StaticParticles, d::ForwardDiff.Dual) = StaticParticles(p.particles .* Ref(d))
 # We now solve the problem using the following list of algorithms
 function solvemany()
     algos = [NelderMead(), SimulatedAnnealing(), BFGS(), Newton()]
@@ -36,3 +35,22 @@ solvemany()'
 # How long time does it take to solve all the problems?
 @time solvemany();
 # It was quite fast
+
+# We can also see whether or not it's possible to take the gradient of
+# 1. An deterministic function with respect to determinisitc parameters
+# 2. An deterministic function with respect to uncertain parameters
+# 3. An uncertain function with respect to determinisitc parameters
+# 4. An uncertain function with respect to uncertain parameters
+function strange(x,y)
+    (x.^2)'*(y.^2)
+end
+deterministic = [1., 2] # Initial guess
+uncertain = [1., 2] .∓ 0.001 # Initial guess
+ForwardDiff.gradient(x->strange(x,deterministic), deterministic)
+#
+ForwardDiff.gradient(x->strange(x,deterministic), uncertain)
+#
+ForwardDiff.gradient(x->strange(x,uncertain), deterministic)
+#
+# ForwardDiff.gradient(x->strange(x,uncertain), uncertain)
+# The last one here is commented because it sometimes segfaults. When it doesn't, it seems to produce the correct result with the complicated type Particles{Particles{Float64,N},N}, which errors when printed.

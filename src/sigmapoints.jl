@@ -22,12 +22,13 @@ true
 ```
 Make sure to pass the variance (not std) as second argument in case `μ` and `Σ` are scalars.
 """
-function sigmapoints(m, Σ)
+function sigmapoints(m, Σ::AbstractMatrix)
     n = length(m)
     X = sqrt(n*Σ)
     [X; -X; zeros(1,n)] .+ m'
 end
 
+sigmapoints(m, Σ::Number) = sigmapoints(m, diagm(fill(Σ, length(m))))
 sigmapoints(d::Normal) = sigmapoints(mean(d), var(d))
 sigmapoints(d::MvNormal) = sigmapoints(mean(d), Matrix(cov(d)))
 

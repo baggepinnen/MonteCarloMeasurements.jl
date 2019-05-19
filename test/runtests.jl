@@ -9,7 +9,6 @@ import Plots
 Random.seed!(0)
 
 @testset "MonteCarloMeasurements.jl" begin
-    include("test_deconstruct.jl")
     # σ/√N = σm
     @time @testset "sampling" begin
         @info "Testing sampling"
@@ -260,7 +259,7 @@ Random.seed!(0)
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
-        @test all(xhp .≈ x)
+        @test xhp ≈ x
         @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
     end
 
@@ -339,7 +338,7 @@ Random.seed!(0)
         end
         x = (1:5) .± 1
         adder!(x)
-        @test all(x .≈ (2:6) .± 1)
+        @test x ≈ ((2:6) .± 1)
     end
 
     @time @testset "outer_product" begin
@@ -388,7 +387,7 @@ Random.seed!(0)
         @test any(1:10) do i
             p = -1ones(2) .+ 2 .*Particles.(200) # Optimum is in [1,1]
             popt = optimize(rosenbrock2d, deepcopy(p))
-            all(popt .≈ [1,1])
+            popt ≈ [1,1]
         end
     end
 
@@ -470,6 +469,9 @@ Random.seed!(0)
         @test h2([p_1,p_2], [p_3,p_4]) ≈ @bypmap h2([p_1,p_2], [p_3,p_4])
 
     end
+
+    include("test_forwarddiff.jl")
+    include("test_deconstruct.jl")
 
 end
 
