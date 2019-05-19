@@ -44,12 +44,13 @@ function strange(x,y)
     (x.^2)'*(y.^2)
 end
 deterministic = [1., 2] # Initial guess
-uncertain = [1., 2] .∓ 0.001 # Initial guess
+uncertain = [1., 2] .+ 0.001 .* StaticParticles.(10) # Initial guess
 ForwardDiff.gradient(x->strange(x,deterministic), deterministic)
 #
 ForwardDiff.gradient(x->strange(x,deterministic), uncertain)
 #
 ForwardDiff.gradient(x->strange(x,uncertain), deterministic)
 #
-# ForwardDiff.gradient(x->strange(x,uncertain), uncertain)
+# a = ForwardDiff.gradient(x->strange(x,uncertain), uncertain);
+# mean.(a)
 # The last one here is commented because it sometimes segfaults. When it doesn't, it seems to produce the correct result with the complicated type Particles{Particles{Float64,N},N}, which errors when printed.
