@@ -172,6 +172,8 @@ function get_setter_funs(paths)
         @capture(x, vecpartind2vec!(y_,z_, partind)) && (return :(setindex!.($(y), $(z), partind)))
         x
     end
+    @show set1expr
+    @show set2expr
     @eval set1fun = (P,P2,partind)-> $set1expr
     @eval set2fun = (Pres,P2res,partind)-> $set2expr
     set1fun, set2fun
@@ -240,12 +242,24 @@ function (w::Workspace)(f, invlatest::Bool)
     partind = 1 # Because we need the actual name partind
     Base.invokelatest(setters, P,P2,partind)
     P2res = f(P2) # We first to index 1 to peek at the result
-    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons
-    Base.invokelatest(setters2, Pres,P2res, partind)
+    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here
+    setters22 = if Pres isa AbstractArray || Pres isa Tuple
+        @show typeof(Pres)
+        @show typeof(Pres[1])
+        @show typeof(P2res)
+        function (Pres,P2res, partind)
+            for (Pres,P2res) in zip(Pres,P2res)
+                setters2(Pres,P2res, partind)
+            end
+        end
+    else
+        setters2
+    end
+    Base.invokelatest(setters22, Pres,P2res, partind)
     for partind = 2:N
         Base.invokelatest(setters, P,P2, partind)
         P2res = f(P2)
-        Base.invokelatest(setters2, Pres,P2res, partind)
+        Base.invokelatest(setters22, Pres,P2res, partind)
     end
     Pres
 end
