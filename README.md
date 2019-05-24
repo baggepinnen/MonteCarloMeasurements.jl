@@ -403,7 +403,7 @@ The application we consider is optimization of a PID controller. Normally, we ar
 Another example using MonteCarloMeasurements to perform [robust optimization](https://en.wikipedia.org/wiki/Robust_optimization), this time with automatic differentiation. We use Optim.jl to solve a linear program with probabilistic constraints using 4 different methods, two gradient free, one first-order and one second-order method.
 
 
-## [Monte-Carlo sampling properties]
+## Monte-Carlo sampling properties
 The variance introduced by Monte-Carlo sampling has some fortunate and some unfortunate properties. It decreases as 1/N, where N is the number of particles/samples. This unfortunately means that to get half the standard deviation in your estimate, you need to quadruple the number of particles. On the other hand, this variance does not depend on the dimension of the space, which is very fortunate.
 
 In this package, we perform [*systematic sampling*](https://arxiv.org/pdf/cs/0507025.pdf) whenever possible. This approach exhibits lower variance than standard random sampling. Below, we investigate the variance of the mean estimator of a random sample from the normal distribution. The variance of the estimate of the mean is known to decrease as 1/N
@@ -423,6 +423,7 @@ plot!(svec, vars, lab="Systematic sampling")
 plot!(svec, N->1/N^2, lab="\$1/N^2\$", l=(:dash,))
 ```
 ![variance plot](figs/variance.svg)
+
 As we can see, the variance of the standard random sampling decreases as expected. We also see that the variance for the systematic sample is considerably lower, and also scales as (almost) 1/N².
 
 A simplified implementation of the systematic sampler is given below
