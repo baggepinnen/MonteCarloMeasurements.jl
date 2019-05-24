@@ -351,6 +351,7 @@ Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 
+Base.sincos(x::AbstractParticles) = sin(x),cos(x)
 Base.minmax(x::AbstractParticles,y::AbstractParticles) = (min(x,y), max(x,y))
 
 Base.:!(p::AbstractParticles) = all(p.particles .== 0)
