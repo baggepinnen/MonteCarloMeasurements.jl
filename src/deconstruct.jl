@@ -49,6 +49,15 @@ function build_mutable_container(P)
 end
 
 """
+    make_static(P)
+Replaces all mutable particles inside `P` with `StaticParticles`.
+"""
+function make_static(P)
+    !has_mutable_particles(P) && (return P)
+    replace_particles(P, P->P isa AbstractParticles, P->StaticParticles(P.particles))
+end
+
+"""
     build_container(P)
 Recursively visits all fields of `P` and replaces all instances of `AbstractParticles{T,N}` with `::T`
 """
@@ -115,6 +124,9 @@ function particle_paths(P, allpaths=[], path=[])
         push!(allpaths, (path,particletype(T)...))
         return
     end
+    if T <: Union{AbstractArray, Tuple}
+        particle_paths(P[1], allpaths, [path; (:input, T, size(P))])
+    end
     for n in fieldnames(T)
         fp = getfield(P,n)
         FT = typeof(fp)
@@ -133,59 +145,93 @@ function vecpartind2vec!(v, pv, j)
     end
 end
 
+function vec2vecpartind!(pv, v, j)
+    for i in eachindex(v)
+        pv[i][j] = v[i]
+    end
+end
+
 """
-    s1,s2 = get_setter_funs(paths)
-Returns two functions that are to be used to update work buffers inside `Workspace`
-This two functions are `@eval`ed and can cause world-age problems unless called with `invokelatest`.
+    s1 = get_buffer_setter(paths)
+Returns a function that is to be used to update work buffer inside `Workspace`
+This function is `@eval`ed and can cause world-age problems unless called with `invokelatest`.
 """
-function get_setter_funs(paths)
-    exprs = map(paths) do p # for each encountered particle
-        get1expr = :(P)
-        set1expr = :(P2)
+function get_buffer_setter(paths)
+    setbufex = map(paths) do p # for each encountered particle
+        getbufex = :(input)
+        setbufex = :(simple_input)
         for (i,(fn,ft,fs)) in enumerate(p[1][1:end-1]) # p[1] is a tuple vector where the first element in each tuple is the fieldname
             if ft <: AbstractArray
                 # Here we should recursively branch down into all the elements, but this seems very complicated so we'll just access element 1 for now
-                get1expr = :($(get1expr).$(fn)[1])
-                set1expr = :($(set1expr).$(fn)[1])
+                getbufex = :($(getbufex).$(fn)[1])
+                setbufex = :($(setbufex).$(fn)[1])
             else # It was no array, regular field
-                get1expr = :($(get1expr).$(fn))
-                set1expr = :($(set1expr).$(fn))
+                getbufex = :($(getbufex).$(fn))
+                setbufex = :($(setbufex).$(fn))
             end
         end
         (fn,ft,fs) = p[1][end] # The last element, we've reached the particles
         if ft <: AbstractArray
-            set1expr = :(vecpartind2vec!($(set1expr).$(fn), $(get1expr).$(fn), partind))
-            # get1expr = :(getindex.($(get1expr).$(fn), partind))
+            setbufex = :(vecpartind2vec!($(setbufex).$(fn), $(getbufex).$(fn), partind))
+            # getbufex = :(getindex.($(getbufex).$(fn), partind))
 
         else # It was no array, regular field
-            get1expr = :($(get1expr).$(fn)[partind])
-            set1expr = :($(get1expr).$(fn)[partind] = $get1expr)
+            getbufex = :($(getbufex).$(fn)[partind])
+            setbufex = :($(getbufex).$(fn)[partind] = $getbufex)
         end
-        get1expr, set1expr
+        setbufex
     end
-    get1expr, set1expr = getindex.(exprs, 1), getindex.(exprs, 2)
-    set1expr = Expr(:block, set1expr...)
-    get1expr = Expr(:block, get1expr...)
-    set2expr = MacroTools.postwalk(set1expr) do x
-        x == :P && (return :P2res)
-        x == :P2 && (return :Pres)
-        @capture(x, vecpartind2vec!(y_,z_, partind)) && (return :(setindex!.($(y), $(z), partind)))
-        x
-    end
-    @eval set1fun = (P,P2,partind)-> $set1expr
-    @eval set2fun = (Pres,P2res,partind)-> $set2expr
-    set1fun, set2fun
+    # setbufex,getbufex = getindex.(setbufex, 1),getindex.(getbufex, 2)
+    setbufex = Expr(:block, setbufex...)
+    # getbufex = Expr(:block, getbufex...)
+    @eval setbuffun = (input,simple_input,partind)-> $setbufex
+    setbuffun
 
+end
+
+function get_result_setter(result)
+    paths = particle_paths(result)
+    setresex = map(paths) do p # for each encountered particle
+        getresex = :(result)
+        setresex = :(simple_result)
+        for (fn,ft,fs) in p[1][1:end-1] # p[1] is a tuple vector where the first element in each tuple is the fieldname
+            if ft <: Union{AbstractArray, Tuple}
+                # Here we should recursively branch down into all the elements, but this seems very complicated so we'll just access element 1 for now
+                getresex = :($(getresex).$(fn)[1])
+                setresex = :($(setresex).$(fn)[1])
+            else # It was no array, regular field
+                getresex = :($(getresex).$(fn))
+                setresex = :($(setresex).$(fn))
+            end
+        end
+        (fn,ft,fs) = p[1][end] # The last element, we've reached the particles
+        if ft <: AbstractArray
+            setresex = :(vec2vecpartind!($(getresex).$(fn), $(setresex).$(fn), partind))
+            # getresex = :(getindex.($(getresex).$(fn), partind))
+
+        else # It was no array, regular field
+            getresex = :($(getresex).$(fn)[partind])
+            setresex = :($(getresex).$(fn)[partind] = $getbufex)
+        end
+        setresex = MacroTools.postwalk(setresex) do x
+            @capture(x, y_.input) && (return y)
+            x
+        end
+        setresex
+    end
+    setresex = Expr(:block, setresex...)
+
+    @eval setresfun = (result,simple_result,partind)-> $setresex
+    setresfun
 end
 
 ##
 # We create a two-stage process with the outer function `withbuffer` and an inner macro with the same name. The reason is that the function generates an expression at *runtime* and this should ideally be compiled into the body of the function without a runtime call to eval. The macro allows us to do this
 
-struct Workspace{T1,T2,T3,T4}
-    P::T1
-    P2::T2
-    setters::T3
-    setters2::T4
+struct Workspace{T1,T2,T3}
+    input::T1
+    simple_input::T2
+    buffersetter::T3
     N::Int
 end
 
@@ -193,13 +239,13 @@ end
     Workspace(P)
 Create a `Workspace` object for inputs of type `P`. Useful if `P` is a structure with fields of type `<: AbstractParticles` (can be deeply nested). See also `with_workspace`.
 """
-function Workspace(P)
-    paths = particle_paths(P)
-    P2 = build_container(P)
-    setters, setters2 = get_setter_funs(paths)
+function Workspace(input)
+    paths = particle_paths(input)
+    buffersetter = get_buffer_setter(paths)
     @assert all(n == paths[1][3] for n in getindex.(paths,3))
+    simple_input = build_container(input)
     N = paths[1][3]
-    Workspace(P,P2,setters,setters2,N)
+    Workspace(input,simple_input,buffersetter,N)
 end
 
 """
@@ -220,72 +266,76 @@ w(f, use_invokelatest)
 with_workspace(f,P) = Workspace(P)(f, true)
 
 function (w::Workspace)(f)
-    P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
+    input,simple_input,buffersetter,N = w.input,w.simple_input,w.buffersetter,w.N
     partind = 1 # Because we need the actual name partind
-    setters(P,P2,partind)
-    P2res = f(P2) # We first to index 1 to peek at the result
-    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons
-    setters2(Pres,P2res, partind)
+    buffersetter(input,simple_input,partind)
+    simple_result = f(simple_input) # We first to index 1 to peek at the result
+    result = @unsafe build_mutable_container(f(input)) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
+    resultsetter = get_result_setter(result)
+
+    Base.invokelatest(resultsetter, result,simple_result, partind)
     for partind = 2:N
-        setters(P,P2, partind)
-        P2res = f(P2)
-        setters2(Pres,P2res, partind)
+        buffersetter(input,simple_input, partind)
+        simple_result = f(simple_input)
+        Base.invokelatest(resultsetter, result,simple_result, partind)
     end
-    Pres
+    has_mutable_particles(input) ? result : make_static(result)
 end
 
 function (w::Workspace)(f, invlatest::Bool)
     invlatest || w(f)
-    P,P2,setters,setters2,N = w.P,w.P2,w.setters,w.setters2,w.N
+    input,simple_input,buffersetter,N = w.input,w.simple_input,w.buffersetter,w.N
     partind = 1 # Because we need the actual name partind
-    Base.invokelatest(setters, P,P2,partind)
-    P2res = f(P2) # We first to index 1 to peek at the result
-    Pres = @unsafe build_mutable_container(f(P)) # Heuristic, see what the result is if called with particles and unsafe_comparisons
-    Base.invokelatest(setters2, Pres,P2res, partind)
+    Base.invokelatest(buffersetter, input,simple_input,partind)
+    simple_result = f(simple_input) # We first to index 1 to peek at the result
+    result = @unsafe build_mutable_container(f(input)) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
+    resultsetter = get_result_setter(result)
+
+    Base.invokelatest(resultsetter, result,simple_result, partind)
     for partind = 2:N
-        Base.invokelatest(setters, P,P2, partind)
-        P2res = f(P2)
-        Base.invokelatest(setters2, Pres,P2res, partind)
+        Base.invokelatest(buffersetter, input,simple_input, partind)
+        simple_result = f(simple_input)
+        Base.invokelatest(resultsetter, result,simple_result, partind)
     end
-    Pres
+    has_mutable_particles(input) ? result : make_static(result)
 end
 
-# macro withbuffer(f,P,P2,setters,setters2,N)
+# macro withbuffer(f,P,simple_input,setters,setters2,N)
 #     quote
 #         $(esc(:(partind = 1))) # Because we need the actual name partind
-#         $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
-#         $(esc(:P2res)) = $(esc(f))($(esc(P2))) # We first to index 1 to peek at the result
-#         Pres = @unsafe build_mutable_container($(esc(f))($(esc(P)))) # Heuristic, see what the result is if called with particles and unsafe_comparisons
-#         $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
+#         $(esc(setters))($(esc(P)),$(esc(simple_input)), $(esc(:partind)))
+#         $(esc(:simple_result)) = $(esc(f))($(esc(simple_input))) # We first to index 1 to peek at the result
+#         result = @unsafe build_mutable_container($(esc(f))($(esc(P)))) # Heuristic, see what the result is if called with particles and unsafe_comparisons
+#         $(esc(setters2))(result,$(esc(:simple_result)), $(esc(:partind)))
 #         for $(esc(:partind)) = 2:$(esc(N))
-#             $(esc(setters))($(esc(P)),$(esc(P2)), $(esc(:partind)))
-#             $(esc(:P2res)) = $(esc(f))($(esc(P2)))
-#             $(esc(setters2))(Pres,$(esc(:P2res)), $(esc(:partind)))
+#             $(esc(setters))($(esc(P)),$(esc(simple_input)), $(esc(:partind)))
+#             $(esc(:simple_result)) = $(esc(f))($(esc(simple_input)))
+#             $(esc(setters2))(result,$(esc(:simple_result)), $(esc(:partind)))
 #         end
-#         Pres
+#         result
 #     end
 # end
 #
-# @generated function withbufferg(f,P,P2,N,setters,setters2)
+# @generated function withbufferg(f,P,simple_input,N,setters,setters2)
 #     ex = Expr(:block)
 #     push!(ex.args, quote
 #         partind = 1 # Because we need the actual name partind
 #     end)
-#     push!(ex.args, :(setters(P,P2,partind)))
+#     push!(ex.args, :(setters(P,simple_input,partind)))
 #     push!(ex.args, quote
-#         P2res = f(P2) # We first to index 1 to peek at the result
-#         Pres = @unsafe f(P)
+#         simple_result = f(simple_input) # We first to index 1 to peek at the result
+#         result = @unsafe f(P)
 #     end) #build_container(paths, results[1])
-#     push!(ex.args, :(setters2(Pres,P2res,partind)))
-#     loopex = Expr(:block, :(setters(P,P2,partind)))
-#     push!(loopex.args, :(P2res = f(P2)))
-#     push!(loopex.args, :(setters2(Pres,P2res,partind)))
+#     push!(ex.args, :(setters2(result,simple_result,partind)))
+#     loopex = Expr(:block, :(setters(P,simple_input,partind)))
+#     push!(loopex.args, :(simple_result = f(simple_input)))
+#     push!(loopex.args, :(setters2(result,simple_result,partind)))
 #     push!(ex.args, quote
 #         for partind = 2:N
 #             $loopex
 #         end
 #     end)
-#     push!(ex.args, :Pres)
+#     push!(ex.args, :result)
 #     ex
 # end
 #

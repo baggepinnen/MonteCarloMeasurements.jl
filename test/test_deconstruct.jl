@@ -1,7 +1,7 @@
 using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓
-using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths, get_setter_funs
+using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths
 using ControlSystems, Test
 ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts::Float64, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
@@ -13,6 +13,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     w = Workspace(P)
     f = x->c2d(x,0.1)
     @time Pd = w(f)
+    @test !MonteCarloMeasurements.has_mutable_particles(Pd)
+    @test MonteCarloMeasurements.has_mutable_particles(MonteCarloMeasurements.build_mutable_container(Pd))
     # See benchmarks below
     # @profiler Workspace(P)
 
@@ -60,14 +62,15 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     # bodeplot!(Pd, exp10.(LinRange(-3, log10(10π), 50)), linecolor=:blue)
 
 
-    let paths = particle_paths(P), P2 = build_container(P), (setters, setters2) = get_setter_funs(paths)
+    let paths = particle_paths(P), P2 = build_container(P), buffersetter = MonteCarloMeasurements.get_buffer_setter(paths)
         Pres = @unsafe build_mutable_container(f(P)) # Auto-created result buffer
+        resultsetter = MonteCarloMeasurements.get_result_setter(Pres)
         @test all(1:paths[1][3]) do i
-            setters(P,P2,i)
+            buffersetter(P,P2,i)
             P.matrix[1].num.a[1][i] == P2.matrix[1].num.a[1] &&
             P.matrix[1].den.a[2][i] == P2.matrix[1].den.a[2]
             P2res = f(P2)
-            setters2(Pres, P2res, i)
+            resultsetter(Pres, P2res, i)
             Pres.matrix[1].num.a[1][i] == P2res.matrix[1].num.a[1] &&
             Pres.matrix[1].den.a[2][i] == P2res.matrix[1].den.a[2]
         end
