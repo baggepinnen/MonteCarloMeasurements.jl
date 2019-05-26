@@ -127,7 +127,14 @@ for PT in (:Particles, :StaticParticles)
             reshape(out, size(p))
         end
     end
-    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.var, Statistics.std, Statistics.median, Statistics.quantile, Statistics.middle
+    for ff in (var, std)
+        f = nameof(ff)
+        @eval function (Statistics.$f)(p::$PT{T,N},args...;kwargs...) where {T,N}
+            N == 1 && (return zero(T))
+            $f(p.particles, args...;kwargs...)
+        end
+    end
+    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle
 end
 
 for PT in (:WeightedParticles,)
@@ -181,7 +188,8 @@ for PT in (:WeightedParticles,)
     end
     for ff in [var, std]
         f = nameof(ff)
-        @eval function (Statistics.$f)(p::$PT,args...;kwargs...)
+        @eval function (Statistics.$f)(p::$PT{T,N},args...;kwargs...) where {T,N}
+            N == 1 && (return zero(T))
             $f(p.particles, AnalyticWeights(exp.(p.logweights)), args...;kwargs...)
         end
     end
@@ -229,7 +237,8 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(promote_type(T,S).(f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
-            std(p) < 100eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
+            N == 1 && (return S(p[1]))
+            std(p) < eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
             return S(p[1])
         end
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteInt,T,N}
@@ -242,8 +251,9 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
         Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
+            N == 1 && (return p[1])
             std(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
-            return T(p[1])
+            return p[1]
         end
 
         """
