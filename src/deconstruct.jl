@@ -93,10 +93,11 @@ function replace_particles(P,condition=P->P isa AbstractParticles,replacer = P->
     # @show typeof(P)
     condition(P) && (return replacer(P))
     has_particles(P) || (return P) # No need to carry on
-    P isa Number && (return P)
     if P isa AbstractArray # Special handling for arrays
         return map(P->replace_particles(P,condition,replacer), P)
     end
+    P isa Complex && condition(real(P)) && (return complex(replacer(real(P)), replacer(imag(P))))
+    P isa Number && (return P)
     fields = map(fieldnames(typeof(P))) do n
         f = getfield(P,n)
         has_particles(f) || (return f)

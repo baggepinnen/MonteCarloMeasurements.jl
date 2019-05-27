@@ -83,6 +83,10 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
             Pres.matrix[1].den.a[2][i] == P2res.matrix[1].den.a[2]
         end
     end
+
+    @test mean_object(complex(1. ± 0.1, 1.)) isa ComplexF64
+    @test mean_object(complex(1. ± 0.1, 1.)) ≈ complex(1,1) atol=1e-3
+
     unsafe_comparisons(false)
 end
 
