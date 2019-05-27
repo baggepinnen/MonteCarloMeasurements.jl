@@ -278,9 +278,9 @@ In some cases, defining a primitive is not possible but allowing unsafe comparis
 # desired computation: y = f(obj), obj contains uncertain parameters inside
 y = with_workspace(f, obj)
 # or equivalently
-w = Workspace(obj) # This is somewhat expensive and can be reused
+w = Workspace(f,obj) # This is somewhat expensive and can be reused
 use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of world-age problems if w is created and used in the same function.
-w(f, use_invokelatest)
+w(obj, use_invokelatest)
 ```
 This interface is so far not tested very well and may throw strange errors. Some care has been taken to make error messages informative.
 Internally, a `w::Workspace` object is created that tries to automatically construct an object identical to `obj`, but where all uncertain parameters are replaced by conventional `Real`. If the heuristics used fail, an error message is displayed detailing which method you need to implement to make it work. When called, `w` populates the internal buffer object with particle `i`, calls `f` using a `Particle`-free `obj` and stores the result in an output object at particle index  `i`. This is done for `i ∈ 1:N` after which the output is returned. Some caveats include: `Workspace` must not be created or used inside a `@generated` function.

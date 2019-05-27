@@ -10,24 +10,24 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     unsafe_comparisons()
     N = 50
     P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])
-    w = Workspace(P)
     f = x->c2d(x,0.1)
-    @time Pd = w(f)
+    w = Workspace(f,P)
+    @time Pd = w(P)
     @test !MonteCarloMeasurements.has_mutable_particles(Pd)
     @test MonteCarloMeasurements.has_mutable_particles(MonteCarloMeasurements.build_mutable_container(Pd))
     # See benchmarks below
     # @profiler Workspace(P)
 
     tt = function (P)
-        w = Workspace(P)
         f = x->c2d(x,0.1)
-        @time Pd = w(f)
+        w = Workspace(f,P)
+        @time Pd = w(P)
     end
     @test_throws MethodError tt(P) # This causes a world-age problem. If this tests suddenly break, it would be nice and we can get rid of the intermediate workspace object.
     tt = function (P)
-        w = Workspace(P)
         f = x->c2d(x,0.1)
-        @time Pd = w(f,true)
+        w = Workspace(f,P)
+        @time Pd = w(P,true)
     end
     @test tt(P) == Pd == with_workspace(f,P)
     p = 1 ± 0.1
@@ -57,6 +57,14 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     bPd = bode(Pd, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
 
     @test mean(abs2, mean.(bP) - mean.(bPd)) < 1e-4
+
+    A = randn(2,2)
+    Ap = A .± 0.1
+    hfun = A->Matrix(hessenberg(A))
+    @test all(ℝⁿ2ℝⁿ_function(hfun, Ap) .≈ Matrix(hessenberg(A)))
+
+    Ap = A .+ 0.1 .* StaticParticles(1)
+    @test_nowarn hessenberg(Ap)
 
     # bodeplot(P, exp10.(LinRange(-3, log10(10π), 50)))
     # bodeplot!(Pd, exp10.(LinRange(-3, log10(10π), 50)), linecolor=:blue)

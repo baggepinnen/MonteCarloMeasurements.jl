@@ -1,13 +1,17 @@
 """
     has_particles(P)
-Determine whether or no the object `P` has some kind of particles inside it. This function examins fields pf `P` recursively and looks inside arrays etc.
+Determine whether or no the object `P` has some kind of particles inside it. This function examins fields of `P` recursively and looks inside arrays etc.
 """
 function has_particles(P)
     P isa AbstractParticles && (return true)
-    P isa AbstractArray && (return has_particles(P[1]))
+    if P isa AbstractArray
+        length(P) < 1 && (return eltype(P) <: AbstractParticles)
+        return has_particles(P[1])
+    end
     any(fieldnames(typeof(P))) do n
         fp = getfield(P,n)
         if fp isa Union{AbstractArray, Tuple}
+            length(fp) < 1 && (return eltype(fp) <: AbstractParticles)
             return has_particles(fp[1]) # Specials can occur inside arrays or tuples
         else
             return has_particles(fp)
@@ -26,6 +30,7 @@ function has_mutable_particles(P)
     all(fieldnames(typeof(P))) do n
         fp = getfield(P,n)
         if fp isa Union{AbstractArray, Tuple}
+            length(fp) < 1 && (return eltype(fp) <: Particles)
             return has_mutable_particles(fp[1])
         else
             return has_mutable_particles(fp)
@@ -46,6 +51,14 @@ Recursively visits all fields of `P` and replaces all instances of `StaticPartic
 function build_mutable_container(P)
     has_mutable_particles(P) && (return P)
     replace_particles(P, P->P isa AbstractParticles, P->Particles(Vector(P.particles)))
+end
+
+function make_scalar(P)
+    replace_particles(P, P->P isa AbstractParticles, P->Particles(P.particles[1:1]))
+end
+
+function restore_scalar(P, N)
+    replace_particles(P, P->P isa AbstractParticles, P->Particles(N))
 end
 
 """
@@ -179,6 +192,10 @@ function get_buffer_setter(paths)
             getbufex = :($(getbufex).$(fn)[partind])
             setbufex = :($(getbufex).$(fn)[partind] = $getbufex)
         end
+        setbufex = MacroTools.postwalk(setbufex) do x
+            @capture(x, y_.input) && (return y)
+            x
+        end
         setbufex
     end
     # setbufex,getbufex = getindex.(setbufex, 1),getindex.(getbufex, 2)
@@ -228,24 +245,31 @@ end
 ##
 # We create a two-stage process with the outer function `withbuffer` and an inner macro with the same name. The reason is that the function generates an expression at *runtime* and this should ideally be compiled into the body of the function without a runtime call to eval. The macro allows us to do this
 
-struct Workspace{T1,T2,T3}
-    input::T1
-    simple_input::T2
-    buffersetter::T3
+struct Workspace{T1,T2,T3,T4,T5,T6}
+    simple_input::T1
+    simple_result::T2
+    result::T3
+    buffersetter::T4
+    resultsetter::T5
+    f::T6
     N::Int
 end
 
 """
-    Workspace(P)
-Create a `Workspace` object for inputs of type `P`. Useful if `P` is a structure with fields of type `<: AbstractParticles` (can be deeply nested). See also `with_workspace`.
+    Workspace(f, input)
+Create a `Workspace` object for inputs of type `typeof(input)`. Useful if `input` is a structure with fields of type `<: AbstractParticles` (can be deeply nested). See also `with_workspace`.
 """
-function Workspace(input)
+function Workspace(f,input)
     paths = particle_paths(input)
     buffersetter = get_buffer_setter(paths)
     @assert all(n == paths[1][3] for n in getindex.(paths,3))
     simple_input = build_container(input)
     N = paths[1][3]
-    Workspace(input,simple_input,buffersetter,N)
+    Base.invokelatest(buffersetter,input,simple_input,1)
+    simple_result = f(simple_input) # We first to index 1 to peek at the result
+    result = @unsafe restore_scalar(build_mutable_container(f(make_scalar(input))), N) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
+    resultsetter = get_result_setter(result)
+    Workspace(simple_input,simple_result,result,buffersetter, resultsetter,f,N)
 end
 
 """
@@ -263,18 +287,11 @@ use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of 
 w(f, use_invokelatest)
 ```
 """
-with_workspace(f,P) = Workspace(P)(f, true)
+with_workspace(f,P) = Workspace(f,P)(P, true)
 
-function (w::Workspace)(f)
-    input,simple_input,buffersetter,N = w.input,w.simple_input,w.buffersetter,w.N
-    partind = 1 # Because we need the actual name partind
-    buffersetter(input,simple_input,partind)
-    simple_result = f(simple_input) # We first to index 1 to peek at the result
-    result = @unsafe build_mutable_container(f(input)) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
-    resultsetter = get_result_setter(result)
-
-    Base.invokelatest(resultsetter, result,simple_result, partind)
-    for partind = 2:N
+function (w::Workspace)(input)
+    simple_input,simple_result,result,buffersetter,resultsetter,N,f = w.simple_input,w.simple_result,w.result,w.buffersetter,w.resultsetter,w.N,w.f
+    for partind = 1:N
         buffersetter(input,simple_input, partind)
         simple_result = f(simple_input)
         Base.invokelatest(resultsetter, result,simple_result, partind)
@@ -282,17 +299,11 @@ function (w::Workspace)(f)
     has_mutable_particles(input) ? result : make_static(result)
 end
 
-function (w::Workspace)(f, invlatest::Bool)
+function (w::Workspace)(input, invlatest::Bool)
     invlatest || w(f)
-    input,simple_input,buffersetter,N = w.input,w.simple_input,w.buffersetter,w.N
-    partind = 1 # Because we need the actual name partind
-    Base.invokelatest(buffersetter, input,simple_input,partind)
-    simple_result = f(simple_input) # We first to index 1 to peek at the result
-    result = @unsafe build_mutable_container(f(input)) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
-    resultsetter = get_result_setter(result)
+    simple_input,simple_result,result,buffersetter,resultsetter,N,f = w.simple_input,w.simple_result,w.result,w.buffersetter,w.resultsetter,w.N,w.f
 
-    Base.invokelatest(resultsetter, result,simple_result, partind)
-    for partind = 2:N
+    for partind = 1:N
         Base.invokelatest(buffersetter, input,simple_input, partind)
         simple_result = f(simple_input)
         Base.invokelatest(resultsetter, result,simple_result, partind)

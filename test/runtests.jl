@@ -455,11 +455,11 @@ Random.seed!(0)
         g(x,y) = sum(x) + sum(y)
         @test g([p,p], [p,p]) ≈ @bymap g([p,p], [p,p])
         @test g([p,p], p) ≈ @bymap g([p,p], p)
-        @test_broken g([p p], [p,p]) ≈ @bymap g([p p], [p,p])
+        @test g([p p], [p,p]) ≈ @bymap g([p p], [p,p])
 
         @test g([p,p], [p,p]) ≈ @bypmap g([p,p], [p,p])
         @test g([p,p], p) ≈ @bypmap g([p,p], p)
-        @test_broken g([p p], [p,p]) ≈ @bypmap g([p p], [p,p])
+        @test g([p p], [p,p]) ≈ @bypmap g([p p], [p,p])
 
         h(x,y) = x .* y'
         Base.Cartesian.@nextract 4 p d-> 0±1

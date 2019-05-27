@@ -1,13 +1,15 @@
 import Base.Cartesian.@ntuple
 
-const SomeKindOfParticles = Union{<:MonteCarloMeasurements.AbstractParticles, MonteCarloMeasurements.MvParticles}
+const ParticleArray = AbstractArray{<:AbstractParticles}
+const SomeKindOfParticles = Union{<:MonteCarloMeasurements.AbstractParticles, ParticleArray}
+
 
 nparticles(p) = length(p)
-nparticles(p::MvParticles) = length(eltype(p))
-nparticles(p::Type{<:MvParticles}) = length(eltype(p))
+nparticles(p::ParticleArray) = length(eltype(p))
+nparticles(p::Type{<:ParticleArray}) = length(eltype(p))
 
 vecindex(p,i) = getindex(p,i)
-vecindex(p::MvParticles,i) = getindex.(p,i)
+vecindex(p::ParticleArray,i) = getindex.(p,i)
 
 function indexof_particles(args)
     inds = findall([a <: SomeKindOfParticles for a in args])
@@ -36,6 +38,7 @@ end
 
 macro bymap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
+    fsym = string(f)
     quote
         N = Ngetter($(esc.(args)...))
         individuals = map(1:N) do i
@@ -44,8 +47,10 @@ macro bymap(ex)
         end
         if ndims(individuals[1]) == 0
             Particles(individuals)
-        else
+        elseif ndims(individuals[1]) == 1
             Particles(copy(reduce(hcat,individuals)'))
+        else
+            error("Output with dimension >2 is currently not supported by `@bymap`. Consider if `ℝⁿ2ℝⁿ_function($($fsym), $($args...))` works for your use case.")
         end
     end
 end
