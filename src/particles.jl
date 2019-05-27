@@ -232,7 +232,8 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
-        Base.promote_rule(::Type{Complex}, ::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}
+        Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N} # Needed since above is not specific enough.
+        Base.promote_rule(::Type{Complex{S}}, ::Type{$PT{T,N}}) where {S,T,N} = Complex{$PT{prmote_type(S,T),N}}
         Base.promote_rule(::Type{Complex{T}}, ::Type{$PT{T,N}}) where {T<:Real,N} = Complex{$PT{T,N}}
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(promote_type(T,S).(f.particles))

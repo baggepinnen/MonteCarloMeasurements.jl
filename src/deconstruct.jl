@@ -54,7 +54,7 @@ function build_mutable_container(P)
 end
 
 function make_scalar(P)
-    replace_particles(P, P->P isa AbstractParticles, P->Particles(P.particles[1:1]))
+    replace_particles(P, P->P isa AbstractParticles, P->Particles([mean(P)]))
 end
 
 function restore_scalar(P, N)
