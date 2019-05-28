@@ -301,7 +301,7 @@ function (w::Workspace)(input)
 end
 
 function (w::Workspace)(input, invlatest::Bool)
-    invlatest || w(f)
+    invlatest || w(input)
     simple_input,simple_result,result,buffersetter,resultsetter,N,f = w.simple_input,w.simple_result,w.result,w.buffersetter,w.resultsetter,w.N,w.f
 
     for partind = 1:N
