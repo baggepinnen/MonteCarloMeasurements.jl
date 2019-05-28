@@ -87,6 +87,10 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     @test mean_object(complex(1. ± 0.1, 1.)) isa ComplexF64
     @test mean_object(complex(1. ± 0.1, 1.)) ≈ complex(1,1) atol=1e-3
 
+    Ps = MonteCarloMeasurements.make_scalar(P)
+    @test MonteCarloMeasurements.particletype(Ps.matrix[1].num.a[1]) == (Float64,1)
+    @test MonteCarloMeasurements.particletype(MonteCarloMeasurements.restore_scalar(Ps,50).matrix[1].num.a[1]) == (Float64,50)
+
     unsafe_comparisons(false)
 end
 

@@ -53,10 +53,20 @@ function build_mutable_container(P)
     replace_particles(P, P->P isa AbstractParticles, P->Particles(Vector(P.particles)))
 end
 
+"""
+    make_scalar(P)
+
+Replaces all fields of `P` that are particles with `Particles(1)`
+"""
 function make_scalar(P)
     replace_particles(P, P->P isa AbstractParticles, P->Particles([mean(P)]))
 end
 
+"""
+    restore_scalar(P, N)
+
+Replaces all fields of `P` that are `Particles(1)` with `Particles(N)`
+"""
 function restore_scalar(P, N)
     replace_particles(P, P->P isa AbstractParticles, P->Particles(N))
 end
@@ -153,12 +163,32 @@ function particle_paths(P, allpaths=[], path=[])
     ntuple(i->allpaths[i], length(allpaths))
 end
 
+"""
+    vecpartind2vec!(v, pv, j)
+
+Extract particle `j` into vector `v`
+
+#Arguments:
+- `v`: vector
+- `pv`: vector of `Particles`
+- `j`: index
+"""
 function vecpartind2vec!(v, pv, j)
     for i in eachindex(v)
         v[i] = pv[i][j]
     end
 end
 
+"""
+    vec2vecpartind!(pv, v, j)
+
+Extract particle `j` from vector `v` into particles
+
+#Arguments:
+- `v`: vector
+- `pv`: vector of `Particles`
+- `j`: index
+"""
 function vec2vecpartind!(pv, v, j)
     for i in eachindex(v)
         pv[i][j] = v[i]
@@ -207,6 +237,10 @@ function get_buffer_setter(paths)
 
 end
 
+"""
+    get_result_setter(result)
+See `get_buffer_setter`.
+"""
 function get_result_setter(result)
     paths = particle_paths(result)
     setresex = map(paths) do p # for each encountered particle
@@ -246,6 +280,20 @@ end
 ##
 # We create a two-stage process with the outer function `withbuffer` and an inner macro with the same name. The reason is that the function generates an expression at *runtime* and this should ideally be compiled into the body of the function without a runtime call to eval. The macro allows us to do this
 
+"""
+    struct Workspace{T1, T2, T3, T4, T5, T6}
+
+DOCSTRING
+
+#Arguments:
+- `simple_input`: Input object `f` will be called with, does not contain any particles
+- `simple_result`: Simple output from `f` without particles
+- `result`: Complete output of `f` including particles
+- `buffersetter`: Helper function to shift data between objects
+- `resultsetter`: Helper function to shift data between objects
+- `f`: Function to call
+- `N`: Number of particles
+"""
 struct Workspace{T1,T2,T3,T4,T5,T6}
     simple_input::T1
     simple_result::T2
@@ -283,9 +331,9 @@ In some cases, defining a primitive function which particles are to be propagate
 # desired computation: y = f(obj), obj contains uncertain parameters inside
 y = with_workspace(f, obj)
 # or equivalently
-w = Workspace(obj)
+w = Workspace(f, obj)
 use_invokelatest = true # Set this to false to gain 0.1-1 ms, at the expense of world-age problems if w is created and used in the same function.
-w(f, use_invokelatest)
+w(obj, use_invokelatest)
 ```
 """
 with_workspace(f,P) = Workspace(f,P)(P, true)
