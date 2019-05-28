@@ -128,9 +128,7 @@ p = 1 ∓ 0.1
 G = tf([p*ω], [1, 2ζ*ω, ω^2])
 t4 = @belapsed bode($G,$w)
 
-p = StaticParticles(sigmapoints(1, 0.1^2))[]
-ζ = StaticParticles(sigmapoints(0.3, 0.1^2))[]
-ω = StaticParticles(sigmapoints(1, 0.1^2))[]
+p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2))
 G = tf([p*ω], [1, 2ζ*ω, ω^2])
 t5 = @belapsed bode($G,$w)
 ##
