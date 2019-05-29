@@ -1,18 +1,23 @@
+"""
+    μ ± σ
 
+Creates $DEFAUL_NUM_PARTICLES `Particles` with mean `μ` and std `σ`.
+If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treated as std if it's a scalar, and variances if it's a matrix or vector.
+"""
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
 ∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
 """
-⊗(μ,σ) = outer_product(Normal.(μ,σ))
+    ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
 See also `outer_product`
 """
 ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
 """
-p = outer_product(dists::Vector{<:Distribution}, N=100_000)
+    p = outer_product(dists::Vector{<:Distribution}, N=100_000)
 
 Creates a multivariate systematic sample where each dimension is sampled according to the corresponding univariate distribution in `dists`. Returns `p::Vector{Particles}` where each Particles has a length approximately equal to `N`.
 The particles form the outer product between `d` systematically sampled vectors with length given by the d:th root of N, where `d` is the length of `dists`, All particles will be independent and have marginal distributions given by `dists`.
@@ -47,6 +52,10 @@ function print_functions_to_extend()
         end
     end
 end
+"""
+    shortform(p::AbstractParticles)
+Return a short string describing the type
+"""
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 shortform(p::WeightedParticles) = "WPart"
@@ -232,8 +241,8 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
-        Base.promote_rule(::Type{Complex}, ::Type{$PT{T,N}}) where {T,N} = Complex{$PT{T,N}}
-        Base.promote_rule(::Type{Complex{T}}, ::Type{$PT{T,N}}) where {T<:Real,N} = Complex{$PT{T,N}}
+        Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N} # Needed since above is not specific enough.
+        Base.promote_rule(::Type{Complex{S}}, ::Type{$PT{T,N}}) where {S<:Real,T<:Real,N} = Complex{$PT{promote_type(S,T),N}}
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(promote_type(T,S).(f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
@@ -353,7 +362,6 @@ function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where 
 end
 
 
-
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
@@ -383,6 +391,12 @@ Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 
+"""
+    norm(x::AbstractParticles, p=2)
+
+if p == 2: return abs(mean(x))
+elseif p == Inf: return max(extrema(x)...)
+"""
 function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Integer}=2)
     if p == 2
         return abs(mean(x))
@@ -393,7 +407,7 @@ function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Intege
 end
 
 """
-ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
+    ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
 applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 """
 function ℂ2ℂ_function(f::F, z::Complex{T}) where {F,T<:AbstractParticles}

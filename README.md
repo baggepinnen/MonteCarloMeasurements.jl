@@ -179,7 +179,14 @@ true
 julia> mean(p) ≈ m
 true
 ```
-`sigmapoints` also accepts a `Normal/MvNormal` object as input. *Caveat:* If you are creating several one-dimensional uncertain values using sigmaopints independently, they will be strongly correlated. Use the multidimensional constructor!
+`sigmapoints` also accepts a `Normal/MvNormal` object as input. *Caveat:* If you are creating several one-dimensional uncertain values using sigmaopints independently, they will be strongly correlated. Use the multidimensional constructor! Example:
+```julia
+p = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+ζ = StaticParticles(sigmapoints(0.3, 0.1^2))             # Wrong!
+ω = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+
+p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
+```
 
 # Latin hypercube sampling
 We do not provide functionality for [latin hypercube sampling](https://en.wikipedia.org/wiki/Latin_hypercube_sampling), rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.

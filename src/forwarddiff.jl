@@ -1,5 +1,10 @@
 import .ForwardDiff: Dual, value, partials, Partials # The dot in .ForwardDiff is an artefact of using Requires.jl
 
+"""
+    switch_representation(d::Dual{T, V, N}) where {T, V <: AbstractParticles, N}
+
+Goes from Dual{Particles} to Particles{Dual}
+"""
 function switch_representation(d::Dual{T,V,N}) where {T,V<:AbstractParticles,N}
     part = partials(d)
     MonteCarloMeasurements.nakedtypeof(V)([Dual{T}(value(d)[i], ntuple(j->part[j][i], N)) for i ∈ 1:length(V)])
