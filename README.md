@@ -445,4 +445,6 @@ end
 As we can see, a single random number is generated to seed the entire sample. The samples are then drawn deterministically from the quantile function of the distribution.
 
 ## Variational inference
-See blog post by @cscherrer
+See blog post by [@cscherrer](https://github.com/cscherrer) for an example of variational inference using `Particles`
+
+https://cscherrer.github.io/post/variational-importance-sampling/
