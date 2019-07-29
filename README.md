@@ -443,3 +443,6 @@ function systematic_sample(N, d=Normal(0,1))
 end
 ```
 As we can see, a single random number is generated to seed the entire sample. The samples are then drawn deterministically from the quantile function of the distribution.
+
+## Variational inference
+See blog post by @cscherrer
