@@ -321,9 +321,12 @@ The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies 
 
 ## ℂ → ℂ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
-- `sqrt`, `exp`
+- `sqrt`, `exp`, `sin`, `cos`
 
-The function `ℂ2ℂ_function(f::Function, z)` applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
+We also provide in-place versions of the above functions, e.g.,
+- `sqrt!(out, p)`, `exp!(out, p)`, `sin!(out, p)`, `cos!(out, p)`
+
+The function `ℂ2ℂ_function(f::Function, z)` (`ℂ2ℂ_function!(f::Function, out, z)`) applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 
 # Weighted particles
 The type `WeightedParticles` contains an additional field `logweights`. You may modify this field as you see fit, e.g.

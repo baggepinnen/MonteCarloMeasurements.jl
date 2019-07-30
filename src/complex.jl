@@ -17,7 +17,15 @@ applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 function ℂ2ℂ_function(f::F, z::Complex{T}) where {F,T<:AbstractParticles}
     rz,iz = z.re,z.im
     s = map(1:length(rz.particles)) do i
-        f(complex(rz[i], iz[i]))
+        @inbounds f(complex(rz[i], iz[i]))
+    end
+    complex(T(real.(s)), T(imag.(s)))
+end
+
+function ℂ2ℂ_function!(f::F, s, z::Complex{T}) where {F,T<:AbstractParticles}
+    rz,iz = z.re,z.im
+    map!(s, 1:length(rz.particles)) do i
+        @inbounds f(complex(rz[i], iz[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -25,6 +33,7 @@ end
 for ff in (sqrt, exp, sin, cos)
     f = nameof(ff)
     @eval Base.$f(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function($f, z)
+    @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
 end
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
