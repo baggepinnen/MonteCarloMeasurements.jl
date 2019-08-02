@@ -225,9 +225,9 @@ see also `examples/lhs.jl`.
 
 # Plotting
 An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
-- `errorbarplot(x,y,[q=0.025])`: `q` determines the quantiles, set to `0` for max/min.
+- `errorbarplot(x,y,[q=0.025])`: `q` determines the quantiles, set to `0` for max/min. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
 - `mcplot(x,y)`: Plots all trajectories
-- `ribbonplot(x,y,[k=2])`: Plots with `k` standard deviations shaded area around mean.
+- `ribbonplot(x,y,[q=0.025])`: Plots with shaded area from quantile `q` to `1-q`. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
 
 
 Below is an example using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
@@ -257,7 +257,7 @@ mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
 ![A bodeplot with lots of lines](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
 ```julia
-ribbonplot(w,mag, yscale=:identity, xscale=:log10, alpha=0.2)
+ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
 ![A bodeplot with a ribbon](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
 

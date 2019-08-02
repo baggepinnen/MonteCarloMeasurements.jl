@@ -381,6 +381,7 @@ Random.seed!(0)
         @test_nowarn errorbarplot(1:2,v)
         @test_nowarn mcplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v)
+        @test_nowarn ribbonplot(1:2,v,(0.1,0.9))
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end

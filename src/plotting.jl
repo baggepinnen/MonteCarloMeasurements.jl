@@ -12,13 +12,28 @@ function handle_args(p)
     y isa AbstractArray{<:AbstractParticles} || throw(ArgumentError("The second argument must be a vector of some kind of Particles"))
     x,y
 end
+
+function quantiles(y,q::Number)
+    m = mean.(y)
+    q > 0.5 && (q = 1-q)
+    lower = -(quantile.(y,q)-m)
+    upper = quantile.(y,1-q)-m
+    lower,upper
+end
+
+function quantiles(y,q)
+    m = mean.(y)
+    lower = -(quantile.(y,q[1])-m)
+    upper = quantile.(y,q[2])-m
+    lower,upper
+end
+
 @userplot Errorbarplot
 @recipe function plt(p::Errorbarplot)
     x,y = handle_args(p)
     q = length(p.args) >= 3 ? p.args[3] : 0.025
     m = mean.(y)
-    lower = -(quantile.(y,q)-m)
-    upper = quantile.(y,1-q)-m
+    lower,upper = quantiles(y, q)
     label --> "Mean with $q quantile"
     yerror := (lower,upper)
     x,m
@@ -28,7 +43,7 @@ end
 @recipe function plt(p::MCplot)
     x,y = handle_args(p)
     label --> ""
-    alpha --> 0.5
+    alpha --> 1/log(nparticles(y))
     m = Matrix(y)'
     x,m
 end
@@ -36,17 +51,19 @@ end
 @userplot Ribbonplot
 @recipe function plt(p::Ribbonplot)
     x,y = handle_args(p)
-    q = length(p.args) >= 3 ? p.args[3] : 2.
-    label --> "Mean ± $q stds"
+    q = length(p.args) >= 3 ? p.args[3] : 0.025
+    label --> "Mean with $q quantile"
     m = mean.(y)
-    ribbon := q*std.(y)
+    lower,upper = quantiles(y, q)
+    ribbon := (lower,upper)
     x,m
 end
 
 """
-errorbarplot(x,y,[q=0.05])
+errorbarplot(x,y,[q=0.025])
 
-Plots a vector of particles with error bars at quantile `q`
+Plots a vector of particles with error bars at quantile `q`.
+If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
 """
 errorbarplot
 
@@ -60,7 +77,8 @@ mcplot
 """
 ribbonplot(x,y,[q=2])
 
-Plots a vector of particles with a ribbon representing `q*std(y)`. Default width is 2σ
+Plots a vector of particles with a ribbon covering quantiles `q, 1-q`.
+If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
 """
 ribbonplot
 
