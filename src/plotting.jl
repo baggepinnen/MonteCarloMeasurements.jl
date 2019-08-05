@@ -84,15 +84,18 @@ ribbonplot
 
 
 
-@recipe function plt(y::MvParticles, q=2)
-    ribbon := q.*std.(y)
+@recipe function plt(y::MvParticles, q=0.025)
+    label --> "Mean with ($q, $(1-q)) quantiles"
+    lower,upper = quantiles(y, q)
+    ribbon := (lower,upper)
     mean.(y)
 end
 
-@recipe function plt(func::Function, x::MvParticles)
+@recipe function plt(func::Function, x::MvParticles, q=0.25)
     y = func.(x)
-    xerror := std.(x)
-    yerror := std.(y)
+    label --> "Mean with ($q, $(1-q)) quantiles"
+    xerror := (quantile.(x, q), quantile.(x, 1-q))
+    yerror := (quantile.(y, q), quantile.(y, 1-q))
     mean.(x), mean.(y)
 end
 
