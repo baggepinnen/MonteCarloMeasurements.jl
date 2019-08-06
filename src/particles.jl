@@ -339,25 +339,25 @@ Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = 
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
 
 
-function _comparioson_operator(p)
+function _comparison_operator(p)
     length(p) == 1 && return
     USE_UNSAFE_COMPARIONS[] || error("Comparison operators are not well defined for uncertain values and are currently turned off. Call `unsafe_comparisons(true)` to enable comparison operators for particles using the current reduction function $(COMPARISON_FUNCTION[]). Change this function using `set_comparison_function(f)`.")
 end
 
 function Base.:<(a::Real,p::AbstractParticles)
-    _comparioson_operator(p)
+    _comparison_operator(p)
     a < COMPARISON_FUNCTION[](p)
 end
 function Base.:<(p::AbstractParticles,a::Real)
-    _comparioson_operator(p)
+    _comparison_operator(p)
     COMPARISON_FUNCTION[](p) < a
 end
 function Base.:<(p::AbstractParticles, a::AbstractParticles)
-    _comparioson_operator(p)
+    _comparison_operator(p)
     COMPARISON_FUNCTION[](p) < COMPARISON_FUNCTION[](a)
 end
 function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where {T,N}
-    _comparioson_operator(p)
+    _comparison_operator(p)
     COMPARISON_FUNCTION[](p) <= COMPARISON_FUNCTION[](a)
 end
 
