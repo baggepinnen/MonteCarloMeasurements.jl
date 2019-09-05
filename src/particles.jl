@@ -390,6 +390,7 @@ Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
+Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
 """
     norm(x::AbstractParticles, p=2)

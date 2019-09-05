@@ -315,7 +315,8 @@ These macros will typically be slower than calling `f(p)`. If `f` is very expens
 
 ## ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
-- `exp : ℝ(n×n) → ℝ(n×n)`   exponential matrix
+- `exp : ℝ(n×n) → ℝ(n×n)`   matrix exponential
+- `log : ℝ(n×n) → ℝ(n×n)`   matrix logarithm
 
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 

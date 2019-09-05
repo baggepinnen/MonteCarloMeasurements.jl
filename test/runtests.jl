@@ -317,6 +317,7 @@ Random.seed!(0)
         A = randn(2,2)
         B = A .± 0
         @test sum(mean, exp(A) .- exp(B)) < 1e-9
+        @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
 
         pp = [1. 0; 0 1] .± 0.0
         @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])
