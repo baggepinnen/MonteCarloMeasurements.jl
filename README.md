@@ -316,7 +316,8 @@ These macros will typically be slower than calling `f(p)`. If `f` is very expens
 ## ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
 - `exp : ℝ(n×n) → ℝ(n×n)`   matrix exponential
-- `log : ℝ(n×n) → ℝ(n×n)`   matrix logarithm
+- `log : ℝ(n×n) → C(n×n)`   matrix logarithm
+- `eigvals : ℝ(n×n) → C(n)` **warning**: eigenvalues are sorted, when two eigenvalues cross, this function is nondifferentiable. Eigenvalues can thus appear to have dramatically widened distributions. Make sure you interpret the result of this call in the right way.
 
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 
