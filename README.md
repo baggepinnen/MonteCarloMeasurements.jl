@@ -400,7 +400,7 @@ This example shows how to simulate control systems (using [ControlSystems.jl](ht
 
 We also perform some limited benchmarks.
 
-## [Lantin Hypercube Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)
+## [Latin Hypercube Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)
 We show how to initialize particles with LHS and how to make sure the sample gets the desired moments. We also visualize the statistics of the sample.
 
 ## [How MC uncertainty propagation works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)
