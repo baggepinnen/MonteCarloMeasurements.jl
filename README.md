@@ -20,7 +20,6 @@ For a comparison of uncertainty propagation and nonlinear filtering, see [notes]
 # Basic Examples
 ```julia
 using MonteCarloMeasurements, Distributions
-using MonteCarloMeasurements: ±
 
 julia> 1 ± 0.1
 (500 Particles{Float64,500}: 1.001 ± 0.1)
@@ -233,7 +232,6 @@ An instance of `p::Particles` can be plotted using `plot(p)`, that creates a his
 Below is an example using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
 ```julia
 using ControlSystems, MonteCarloMeasurements, StatsPlots
-import MonteCarloMeasurements: ±
 
 p = 1 ± 0.1
 ζ = 0.3 ± 0.1
