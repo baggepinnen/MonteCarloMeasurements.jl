@@ -263,7 +263,57 @@ ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 
 
 # Differential Equations
-[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well.
+[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well
+```julia
+function sim(±, tspan, plotfun=plot!; kwargs...)
+
+    g = 9.79 ± 0.02; # Gravitational constants
+    L = 1.00 ± 0.01; # Length of the pendulum
+
+    #Initial Conditions
+    u₀ = [0 ± 0, π / 3 ± 0.02] # Initial speed and initial angle
+
+    #Define the problem
+    function simplependulum(du,u,p,t)
+        θ  = u[1]
+        dθ = u[2]
+        du[1] = dθ
+        du[2] = -(g/L) * sin(θ)
+    end
+
+    #Pass to solvers
+    prob = ODEProblem(simplependulum, u₀, tspan)
+    sol = solve(prob, Tsit5(), reltol = 1e-6)
+
+    plotfun(sol.t, getindex.(sol.u, 2); kwargs...)
+
+end
+
+tspan = (0.0, 5)
+plot()
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
+sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
+```
+![window](figs/short_timescale.svg)
+The mean and errorbars for both Measurements and MonteCarloMeasurements line up perfectly.
+
+However, the uncertainty in the pendulum coefficients implies that the frequency of the pendulum oscillation is uncertain, when solving on longer time scales, this should result in the phase being completely unknown, something linear uncertainty propagation does not handle
+```julia
+tspan = (0.0, 200)
+plot()
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
+sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
+```
+![window](figs/long_timescale.svg)
+
+This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the staring amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
+```julia
+plot()
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,))
+sim(MonteCarloMeasurements.:∓, tspan, mcplot!, label = "", xlims=(tspan[2]-5,tspan[2]), l=(:black,0.1))
+```
+![window](figs/long_timescale_mc.svg)
+It now becomes clear that each trajectory has a fixed amplitude, but the phase is all mixed up due to the slightly different frequencies!
 
 # Limitations
 One major limitation is functions that contain control flow, where the branch is decided by an uncertain value. Consider the following case
