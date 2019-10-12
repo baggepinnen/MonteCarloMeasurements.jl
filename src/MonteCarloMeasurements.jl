@@ -61,7 +61,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, AbstractParticles,Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, sqrt!, exp!, sin!, cos!
+export ±, ∓, AbstractParticles,Particles,StaticParticles, WeightedParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -78,6 +78,7 @@ include("types.jl")
 include("register_primitive.jl")
 include("sampling.jl")
 include("particles.jl")
+include("distances.jl")
 include("complex.jl")
 include("sigmapoints.jl")
 include("resampling.jl")

@@ -334,6 +334,12 @@ Random.seed!(0)
         y = Particles(100)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
+
+        p = 2 ± 0.1
+        q = 3 ± 0.1
+        @test wasserstein(p,p,1) == 0
+        @test wasserstein(p,q,1) >= 0
+        @test bootstrap(p) ≈ p
     end
 
     @time @testset "mutation" begin

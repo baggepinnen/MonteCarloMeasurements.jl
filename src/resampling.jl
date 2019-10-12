@@ -65,3 +65,12 @@ function _resample!(p::WeightedParticles,Σ)
     end
     Σ
 end
+
+"""
+    bootstrap(p::Particles)
+
+Return Particles resampled with replacement.
+"""
+function bootstrap(p::T) where T <: AbstractParticles
+    T(p.particles[rand(1:length(p))])
+end
