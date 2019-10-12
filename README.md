@@ -261,7 +261,7 @@ ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 
 
 # Differential Equations
-[The tutorial](http://juliadiffeq.org/DiffEqTutorials.jl/html/type_handling/uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well
+[The tutorial](http://tutorials.juliadiffeq.org/html/type_handling/02-uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well
 ```julia
 function sim(±, tspan, plotfun=plot!; kwargs...)
 
