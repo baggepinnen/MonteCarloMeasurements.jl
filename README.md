@@ -3,9 +3,9 @@
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 
 
-This package facilitates nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty) by means of Monte-Carlo methods. A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide three core types to represent uncertainty: `Particles`, `StaticParticles` and `WeightedParticles`, all `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
+This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
 
-The goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²` or `f(x) = sign(x)` at `x=0`, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support correlations between quantities.
+Although several interesting use cases for doing calculations with probability distributions have popped up (see [Examples](https://github.com/baggepinnen/MonteCarloMeasurements.jl#examples-1)), the original goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²`, `f(x) = sign(x)` at `x=0` and long-time integration, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support correlations between quantities.
 
 A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded.
 
@@ -22,22 +22,22 @@ For a comparison of uncertainty propagation and nonlinear filtering, see [notes]
 using MonteCarloMeasurements, Distributions
 
 julia> 1 ± 0.1
-(500 Particles{Float64,500}: 1.001 ± 0.1)
+Part500(1.0 ± 0.1)
 
 julia> p = StaticParticles(100)
-(100 StaticParticles: -0.006 ± 1.069)
+SPart100(0.0 ± 0.999)
 
 julia> std(p)
-1.0687859218804316
+0.9986403042113867
 
 julia> var(p)
-1.142303346809804
+0.997282457195411
 
 julia> mean(p)
--0.0063862728919496315
+-4.6074255521943994e-17
 
 julia> f = x -> 2x + 10
-#104 (generic function with 1 method)
+#95 (generic function with 1 method)
 
 julia> f(p) ≈ 10 # ≈ determines if f(p) is within 2σ of 10
 true
@@ -52,12 +52,12 @@ julia> fit(Normal, f(p)) # Same as above
 Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
 
 julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
-(100 Particles{Float64,100}: 1.008 ± 0.58)
+Part100(1.0 ± 0.58)
 
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
 2-element Array{Particles{Float64,1000},1}:
- (1000 Particles: 0.00466 ± 1.42)
- (1000 Particles: 0.0819 ± 2.0)
+ 0.0254 ± 1.4
+ 0.0641 ± 2.0
 ```
 
 # Why a package
@@ -119,45 +119,45 @@ The following example creates a vector of two `Particles`. Since they were creat
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
 2-element Array{Particles{Float64,500},1}:
- (500 Particles: 1.0 ± 1.0)
- (500 Particles: 4.99 ± 2.0)
+ 1.0 ± 1.0
+ 5.0 ± 2.0
 
 julia> A = randn(2,2)
 2×2 Array{Float64,2}:
-  0.119307   0.791648
- -0.332829  -0.524872
+ -1.80898  -1.24566
+  1.41308   0.196504
 
 julia> y = A*p
 2-element Array{Particles{Float64,500},1}:
- (500 Particles: 4.07 ± 1.6)  
- (500 Particles: -2.95 ± 1.12)
+ -8.04 ± 3.1
+  2.4 ± 1.5
 
 julia> cov(y)
 2×2 Array{Float64,2}:
-  2.55287  -1.74549
- -1.74549   1.25673
+  9.61166  -3.59812
+ -3.59812   2.16701
 
 julia> A*Diagonal([1^2, 2^2])*A'
 2×2 Array{Float64,2}:
-  2.52106  -1.70176
- -1.70176   1.21274
+  9.4791   -3.53535
+ -3.53535   2.15126
 ```
 To create particles that exhibit a known covariance/correlation, use the appropriate constructor, e.g.,
 ```julia
 julia> p = Particles(10000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
 2-element Array{Particles{Float64,10000},1}:
- (10000 Particles: 19.2 ± 39.8)
- (10000 Particles: 13.0 ± 81.2)
+ 19.3 ± 48.0
+ 11.9 ± 43.0
 
 julia> cov(log.(p))
 2×2 Array{Float64,2}:
- 1.99736  1.00008
- 1.00008  3.00562
+ 1.96672  1.0016
+ 1.0016   2.98605
 
- julia> mean(log.(p))
+julia> mean(log.(p))
 2-element Array{Float64,1}:
- 1.99659
- 1.00218
+ 1.985378409751101
+ 1.000702538699887
 ```
 
 # Sigma points
@@ -169,8 +169,8 @@ julia> Σ = [3. 1; 1 4]
 
 julia> p = StaticParticles(sigmapoints(m,Σ))
 2-element Array{StaticParticles{Float64,5},1}:
- (5 StaticParticles: 1.0 ± 1.73) # 2n+1 = 5 particles
- (5 StaticParticles: 2.0 ± 2.0)
+ 1.0 ± 1.7 # 2n+1 = 5 particles
+ 2.0 ± 2.0
 
 julia> cov(p) ≈ Σ
 true
@@ -239,7 +239,7 @@ p = 1 ± 0.1
 G = tf([p*ω], [1, 2ζ*ω, ω^2]) # Transfer function with uncertain parameters
 
 dc = dcgain(G)[]
-# 500 Particles: 1.012 ± 0.149
+# Part500(1.01 ± 0.147)
 density(dc, title="Probability density of DC-gain")
 ```
 ![A density](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
@@ -261,14 +261,11 @@ ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 
 
 # Differential Equations
-[The tutorial](http://tutorials.juliadiffeq.org/html/type_handling/02-uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well
+[The tutorial](http://tutorials.juliadiffeq.org/html/type_handling/02-uncertainties.html) for solving differential equations using `Measurement` works for `Particles` as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well, as evidenced by the below simulation of a pendulum with uncertain properties
 ```julia
 function sim(±, tspan, plotfun=plot!; kwargs...)
-
-    g = 9.79 ± 0.02; # Gravitational constants
+    g = 9.79 ± 0.02; # Gravitational constant
     L = 1.00 ± 0.01; # Length of the pendulum
-
-    #Initial Conditions
     u₀ = [0 ± 0, π / 3 ± 0.02] # Initial speed and initial angle
 
     #Define the problem
@@ -279,12 +276,10 @@ function sim(±, tspan, plotfun=plot!; kwargs...)
         du[2] = -(g/L) * sin(θ)
     end
 
-    #Pass to solvers
     prob = ODEProblem(simplependulum, u₀, tspan)
     sol = solve(prob, Tsit5(), reltol = 1e-6)
 
     plotfun(sol.t, getindex.(sol.u, 2); kwargs...)
-
 end
 
 tspan = (0.0, 5)
@@ -294,7 +289,7 @@ sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,t
 ```
 ![window](figs/short_timescale.svg)
 
-The mean and errorbars for both Measurements and MonteCarloMeasurements line up perfectly.
+The mean and errorbars for both Measurements and MonteCarloMeasurements line up perfectly when integrating over 5 seconds.
 
 However, the uncertainty in the pendulum coefficients implies that the frequency of the pendulum oscillation is uncertain, when solving on longer time scales, this should result in the phase being completely unknown, something linear uncertainty propagation does not handle
 ```julia
@@ -305,7 +300,7 @@ sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,t
 ```
 ![window](figs/long_timescale.svg)
 
-This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the starting amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
+We now integrated over 200 seconds and look at the last 5 seconds. This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the starting amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
 ```julia
 plot()
 sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,))
@@ -313,7 +308,7 @@ sim(MonteCarloMeasurements.:∓, tspan, mcplot!, label = "", xlims=(tspan[2]-5,t
 ```
 ![window](figs/long_timescale_mc.svg)
 
-It now becomes clear that each trajectory has a fixed amplitude, but the phase is all mixed up due to the slightly different frequencies!
+It now becomes clear that each trajectory has a constant amplitude (although individual trajectories amplitudes vary slightly due to the uncertainty in the initial angle), but the phase is all mixed up due to the slightly different frequencies!
 
 These problems grow with increasing uncertainty and increasing integration time. In fact, the uncertainty reported by Measurements.jl goes to infinity as the integration time does the same.
 
