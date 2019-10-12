@@ -136,7 +136,7 @@ Random.seed!(0)
                 @test sum(a.*b) ≈ 0
                 @test all(A*b .≈ [0,0,0])
 
-                @test all(A\b .≈ zeros(3))
+                @test @unsafe all(A\b .≈ zeros(3))
                 @test_nowarn @unsafe qr(A)
                 @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
                 pn = Particles(100, Normal(2,1), systematic=false)
@@ -317,6 +317,8 @@ Random.seed!(0)
         A = randn(2,2)
         B = A .± 0
         @test sum(mean, exp(A) .- exp(B)) < 1e-9
+        @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
+        @test sum(mean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
         pp = [1. 0; 0 1] .± 0.0
         @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])

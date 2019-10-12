@@ -27,6 +27,22 @@ function register_primitive_multi(ff, eval=eval)
             end
         end)
     end
+    # The code below is resolving some method ambiguities
+    eval(quote
+        function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{T,N}) where {T,N}
+            StaticParticles{T,N}(map(($m.$f), p1.particles, p2.particles))
+        end
+        function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{S,N}) where {T,S,N} # Needed for particles of different float types :/
+            StaticParticles{promote_type(T,S),N}(map(($m.$f), p1.particles, p2.particles))
+        end
+
+        function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{T,N}) where {T,N}
+            StaticParticles{T,N}(map(($m.$f), p1.particles, p2.particles))
+        end
+        function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{S,N}) where {T,S,N} # Needed for particles of different float types :/
+            StaticParticles{promote_type(T,S),N}(map(($m.$f), p1.particles, p2.particles))
+        end
+    end)
 end
 
 function register_primitive_single(ff, eval=eval)

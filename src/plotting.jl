@@ -75,7 +75,7 @@ Plots all trajectories represented by a vector of particles
 mcplot
 
 """
-ribbonplot(x,y,[q=2])
+ribbonplot(x,y,[q=0.025])
 
 Plots a vector of particles with a ribbon covering quantiles `q, 1-q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
@@ -91,11 +91,11 @@ ribbonplot
     mean.(y)
 end
 
-@recipe function plt(func::Function, x::MvParticles, q=0.25)
+@recipe function plt(func::Function, x::MvParticles, q=0.025)
     y = func.(x)
     label --> "Mean with ($q, $(1-q)) quantiles"
-    xerror := (quantile.(x, q), quantile.(x, 1-q))
-    yerror := (quantile.(y, q), quantile.(y, 1-q))
+    xerror := quantiles(x, q)
+    yerror := quantiles(y, q)
     mean.(x), mean.(y)
 end
 
@@ -110,24 +110,22 @@ end
             Matrix(x), Matrix(y)
         end
     else
-        lowery = -(quantile.(y,q)-my)
-        uppery = quantile.(y,1-q)-my
-        lowerx = -(quantile.(x,q)-mx)
-        upperx = quantile.(x,1-q)-mx
-        yerror := (lowery,uppery)
-        xerror := (lowerx,upperx)
+        yerror := quantiles(y, q)
+        xerror := quantiles(x, q)
         label --> "Mean with $q quantile"
     end
-    mean.(x), mean.(y)
+    mx, my
 end
 
-@recipe function plt(x::MvParticles, y::AbstractArray)
-    xerror := std.(x)
-    mean.(x), y
+@recipe function plt(x::MvParticles, y::AbstractArray, q=0.025)
+    mx = mean.(x)
+    lower,upper = quantiles(x, q)
+    xerror := (lower,upper)
+    mx, y
 end
 
-@recipe function plt(x::AbstractArray, y::MvParticles, q=2)
-    ribbon := q.*std.(y)
-    label --> "Mean ± $q stds"
+@recipe function plt(x::AbstractArray, y::MvParticles, q=0.025)
+    ribbon := quantiles(y, q)
+    label --> "Mean with ($q, $(1-q)) quantiles"
     x, mean.(y)
 end

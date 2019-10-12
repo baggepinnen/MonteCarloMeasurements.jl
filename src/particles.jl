@@ -243,6 +243,7 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
         Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
         Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N} # Needed since above is not specific enough.
 
+        Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(promote_type(T,S).(f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
@@ -390,6 +391,7 @@ Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)
 Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
+Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
 """
     norm(x::AbstractParticles, p=2)

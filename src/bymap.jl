@@ -49,6 +49,8 @@ macro bymap(ex)
             Particles(individuals)
         elseif ndims(individuals[1]) == 1
             Particles(copy(reduce(hcat,individuals)'))
+        elseif ndims(individuals[1]) == 2
+            reshape(Particles(copy(reduce(hcat,vec.(individuals))')), size(individuals[1])...)
         else
             error("Output with dimension >2 is currently not supported by `@bymap`. Consider if `ℝⁿ2ℝⁿ_function($($fsym), $($args...))` works for your use case.")
         end
@@ -57,6 +59,7 @@ end
 
 macro bypmap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
+    fsym = string(f)
     quote
         N = Ngetter($(esc.(args)...))
         individuals = pmap(1:N) do i
@@ -65,8 +68,12 @@ macro bypmap(ex)
         end
         if ndims(individuals[1]) == 0
             Particles(individuals)
-        else
+        elseif ndims(individuals[1]) == 1
             Particles(copy(reduce(hcat,individuals)'))
+        elseif ndims(individuals[1]) == 2
+            reshape(Particles(copy(reduce(hcat,vec.(individuals))')), size(individuals[1])...)
+        else
+            error("Output with dimension >2 is currently not supported by `@bymap`. Consider if `ℝⁿ2ℝⁿ_function($($fsym), $($args...))` works for your use case.")
         end
     end
 end
