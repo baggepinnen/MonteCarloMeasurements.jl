@@ -55,7 +55,7 @@ end
     label --> "Mean with $q quantile"
     m = mean.(y)
     lower,upper = quantiles(y, q)
-    ribbon := (lower,upper)
+    ribbon := [lower,upper]
     x,m
 end
 
@@ -87,7 +87,7 @@ ribbonplot
 @recipe function plt(y::MvParticles, q=0.025)
     label --> "Mean with ($q, $(1-q)) quantiles"
     lower,upper = quantiles(y, q)
-    ribbon := (lower,upper)
+    ribbon := [lower,upper]
     mean.(y)
 end
 
@@ -125,7 +125,7 @@ end
 end
 
 @recipe function plt(x::AbstractArray, y::MvParticles, q=0.025)
-    ribbon := quantiles(y, q)
+    ribbon := [quantiles(y, q)...]
     label --> "Mean with ($q, $(1-q)) quantiles"
     x, mean.(y)
 end
