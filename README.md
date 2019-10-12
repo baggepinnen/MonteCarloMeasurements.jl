@@ -293,6 +293,7 @@ sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
 sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
 ```
 ![window](figs/short_timescale.svg)
+
 The mean and errorbars for both Measurements and MonteCarloMeasurements line up perfectly.
 
 However, the uncertainty in the pendulum coefficients implies that the frequency of the pendulum oscillation is uncertain, when solving on longer time scales, this should result in the phase being completely unknown, something linear uncertainty propagation does not handle
@@ -304,14 +305,17 @@ sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,t
 ```
 ![window](figs/long_timescale.svg)
 
-This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the staring amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
+This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the starting amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
 ```julia
 plot()
 sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,))
 sim(MonteCarloMeasurements.:∓, tspan, mcplot!, label = "", xlims=(tspan[2]-5,tspan[2]), l=(:black,0.1))
 ```
 ![window](figs/long_timescale_mc.svg)
+
 It now becomes clear that each trajectory has a fixed amplitude, but the phase is all mixed up due to the slightly different frequencies!
+
+This problems grow with increasing uncertainty and increasing integration time. In fact, the uncertainty reported by Measurements.jl goes to infinity as the integration time does the same. 
 
 # Limitations
 One major limitation is functions that contain control flow, where the branch is decided by an uncertain value. Consider the following case
