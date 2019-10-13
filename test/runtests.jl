@@ -483,6 +483,9 @@ Random.seed!(0)
         @test h2([p_1,p_2], [p_3,p_4]) ≈ @bymap  h2([p_1,p_2], [p_3,p_4])
         @test h2([p_1,p_2], [p_3,p_4]) ≈ @bypmap h2([p_1,p_2], [p_3,p_4])
 
+        g(nt::NamedTuple) = nt.x^2 + nt.y^2
+        @test g((x=p_1, y=p_2)) ≈ 2 ± 1.9
+
     end
 
     include("test_forwarddiff.jl")

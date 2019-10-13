@@ -117,7 +117,11 @@ function replace_particles(P,condition=P->P isa AbstractParticles,replacer = P->
     T = nakedtypeof(P)
 
     try
-        return T(fields...)
+        if T <: NamedTuple # Special case required for NamedTuple
+            return (;Pair.(keys(P), fields)...) # The semicolon is required to create named tuple
+        else
+            return T(fields...)
+        end
     catch e
         if has_mutable_particles(P)
             @error("Failed to create a `$T` by calling it with its fields in order. For this to work, `$T` must have a constructor that accepts all fields in the order they appear in the struct and accept that the fields that contained particles are replaced by 0. Try defining a meaningful constructor that accepts arguments with the type signature \n`$(T)$(typeof.(fields))`\nThe error thrown by `$T` was ")
@@ -148,14 +152,19 @@ function particle_paths(P, allpaths=[], path=[])
         push!(allpaths, (path,particletype(T)...))
         return
     end
-    if T <: Union{AbstractArray, Tuple}
+    if T <: AbstractArray
         particle_paths(P[1], allpaths, [path; (:input, T, size(P))])
+    end
+    if T <: Tuple
+        particle_paths(P[1], allpaths, [path; (:input, T, length(P))])
     end
     for n in fieldnames(T)
         fp = getfield(P,n)
         FT = typeof(fp)
-        if FT <: Union{AbstractArray, Tuple}
+        if FT <: AbstractArray
             particle_paths(fp[1], allpaths, [path; (n, FT, size(fp))])
+        elseif FT <: Tuple
+                particle_paths(fp[1], allpaths, [path; (n, FT, length(fp))])
         else
             particle_paths(fp, allpaths, [path; (n, FT, ())])
         end
