@@ -38,7 +38,7 @@ end
     :($N)
 end
 
-@generated function arggetter(i,ntt::NamedTuple)
+function arggetter(i,ntt::Type{NamedTuple})
     inds = indexof_particles(ntt)
     nargs = fieldcount(ntt)
     quote
@@ -47,27 +47,24 @@ end
     end
 end
 
-@generated function arggetter(i,args...)
-    nargs = length(args)
-    inds = indexof_particles(args)
-    quote
-        @ntuple $nargs j->j ∈ $inds ? vecindex(args[j],i) : args[j] # Must interpolate in vars that were created outside of the quote, but not arguments to the generated function
-    end
+function arggetter(i,a::SomeKindOfParticles)
+    vecindex(a,i)
 end
 
+function arggetter(i,a)
+    a
+end
 
 macro bymap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
     fsym = string(f)
+    nargs = length(args)
     quote
         N = Ngetter($(esc.(args)...))
         individuals = map(1:N) do i
-            argsi = arggetter(i,$(esc.(args)...))
-            if argsi isa NamedTuple
-                $(esc(f))(argsi)
-            else
-                $(esc(f))(argsi...)
-            end
+            eargs = ($(esc.(args)...),)
+            argsi = ntuple(j->arggetter(i,eargs[j]), $nargs)
+            $(esc(f))(argsi...)
         end
         if ndims(individuals[1]) == 0
             Particles(individuals)
@@ -81,13 +78,16 @@ macro bymap(ex)
     end
 end
 
+
 macro bypmap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
     fsym = string(f)
+    nargs = length(args)
     quote
         N = Ngetter($(esc.(args)...))
         individuals = pmap(1:N) do i
-            argsi = arggetter(i,$(esc.(args)...))
+            eargs = ($(esc.(args)...),)
+            argsi = ntuple(j->arggetter(i,eargs[j]), $nargs)
             $(esc(f))(argsi...)
         end
         if ndims(individuals[1]) == 0
