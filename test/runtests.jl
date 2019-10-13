@@ -486,6 +486,9 @@ Random.seed!(0)
         g(nt::NamedTuple) = nt.x^2 + nt.y^2
         @test g((x=p_1, y=p_2)) == p_1^2 + p_2^2
 
+        g2(a,nt::NamedTuple) = a + nt.x^2 + nt.y^2
+        @test g2(p_3, (x=p_1, y=p_2)) == p_3 + p_1^2 + p_2^2
+
     end
 
     include("test_forwarddiff.jl")
