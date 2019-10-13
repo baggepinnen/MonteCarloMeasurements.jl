@@ -51,6 +51,16 @@ ForwardDiff.gradient(x->strange(x,deterministic), uncertain)
 #
 ForwardDiff.gradient(x->strange(x,uncertain), deterministic)
 #
-# a = ForwardDiff.gradient(x->strange(x,uncertain), uncertain);
+a = ForwardDiff.gradient(x->strange(x,uncertain), uncertain);
 # mean.(a)
 # The last one here is commented because it sometimes segfaults. When it doesn't, it seems to produce the correct result with the complicated type Particles{Particles{Float64,N},N}, which errors when printed.
+
+# We can also do the same using Zygote. The result is the same, and Zygote also handles the last version without producing a weird type in the result!
+using Zygote
+Zygote.gradient(x->strange(x,deterministic), deterministic)
+#
+Zygote.gradient(x->strange(x,deterministic), uncertain)
+#
+Zygote.gradient(x->strange(x,uncertain), deterministic)
+#
+Zygote.gradient(x->strange(x,uncertain), uncertain)
