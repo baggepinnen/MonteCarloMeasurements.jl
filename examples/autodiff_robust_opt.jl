@@ -5,25 +5,25 @@
 # Where $c$ and $d$ are uncertain. We encode the constraint into the cost and solve it using 4 different algorithms
 
 
-using MonteCarloMeasurements, Optim, ForwardDiff
-using MonteCarloMeasurements: ∓
+using MonteCarloMeasurements, Optim, ForwardDiff, Zygote
 
 const c = 1 ∓ 0.1 # These are the uncertain parameters
 const d = 1 ∓ 0.1 # These are the uncertain parameters
 # In the cost function below, we ensure that $cx+dy > 10 \; ∀ \; c,d ∈ P$ by looking at the worst case
-function cost(params)
-    x,y = params
-    -(3x+2y) + 10000sum(params .< 0) + 10000*(maximum(c*x+d*y) > 10)
+Base.findmax(p::AbstractParticles;dims=:) = findmax(p.particles,dims=:)
+function cost(pars)
+    x,y = pars
+    -(3x+2y) + 10000sum(pars .< 0) + 10000*(maximum(c*x+d*y) > 10)
 end
 
-params = [1., 1] # Initial guess
-cost(params)     # Try the cost function
-
+pars = [1., 1] # Initial guess
+cost(pars)     # Try the cost function
+cost'(pars)
 # We now solve the problem using the following list of algorithms
 function solvemany()
     algos = [NelderMead(), SimulatedAnnealing(), BFGS(), Newton()]
     map(algos) do algo
-        res = Optim.optimize(cost, params, algo, autodiff=:forward)
+        res = Optim.optimize(cost, p->cost'(p), pars, algo, inplace=false)
         m = res.minimizer
         cost(m)
     end
