@@ -9,6 +9,8 @@ If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treate
 ∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
+(..)(a,b) = Particles(DEFAUL_NUM_PARTICLES, Uniform(a,b))
+
 """
     ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
@@ -205,6 +207,14 @@ for PT in (:WeightedParticles,)
     @eval Statistics.cov(p::$PT,args...;kwargs...) = var(p,args...;kwargs...)
 end
 
+function Particles(d::Distribution;kwargs...)
+    Particles(DEFAUL_NUM_PARTICLES, d; kwargs...)
+end
+
+function StaticParticles(d::Distribution;kwargs...)
+    StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
+end
+
 for PT in (:Particles, :StaticParticles, :WeightedParticles)
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
@@ -225,6 +235,8 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
             end
             $PT{eltype(v),N}(v)
         end
+
+
 
         function $PT(N::Integer, d::MultivariateDistribution)
             v = rand(d,N)' |> copy # For cache locality

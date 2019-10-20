@@ -1,5 +1,4 @@
 using MonteCarloMeasurements, ForwardDiff, Test
-using MonteCarloMeasurements: ±
 const FD = ForwardDiff
 
 @testset "forwarddiff" begin
