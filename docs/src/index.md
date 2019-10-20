@@ -1,13 +1,9 @@
-# MonteCarloMeasurements
-
-```@contents
-Depth = 3
-```
 
 ![logo](figs/logo.svg)
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 
+# MonteCarloMeasurements
 
 This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. Correlated quantities are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
 
@@ -249,22 +245,22 @@ dc = dcgain(G)[]
 # Part500(1.01 ± 0.147)
 density(dc, title="Probability density of DC-gain")
 ```
-![A density](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/dens.svg)
+![A density](figs/dens.svg)
 ```julia
 w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 ```
-![A bodeplot with errorbars](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/errorbar.svg)
+![A bodeplot with errorbars](figs/errorbar.svg)
 ```julia
 mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![A bodeplot with lots of lines](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/mc.svg)
+![A bodeplot with lots of lines](figs/mc.svg)
 ```julia
 ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![A bodeplot with a ribbon](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/figs/rib.svg)
+![A bodeplot with a ribbon](figs/rib.svg)
 
 
 # Differential Equations
@@ -374,7 +370,7 @@ These macros will map the function `f` over each element of `p::Particles{T,N}`,
 These macros will typically be slower than calling `f(p)`. If `f` is very expensive, `@bypmap` might prove prove faster than calling `f` with `p`, it's worth a try. The usual caveats for distributed computing applies, all code must be loaded on all workers etc.
 
 
-## ℝⁿ → ℝⁿ functions
+# ℝⁿ → ℝⁿ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
 - `exp : ℝ(n×n) → ℝ(n×n)`   matrix exponential
 - `log : ℝ(n×n) → C(n×n)`   matrix logarithm
@@ -382,7 +378,7 @@ These functions do not work with `Particles` out of the box. Special cases are c
 
 The function `ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
 
-## ℂ → ℂ functions
+# ℂ → ℂ functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
 - `sqrt`, `exp`, `sin`, `cos`
 
@@ -456,8 +452,7 @@ The table below compares methods for uncertainty propagation with their parallel
 
 # Examples
 ## [Control systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)
-This example shows how to simulate control systems (using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)
-[](ControlSystems.jl)) with uncertain parameters. We calculate and display Bode diagrams, Nyquist diagrams and time-domain responses. We also illustrate how the package [ControlSystemIdentification.jl](https://github.com/baggepinnen/ControlSystemIdentification.jl) interacts with MonteCarloMeasurements to facilitate the creation and analysis of uncertain systems.
+This example shows how to simulate control systems (using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)) with uncertain parameters. We calculate and display Bode diagrams, Nyquist diagrams and time-domain responses. We also illustrate how the package [ControlSystemIdentification.jl](https://github.com/baggepinnen/ControlSystemIdentification.jl) interacts with MonteCarloMeasurements to facilitate the creation and analysis of uncertain systems.
 
 We also perform some limited benchmarks.
 
@@ -517,15 +512,15 @@ https://cscherrer.github.io/post/variational-importance-sampling/
 
 
 # Exported functions and types
+## Index
+
+```@index
+```
 ```@autodocs
 Modules = [MonteCarloMeasurements]
 Private = false
-Pages   = ["MonteCarloMeasurements.jl"]
 ```
-
-
-
-# Index
-
-```@index
+```@docs
+Base.:(≈)(p::AbstractParticles, a::AbstractParticles)
+MonteCarloMeasurements.:(≉)(a::AbstractParticles, b::AbstractParticles)
 ```

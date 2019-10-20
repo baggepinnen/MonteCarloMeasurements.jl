@@ -374,15 +374,24 @@ function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where 
     COMPARISON_FUNCTION[](p) <= COMPARISON_FUNCTION[](a)
 end
 
+"""
+    p1 ≈ p2
 
+Determine if two particles are not significantly different
+"""
+Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
-Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::MvParticles, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
+"""
+    p1 ≉ p2
+
+Determine if two particles are significantly different
+"""
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 
 Base.sincos(x::AbstractParticles) = sin(x),cos(x)

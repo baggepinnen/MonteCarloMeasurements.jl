@@ -9,6 +9,7 @@ This type represents uncertainty using a cloud of particles.
 # Constructors:
 - `Particles()`
 - `Particles(N::Integer)`
+- `Particles(d::Distribution)`
 - `Particles(N::Integer, d::Distribution)`
 - `Particles(N::Integer, d::Distribution; permute, systematic)`
 - `Particles(v::Array{T,1} where T)`
@@ -21,7 +22,7 @@ end
 """
     struct StaticParticles{T, N} <: AbstractParticles{T, N}
 
-See `?Particles` for help. The difference between `StaticParticles` and `Particles` is that the `StaticParticles` store particles in a static vecetor. This makes runtimes much shorter, but compile times longer. See the readme for some benchmarks.
+See `?Particles` for help. The difference between `StaticParticles` and `Particles` is that the `StaticParticles` store particles in a static vecetor. This makes runtimes much shorter, but compile times longer. See the documentation for some benchmarks.
 """
 struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
