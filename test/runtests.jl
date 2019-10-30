@@ -27,8 +27,8 @@ Random.seed!(0)
     @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
-        @test [0,0] ∓ 1 isa MonteCarloMeasurements.MvParticles
-        @test [0,0] ∓ [1,1] isa MonteCarloMeasurements.MvParticles
+        @test [0,0] ∓ 1. isa MonteCarloMeasurements.MvParticles
+        @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
 
         @info "Done"
         for PT = (Particles, StaticParticles, WeightedParticles)
