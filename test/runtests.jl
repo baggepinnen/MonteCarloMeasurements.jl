@@ -291,6 +291,7 @@ Random.seed!(0)
         @test promote_type(Particles{Float64,10}, Float64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, Int64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, ComplexF64) == Complex{Particles{Float64,10}}
+        @test promote_type(Particles{Float64,10}, Missing) == Union{Particles{Float64,10},Missing}
         @test convert(Float64, 0p) isa Float64
         @test convert(Float64, 0p) == 0
         @test convert(Int, 0p) isa Int
