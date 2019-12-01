@@ -61,9 +61,9 @@ Return a short string describing the type
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 shortform(p::WeightedParticles) = "WPart"
-function to_num_str(p, d=3)
+function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
-    if s < eps(p)
+    if T <: AbstractFloat && s < eps(p)
         string(round(mean(p), sigdigits=d))
     else
         string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=d-1))
@@ -229,7 +229,7 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
             end
         end
 
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
+        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
                 v = systematic_sample(N,d; permute=permute)
             else
