@@ -157,6 +157,20 @@ Random.seed!(0)
                 @test Particles(100) + Particles(randn(Float32, 100)) ≈ 0
                 @test_throws MethodError p + Particles(randn(Float32, 200)) # Npart and Float type differ
                 @test_throws MethodError p + Particles(200) # Npart differ
+
+                PT == WeightedParticles && continue
+                @testset "discrete distributions" begin
+                    p = PT(Poisson(50))
+                    @test p isa PT{Int}
+                    @test (p^2 - 1) isa PT{Int}
+                    @test exp(p) isa PT{Float64}
+
+                    # mainly just test that printing PT{Int} doesn't error
+                    io = IOBuffer()
+                    show(io, p)
+                    s = String(take!(io))
+                    @test occursin('±', s)
+                end
             end
         end
     end
