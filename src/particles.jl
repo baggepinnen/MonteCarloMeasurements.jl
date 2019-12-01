@@ -221,9 +221,11 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
     @eval begin
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(m::Matrix)
-            map(1:size(m,2)) do i
-                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+        function $PT(m::Array{T,N}) where {T,N}
+            s1 = size(m, 1)
+            inds = CartesianIndices(axes(m)[2:end])
+            map(inds) do ind
+                $PT{T,s1}(@view(m[:,ind]))
             end
         end
 
@@ -320,7 +322,12 @@ Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, v
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
-Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
+function Base.Array(v::Array{<:AbstractParticles})
+    m = reduce(hcat, getfield.(v,:particles))
+    return reshape(m, size(m, 1), size(v)...)
+end
+Base.Matrix(v::MvParticles) = Array(v)
+
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
 #     s2 = map(1:length(v[1])) do i
 #         var(getindex.(v,i))
