@@ -322,8 +322,11 @@ Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, v
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
+Base.Array(p::AbstractParticles) = p.particles
+Base.Vector(p::AbstractParticles) = Array(p)
+
 function Base.Array(v::Array{<:AbstractParticles})
-    m = reduce(hcat, getfield.(v,:particles))
+    m = reduce(hcat, Array.(v))
     return reshape(m, size(m, 1), size(v)...)
 end
 Base.Matrix(v::MvParticles) = Array(v)
