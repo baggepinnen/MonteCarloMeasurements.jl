@@ -73,6 +73,10 @@ Random.seed!(0)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
 
+                v = randn(5)
+                @test Vector(PT(v)) == v
+                @test Array(PT(v)) == v
+
                 @testset "unsafe comparisons" begin
                     unsafe_comparisons(false)
                     @test_throws ErrorException p<p
