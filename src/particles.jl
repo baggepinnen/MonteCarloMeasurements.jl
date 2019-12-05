@@ -99,6 +99,8 @@ sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
 asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
 zero,sign,abs,sqrt,rad2deg,deg2rad])
 
+MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
+
 for PT in (:Particles, :StaticParticles)
     # Constructors
     @eval begin

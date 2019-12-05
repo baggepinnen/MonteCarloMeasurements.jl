@@ -162,6 +162,10 @@ Random.seed!(0)
                 @test_throws MethodError p + Particles(randn(Float32, 200)) # Npart and Float type differ
                 @test_throws MethodError p + Particles(200) # Npart differ
 
+                mp = MvParticles([randn(10) for _ in 1:3])
+                @test length(mp) == 10
+                @test MonteCarloMeasurements.nparticles(mp) == 3
+
                 PT == WeightedParticles && continue
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
