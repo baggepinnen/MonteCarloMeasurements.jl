@@ -120,6 +120,8 @@ Random.seed!(0)
                 @test !(f(p) ≲ 11)
                 @test f(p) ≲ 15
                 @test 5 ≲ f(p)
+                @test 1 ≲ 2
+                
                 @test Normal(f(p)).μ ≈ mean(f(p))
                 !isa(p, WeightedParticles) && @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
