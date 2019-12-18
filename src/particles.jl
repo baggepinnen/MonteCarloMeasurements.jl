@@ -316,9 +316,9 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
             @eval Base.promote_rule(::Type{$PT{S,N}}, ::Type{$PT2{T,N}}) where {S,T,N} = Particles{promote_type(S,T),N}
         end
     end
-end
 
-Base.promote_rule(::Type{<:AbstractParticles{S,M}}, ::Type{<:AbstractParticles{T,N}}) where {S,T,M,N} = Union{}
+    @eval Base.promote_rule(::Type{<:AbstractParticles}, ::Type{$PT{T,N}}) where {T,N} = Union{}
+end
 
 Base.length(p::AbstractParticles{T,N}) where {T,N} = N
 Base.ndims(p::AbstractParticles{T,N}) where {T,N} = ndims(T)

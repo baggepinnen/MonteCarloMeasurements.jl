@@ -314,7 +314,7 @@ Random.seed!(0)
         @testset "promotion of $PT" for PT in (Particles, StaticParticles)
             @test promote_type(PT{Float64,10}, PT{Float64,10}) == PT{Float64,10}
             @test promote_type(PT{Float64,10}, PT{Int,10}) == PT{Float64,10}
-            @test promote_type(PT{Int,5}, PT{Float64,10}) == Any
+            @test promote_type(PT{Int,5}, PT{Float64,10}) == PT
         end
         @test promote_type(Particles{Float64,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
         @test promote_type(Particles{Int,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
