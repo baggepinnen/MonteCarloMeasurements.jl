@@ -307,7 +307,7 @@ for PT in (:Particles, :StaticParticles, :WeightedParticles)
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N}
     @eval Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N}
 
-    for PT2 in (:Particles, :StaticParticles, :WeightedParticles)
+    for PT2 in (:Particles, :StaticParticles)
         if PT == PT2
             @eval Base.promote_rule(::Type{$PT{S,N}}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         elseif any(==(:StaticParticles), (PT, PT2))
