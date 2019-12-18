@@ -244,7 +244,10 @@ for PT in (:Particles, :StaticParticles)
             $PT([filter(f, p1.particles); filter(f, p2.particles)])
         end
 
-        Base.:^(p::$PT, i::Integer) = $PT(p.particles.^i) # Resolves ambiguity
+        function Base.:^(p::$PT{T,N}, i::Integer) where {T,N} # Resolves ambiguity
+            res = p.particles.^i
+             $PT{eltype(res),N}(res)
+        end
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
     end
 
