@@ -1,7 +1,5 @@
 @inline maybe_particles(x) = x
 @inline maybe_particles(p::AbstractParticles) = p.particles
-@inline maybe_logweights(x) = 0
-@inline maybe_logweights(p::WeightedParticles) = p.logweights
 
 function register_primitive(ff, eval=eval)
     register_primitive_multi(ff, eval)

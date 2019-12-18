@@ -1,7 +1,6 @@
 module MonteCarloMeasurements
 using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
 using Distributed: pmap
-import StatsBase: ProbabilityWeights
 using Lazy: @forward
 import Base: add_sum
 
@@ -61,7 +60,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., AbstractParticles,Particles,StaticParticles, WeightedParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
+export ±, ∓, .., AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -97,6 +96,3 @@ function __init__()
 end
 
 end
-
-
-# TODO: ifelse?

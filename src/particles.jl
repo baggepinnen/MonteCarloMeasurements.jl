@@ -60,7 +60,6 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
-shortform(p::WeightedParticles) = "WPart"
 function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
     if T <: AbstractFloat && s < eps(p)
@@ -150,65 +149,6 @@ for PT in (:Particles, :StaticParticles)
     @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle
 end
 
-for PT in (:WeightedParticles,)
-    # Constructors
-    @eval begin
-        $PT(v::Vector, w=fill(-log(length(v)), length(v))) = $PT{eltype(v),length(v)}(v,w)
-        function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
-            v = fill(n,N)
-            w = fill(-log(N),N)
-            $PT{T,N}(v,w)
-        end
-    end
-    # Two-argument functions
-    for ff in (+,-,*,/,//,^, max,min,mod,mod1,atan,add_sum)
-        f = nameof(ff)
-        @eval begin
-            function (Base.$f)(p::$PT{T,N},a::Real...) where {T,N}
-                # $PT{T,N}(map(x->$f(x,a...), p.particles),p.logweights)
-                $PT{T,N}($f.(p.particles, maybe_particles.(a)...), .+(p.logweights, maybe_logweights.(a)...))
-            end
-            function (Base.$f)(a::Real,p::$PT{T,N}) where {T,N}
-                $PT{T,N}(map(x->$f(a,x), p.particles),p.logweights)
-            end
-            function (Base.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N} # TODO: add logweights for multiplication but not for addition
-                sf = string($f)
-                $f == Base.:(*) || @warn("p1 $sf p2 not yet fully supported for WeightedParticles")
-                $PT{T,N}(map($f, p1.particles, p2.particles),p1.logweights+p2.logweights)
-            end
-            function (Base.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
-                $PT{promote_type(T,S),N}(map($f, p1.particles, p2.particles),p1.logweights+p2.logweights)
-            end
-        end
-    end
-    # One-argument functions
-    for ff in [*,+,-,/,
-        exp,exp2,exp10,expm1,
-        log,log10,log2,log1p,
-        sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
-        asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
-        zero,sign,abs,sqrt,rad2deg,deg2rad]
-        f = nameof(ff)
-        @eval function (Base.$f)(p::$PT)
-            $PT(map($f, p.particles), p.logweights)
-        end
-    end
-    for ff in [mean, median, quantile]
-        f = nameof(ff)
-        @eval function (Statistics.$f)(p::$PT,args...;kwargs...)
-            $f(p.particles, Weights(exp.(p.logweights)), args...;kwargs...)
-        end
-    end
-    for ff in [var, std]
-        f = nameof(ff)
-        @eval function (Statistics.$f)(p::$PT{T,N},args...;kwargs...) where {T,N}
-            N == 1 && (return zero(T))
-            $f(p.particles, AnalyticWeights(exp.(p.logweights)), args...;kwargs...)
-        end
-    end
-    @eval Statistics.cov(p::$PT,args...;kwargs...) = var(p,args...;kwargs...)
-end
-
 function Particles(d::Distribution;kwargs...)
     Particles(DEFAUL_NUM_PARTICLES, d; kwargs...)
 end
@@ -217,7 +157,7 @@ function StaticParticles(d::Distribution;kwargs...)
     StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles, :WeightedParticles)
+for PT in (:Particles, :StaticParticles)
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin
@@ -344,15 +284,7 @@ Statistics.mean(v::MvParticles) = mean.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
-check_similar_weights(v) = all(v[i].logweights ≈ v[1].logweights for i in 2:length(v))
-function Statistics.cov(v::MvWParticles,args...;kwargs...)
-    check_similar_weights(v)
-    cov(Matrix(v), AnalyticWeights(v[1].logweights); kwargs...)
-end
-Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvWParticles) = error("Not implemented for weighted particles yet")
-Distributions.fit(d::Type{<:Distribution}, p::WeightedParticles) = error("Not implemented for weighted particles yet")
-Distributions.fit(d::Type{<:MvNormal}, p::MvWParticles) = MvNormal(p)
-Distributions.fit(d::Type{<:Normal}, p::WeightedParticles) = Normal(p)
+
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))

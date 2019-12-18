@@ -31,7 +31,7 @@ Random.seed!(0)
         @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
 
         @info "Done"
-        for PT = (Particles, StaticParticles, WeightedParticles)
+        for PT = (Particles, StaticParticles)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
                 p = PT(100)
@@ -123,7 +123,7 @@ Random.seed!(0)
                 @test 1 ≲ 2
                 
                 @test Normal(f(p)).μ ≈ mean(f(p))
-                !isa(p, WeightedParticles) && @test fit(Normal, f(p)).μ ≈ mean(f(p))
+                @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
 
                 f = x -> x^2
@@ -188,11 +188,11 @@ Random.seed!(0)
 
 
     @time @testset "Multivariate Particles" begin
-        for PT = (Particles, StaticParticles, WeightedParticles)
+        for PT = (Particles, StaticParticles)
             @testset "$(repr(PT))" begin
                 @info "Running tests for multivariate $PT"
                 p = PT(100, MvNormal(2,1))
-                !isa(p,MonteCarloMeasurements.MvWParticles) && @test_nowarn sum(p)
+                @test_nowarn sum(p)
                 @test cov(p) ≈ I atol=0.6
                 @test mean(p) ≈ [0,0] atol=0.2
                 m = Matrix(p)
@@ -429,40 +429,6 @@ Random.seed!(0)
             popt = optimize(rosenbrock2d, deepcopy(p))
             popt ≈ [1,1]
         end
-    end
-
-    @time @testset "WeightedParticles" begin
-        @info "Testing weighted particles"
-        p = WeightedParticles(100)
-
-        # @test sum(p.weights) ≈ 1
-        @test sum(exp,p.logweights) ≈ 1
-        p.logweights .= randn.()
-        resample!(p)
-        # @test sum(p.weights) ≈ 1
-        @test sum(exp,p.logweights) ≈ 1
-        p = WeightedParticles(100)
-        p.logweights .+= logpdf.(Normal(0,1), 2 .-p.particles)
-        resample!(p)
-        @test mean(p) > 0
-        v = [WeightedParticles(1000), WeightedParticles(1000)]
-        @test cov(v) ≈ I atol=0.15
-        p = WeightedParticles(100)
-        p.logweights .= randn.()
-        log∑exp = log(sum(exp, p.logweights))
-        @test log∑exp ≈ MonteCarloMeasurements.logsumexp!(p)[1]
-        # Test numerical stability
-        p = WeightedParticles(2)
-        p.logweights .= [1e-20, log(1e-20)]
-        @test MonteCarloMeasurements.logsumexp!(p)[1] ≈ 2e-20
-
-        @test WeightedParticles(100) + WeightedParticles(randn(Float32, 100)) isa WeightedParticles{Float64,100}
-
-        p = WeightedParticles(100)
-        p.logweights .= randn.()
-        @test (p*p*p).logweights ≈ 3*p.logweights
-        msg = r"not yet fully supported for WeightedParticles"
-        @test_logs (:warn, msg) p+p
     end
 
 
