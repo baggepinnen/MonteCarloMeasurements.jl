@@ -121,7 +121,7 @@ Random.seed!(0)
                 @test f(p) ≲ 15
                 @test 5 ≲ f(p)
                 @test 1 ≲ 2
-                
+
                 @test Normal(f(p)).μ ≈ mean(f(p))
                 @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
@@ -168,7 +168,6 @@ Random.seed!(0)
                 @test length(mp) == 10
                 @test MonteCarloMeasurements.nparticles(mp) == 3
 
-                PT == WeightedParticles && continue
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
                     @test p isa PT{Int}
