@@ -27,8 +27,8 @@ Random.seed!(0)
     @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
-        @test [0,0] ∓ 1 isa MonteCarloMeasurements.MvParticles
-        @test [0,0] ∓ [1,1] isa MonteCarloMeasurements.MvParticles
+        @test [0,0] ∓ 1. isa MonteCarloMeasurements.MvParticles
+        @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
 
         @info "Done"
         for PT = (Particles, StaticParticles)
@@ -73,6 +73,10 @@ Random.seed!(0)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
 
+                v = randn(5)
+                @test Vector(PT(v)) == v
+                @test Array(PT(v)) == v
+
                 @testset "unsafe comparisons" begin
                     unsafe_comparisons(false)
                     @test_throws ErrorException p<p
@@ -116,6 +120,8 @@ Random.seed!(0)
                 @test !(f(p) ≲ 11)
                 @test f(p) ≲ 15
                 @test 5 ≲ f(p)
+                @test 1 ≲ 2
+                
                 @test Normal(f(p)).μ ≈ mean(f(p))
                 @test fit(Normal, f(p)).μ ≈ mean(f(p))
 
@@ -157,6 +163,24 @@ Random.seed!(0)
                 @test Particles(100) + Particles(randn(Float32, 100)) ≈ 0
                 @test_throws MethodError p + Particles(randn(Float32, 200)) # Npart and Float type differ
                 @test_throws MethodError p + Particles(200) # Npart differ
+
+                mp = MvParticles([randn(10) for _ in 1:3])
+                @test length(mp) == 10
+                @test MonteCarloMeasurements.nparticles(mp) == 3
+
+                PT == WeightedParticles && continue
+                @testset "discrete distributions" begin
+                    p = PT(Poisson(50))
+                    @test p isa PT{Int}
+                    @test (p^2 - 1) isa PT{Int}
+                    @test exp(p) isa PT{Float64}
+
+                    # mainly just test that printing PT{Int} doesn't error
+                    io = IOBuffer()
+                    show(io, p)
+                    s = String(take!(io))
+                    @test occursin('±', s)
+                end
             end
         end
     end
@@ -291,6 +315,7 @@ Random.seed!(0)
         @test promote_type(Particles{Float64,10}, Float64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, Int64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, ComplexF64) == Complex{Particles{Float64,10}}
+        @test promote_type(Particles{Float64,10}, Missing) == Union{Particles{Float64,10},Missing}
         @test convert(Float64, 0p) isa Float64
         @test convert(Float64, 0p) == 0
         @test convert(Int, 0p) isa Int

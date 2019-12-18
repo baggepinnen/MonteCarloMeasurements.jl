@@ -60,9 +60,9 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
-function to_num_str(p, d=3)
+function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
-    if s < eps(p)
+    if T <: AbstractFloat && s < eps(p)
         string(round(mean(p), sigdigits=d))
     else
         string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=d-1))
@@ -97,6 +97,8 @@ log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
 asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
 zero,sign,abs,sqrt,rad2deg,deg2rad])
+
+MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
 for PT in (:Particles, :StaticParticles)
     # Constructors
@@ -161,13 +163,15 @@ for PT in (:Particles, :StaticParticles)
     @eval begin
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(m::Matrix)
-            map(1:size(m,2)) do i
-                $PT{eltype(m),size(m,1)}(@view(m[:,i]))
+        function $PT(m::Array{T,N}) where {T,N}
+            s1 = size(m, 1)
+            inds = CartesianIndices(axes(m)[2:end])
+            map(inds) do ind
+                $PT{T,s1}(@view(m[:,ind]))
             end
         end
 
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution=Normal(0,1); permute=true, systematic=true)
+        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
                 v = systematic_sample(N,d; permute=permute)
             else
@@ -192,7 +196,7 @@ for PT in (:Particles, :StaticParticles)
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
-        Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
+        Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
         Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N} # Needed since above is not specific enough.
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
@@ -260,7 +264,15 @@ Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, v
 Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
-Base.Matrix(v::MvParticles) = reduce(hcat, getfield.(v,:particles))
+Base.Array(p::AbstractParticles) = p.particles
+Base.Vector(p::AbstractParticles) = Array(p)
+
+function Base.Array(v::Array{<:AbstractParticles})
+    m = reduce(hcat, Array.(v))
+    return reshape(m, size(m, 1), size(v)...)
+end
+Base.Matrix(v::MvParticles) = Array(v)
+
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
 #     s2 = map(1:length(v[1])) do i
 #         var(getindex.(v,i))
@@ -306,15 +318,24 @@ function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where 
     COMPARISON_FUNCTION[](p) <= COMPARISON_FUNCTION[](a)
 end
 
+"""
+    p1 ≈ p2
 
+Determine if two particles are not significantly different
+"""
+Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
 Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
-Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::MvParticles, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≉(a,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 Base.:≉(a::AbstractParticles,b,lim=2) = !(≈(a,b,lim))
+"""
+    p1 ≉ p2
+
+Determine if two particles are significantly different
+"""
 Base.:≉(a::AbstractParticles,b::AbstractParticles,lim=2) = !(≈(a,b,lim))
 
 Base.sincos(x::AbstractParticles) = sin(x),cos(x)
@@ -326,7 +347,7 @@ Base.isinteger(p::AbstractParticles) = all(isinteger, p.particles)
 Base.iszero(p::AbstractParticles) = all(iszero, p.particles)
 Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 
-
+≲(a,b,args...) = a < b
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
 ≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) > lim
