@@ -211,8 +211,8 @@ for PT in (:Particles, :StaticParticles)
             isinteger(p) || throw(ArgumentError("Cannot convert a particle distribution to an int if not all particles are the same."))
             return S(p[1])
         end
-        Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT(zeros(eltype(T),N)) for d = 1:dim]
-        Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT(zeros(eltype(T),N))
+        Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT{T,N}(zeros(eltype(T),N)) for d = 1:dim]
+        Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
         Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
