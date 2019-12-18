@@ -2,7 +2,7 @@
 # In this example, we will create a transfer function with uncretain coefficients, and use it to calculate bode diagrams and simulate the system.
 using ControlSystems, MonteCarloMeasurements, StatsPlots
 using Test, LinearAlgebra, Statistics
-import MonteCarloMeasurements: ±,⊗
+import MonteCarloMeasurements: ⊗
 unsafe_comparisons(true, verbose=false) # This file requires mean comparisons for displaying transfer functions in text form as well as for discretizing a LTIsystem
 default(size=(2000,1200))
 
@@ -103,8 +103,8 @@ errorbarplot!(w,mag,0.01; scales..., subplot=3, lab="wtls")
 plot!(w,magG, subplot=3)
 
 ## bode benchmark =========================================
-using BenchmarkTools, Printf
-using MonteCarloMeasurements: ∓
+using BenchmarkTools, Printf, ControlSystems
+w = exp10.(LinRange(-3,log10(π),30))
 p = 1 ± 0.1
 ζ = 0.3 ± 0.1
 ω = 1 ± 0.1
