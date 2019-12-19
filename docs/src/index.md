@@ -63,7 +63,7 @@ julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distributio
 ```
 
 # Why a package
-Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional benchmarks further down) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
+Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional [benchmarks further down](Benchmark)) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
 ```julia
 using BenchmarkTools
 A = [Particles(1000) for i = 1:3, j = 1:3]
@@ -92,10 +92,10 @@ B = similar(A, Float64)
   75.068 ms (403 allocations: 2.11 MiB)
 # 40 times faster
 ```
-`StaticParticles` allocate much less memory than regular `Particles`, but are more stressful for the compiler to handle.
+[`StaticParticles`](@ref) allocate much less memory than regular [`Particles`](@ref), but are more stressful for the compiler to handle.
 
 # Constructors
-The most basic constructor of `Particles` acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(N, Normal(μ,σ))`. This last constructor works with any distribution from which one can sample.
+The most basic constructor of [`Particles`](@ref) acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(N, Normal(μ,σ))`. This last constructor works with any distribution from which one can sample.
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
@@ -292,7 +292,7 @@ Ideally, half of the particles should turn out negative and half positive when a
 | Large uncertainties in input | Use MonteCarloMeasurements |
 | Small uncertainties in input in relation to the curvature of the function | Use Measurements |
 | Interested in low probability events / extremas  | Use MonteCarloMeasurements |
-| Limited computational budget | Use Measurements or [`StaticParticles`](@ref) with  [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
+| Limited computational budget | Use Measurements or [`StaticParticles`](@ref) with [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
 | Non-Gaussian input distribution  | Use MonteCarloMeasurements |
 | Calculate tail integrals accurately | This requires some form of [importance sampling](https://en.wikipedia.org/wiki/Importance_sampling#Application_to_simulation), not yet fully supported |
 
@@ -303,7 +303,7 @@ Linear uncertainty propagation does thus not allow you to upperbound/lowerbound 
 
 ## Benchmark
 
-The benchmark results below come from [`examples/controlsystems.jl`](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl) The benchmark consists of calculating the Bode curves for a linear system with uncertain parameters
+The benchmark results below comes from [`examples/controlsystems.jl`](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl) The benchmark consists of calculating the Bode curves for a linear system with uncertain parameters
 ```julia
 w  = exp10.(LinRange(-1,1,200)) # Frequency vector
 p  = 1 ± 0.1
