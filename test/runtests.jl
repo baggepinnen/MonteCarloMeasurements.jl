@@ -356,6 +356,12 @@ Random.seed!(0)
         @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
         @test sum(mean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
+        @test (1 .. 2) isa Particles
+        @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())
+        @test maximum((1 .. 2)) <= 2
+        @test minimum((1 .. 2)) >= 1
+
+
         pp = [1. 0; 0 1] .± 0.0
         @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])
 
