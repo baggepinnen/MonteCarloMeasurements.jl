@@ -3,18 +3,37 @@
 
 Creates $DEFAUL_NUM_PARTICLES `Particles` with mean `μ` and std `σ`.
 If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treated as std if it's a scalar, and variances if it's a matrix or vector.
+See also [`∓`](@ref), [`..`](@ref)
 """
+±
+
+"""
+    μ ∓ σ
+
+Creates $DEFAUL_STATIC_NUM_PARTICLES `StaticParticles` with mean `μ` and std `σ`.
+If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treated as std if it's a scalar, and variances if it's a matrix or vector.
+See also [`±`](@ref), [`⊗`](@ref)
+"""
+∓
+
+
 ±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
 ∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
+"""
+    a .. b
+
+Creates $DEFAUL_NUM_PARTICLES `Particles` with mean a `Uniform` distribution between `a` and `b`.
+See also [`±`](@ref), [`⊗`](@ref)
+"""
 (..)(a,b) = Particles(DEFAUL_NUM_PARTICLES, Uniform(a,b))
 
 """
     ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
-See also `outer_product`
+See also [`outer_product`](@ref), [`±`](@ref)
 """
 ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
