@@ -28,7 +28,7 @@ errorbarplot(w,mag,0.00; scales..., layout=3, subplot=1, lab="q=$(0.00)")
 errorbarplot!(w,mag,0.01, subplot=1, lab="q=$(0.01)")
 errorbarplot!(w,mag,0.1, subplot=1, lab="q=$(0.1)", legend=:bottomleft, linewidth=3)
 mcplot!(w,mag; scales..., alpha=0.2, subplot=2, c=:black)
-ribbonplot!(w,mag, 2; yscale=:log10, xscale=:log10, alpha=0.2, subplot=3)
+ribbonplot!(w,mag, 0.95; yscale=:log10, xscale=:log10, alpha=0.2, subplot=3)
 # A ribbonplot is not always suitable for plots with logarithmic scales.
 
 # ## Nyquist plot
