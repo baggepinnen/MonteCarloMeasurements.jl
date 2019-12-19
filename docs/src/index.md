@@ -312,18 +312,21 @@ t1 = @belapsed bode($G,$w)
    ⋮
 ```
 
+## Benchmark
 | Benchmark | Result |
 |-----------|--------|
-| Time with 500 particles |           2.6953ms |
-| Time with regular floating point |  0.1174ms |
-| Time with Measurements |            0.1957ms |
-| Time with 100 static part. |        0.5641ms |
-| Time with static sigmapoints. |     0.2371ms |
-| 500×floating point time |          58.6930ms |
-| Speedup factor vs. Manual |        21.8x |
-| Slowdown factor vs. Measurements | 13.8x |
-| Slowdown static vs. Measurements |  2.9x |
-| Slowdown sigma vs. Measurements |   1.2x|
+| Time with 500 particles |           1.3632ms |
+| Time with regular floating point |  0.0821ms |
+| Time with Measurements |            0.1132ms |
+| Time with 100 static part. |        0.2375ms |
+| Time with static sigmapoints. |     0.0991ms |
+| 500×floating point time |          41.0530ms |
+| Speedup factor vs. Manual |        30.1x |
+| Slowdown factor vs. Measurements | 12.0x |
+| Slowdown static vs. Measurements |  2.1x |
+| Slowdown sigma vs. Measurements |   0.9x|
+
+The benchmarks show that using `Particles` is much faster than doing the Monte-Carlo sampling manually. We also see that we're about 12 times slower than linear uncertaintu propagation with Measurements.jl if we are using standard `Particles`, `StaticParticles` are within a factor of 2 of Measurements and `StaticParticles` with [`sigmapoints`](@ref) are actually 10% faster than Measurements (this is because 4 sigmapoits fits perfectly into the processors vector registers, making the extra calculations almost free).
 
 ## Comparison to nonlinear filtering
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
