@@ -100,7 +100,7 @@ One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
 - The [`±`](@ref) operator (`\pm`) (similar to [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)). We have `μ ± σ = μ + σ*Particles(DEFAUL_NUM_PARTICLES)`, where the global constant `DEFAUL_NUM_PARTICLES = 500`. You can change this if you would like, or simply define your own `±` operator like `±(μ,σ) = μ + σ*Particles(my_default_number, my_default_distribution)`. The upside-down operator [`∓`](@ref) (`\mp`) instead creates a `StaticParticles(100)`.
-- The `..` binary infix operator creates uniformly sampled particles, e.g., `2..3 = Particles(Uniform(2,3))`
+- The [`..`](@ref) binary infix operator creates uniformly sampled particles, e.g., `2..3 = Particles(Uniform(2,3))`
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
@@ -115,7 +115,7 @@ A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` 
 
 Broadcasting the ±/∓ operators works as you would expect, `zeros(3) .± 1` gives you a three-vector of *independent* particles, so does `zeros(3) .+ Particles.(N)`.
 
-Independent multivariate systematic samples can be created using the function `outer_product` or the non-exported operator ⊗ (`\otimes`).
+Independent multivariate systematic samples can be created using the function [`outer_product`](@ref) or the non-exported operator ⊗ (`\otimes`).
 
 ### Examples
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
@@ -292,7 +292,7 @@ Ideally, half of the particles should turn out negative and half positive when a
 | Large uncertainties in input | Use MonteCarloMeasurements |
 | Small uncertainties in input in relation to the curvature of the function | Use Measurements |
 | Interested in low probability events / extremas  | Use MonteCarloMeasurements |
-| Limited computational budget | Use Measurements or `StaticParticles` with  [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
+| Limited computational budget | Use Measurements or [`StaticParticles`](@ref) with  [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
 | Non-Gaussian input distribution  | Use MonteCarloMeasurements |
 | Calculate tail integrals accurately | This requires some form of [importance sampling](https://en.wikipedia.org/wiki/Importance_sampling#Application_to_simulation), not yet fully supported |
 
@@ -300,6 +300,8 @@ Due to [Jensen's inequality](https://en.wikipedia.org/wiki/Jensen%27s_inequality
 > In its simplest form the inequality states that the convex transformation of a mean is less than or equal to the mean applied after convex transformation; it is a simple corollary that the opposite is true of concave transformations.
 
 Linear uncertainty propagation does thus not allow you to upperbound/lowerbound the output uncertainty of a convex/concave function, and will be conservative in the reverse case.
+
+## Benchmark
 
 The benchmark results below come from [`examples/controlsystems.jl`](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl) The benchmark consists of calculating the Bode curves for a linear system with uncertain parameters
 ```julia
@@ -312,7 +314,7 @@ t1 = @belapsed bode($G,$w)
    ⋮
 ```
 
-## Benchmark
+
 | Benchmark | Result |
 |-----------|--------|
 | Time with 500 particles |           1.3632ms |
@@ -326,7 +328,7 @@ t1 = @belapsed bode($G,$w)
 | Slowdown static vs. Measurements |  2.1x |
 | Slowdown sigma vs. Measurements |   0.9x|
 
-The benchmarks show that using `Particles` is much faster than doing the Monte-Carlo sampling manually. We also see that we're about 12 times slower than linear uncertaintu propagation with Measurements.jl if we are using standard `Particles`, `StaticParticles` are within a factor of 2 of Measurements and `StaticParticles` with [`sigmapoints`](@ref) are actually 10% faster than Measurements (this is because 4 sigmapoits fits perfectly into the processors vector registers, making the extra calculations almost free).
+The benchmarks show that using `Particles` is much faster than doing the Monte-Carlo sampling manually. We also see that we're about 12 times slower than linear uncertainty propagation with Measurements.jl if we are using standard `Particles`, `StaticParticles` are within a factor of 2 of Measurements and `StaticParticles` with [`sigmapoints`](@ref) are actually 10% faster than Measurements (this is because 4 sigmapoints fit perfectly into the processors SIMD registers, making the extra calculations almost free).
 
 ## Comparison to nonlinear filtering
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
