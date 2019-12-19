@@ -35,6 +35,11 @@ function arggetter(i,a)
     a
 end
 
+"""
+    @bymap f(p, args...)
+
+Call `f` with particles or vectors of particles by using `map`. This can be utilized if registering `f` using [`register_primitive`](@ref) fails. See also [`Workspace`](@ref) if `bymap` fails.
+"""
 macro bymap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
     fsym = string(f)
@@ -59,6 +64,11 @@ macro bymap(ex)
 end
 
 
+"""
+    @bypmap f(p, args...)
+
+Call `f` with particles or vectors of particles by using parallel `pmap`. This can be utilized if registering `f` using [`register_primitive`](@ref) fails. See also [`Workspace`](@ref) if `bymap` fails.
+"""
 macro bypmap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
     fsym = string(f)
