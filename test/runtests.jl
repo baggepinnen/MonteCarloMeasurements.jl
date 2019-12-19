@@ -179,6 +179,11 @@ Random.seed!(0)
                     show(io, p)
                     s = String(take!(io))
                     @test occursin('±', s)
+
+                    # issue #50
+                    @test 2.5 * p isa PT{Float64}
+                    @test p / 3 isa PT{Float64}
+                    @test sqrt(p) isa PT{Float64}
                 end
             end
         end
@@ -315,6 +320,13 @@ Random.seed!(0)
         @test promote_type(Particles{Float64,10}, Int64) == Particles{Float64,10}
         @test promote_type(Particles{Float64,10}, ComplexF64) == Complex{Particles{Float64,10}}
         @test promote_type(Particles{Float64,10}, Missing) == Union{Particles{Float64,10},Missing}
+        @testset "promotion of $PT" for PT in (Particles, StaticParticles)
+            @test promote_type(PT{Float64,10}, PT{Float64,10}) == PT{Float64,10}
+            @test promote_type(PT{Float64,10}, PT{Int,10}) == PT{Float64,10}
+            @test promote_type(PT{Int,5}, PT{Float64,10}) == PT
+        end
+        @test promote_type(Particles{Float64,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
+        @test promote_type(Particles{Int,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
         @test convert(Float64, 0p) isa Float64
         @test convert(Float64, 0p) == 0
         @test convert(Int, 0p) isa Int

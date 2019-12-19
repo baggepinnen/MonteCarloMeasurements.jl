@@ -22,33 +22,41 @@ function register_primitive_multi(ff, eval=eval)
     for PT in (:Particles, :StaticParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N},a::Real...) where {T,N}
-                $PT{T,N}(($m.$f).(p.particles, MonteCarloMeasurements.maybe_particles.(a)...)) # maybe_particles introduced to handle >2 arg operators
+                res = ($m.$f).(p.particles, MonteCarloMeasurements.maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
+                return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(a::Real,p::$PT{T,N}) where {T,N}
-                $PT{T,N}(map(x->($m.$f)(a,x), p.particles))
+                res = map(x->($m.$f)(a,x), p.particles)
+                return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
-                $PT{T,N}(map(($m.$f), p1.particles, p2.particles))
+                res = map(($m.$f), p1.particles, p2.particles)
+                return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
-                $PT{promote_type(T,S),N}(map(($m.$f), p1.particles, p2.particles))
+                res = map(($m.$f), p1.particles, p2.particles)
+                return $PT{eltype(res),N}(res)
             end
         end)
     end
     # The code below is resolving some method ambiguities
     eval(quote
         function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{T,N}) where {T,N}
-            StaticParticles{T,N}(map(($m.$f), p1.particles, p2.particles))
+            res = map(($m.$f), p1.particles, p2.particles)
+            return StaticParticles{eltype(res),N}(res)
         end
         function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{S,N}) where {T,S,N} # Needed for particles of different float types :/
-            StaticParticles{promote_type(T,S),N}(map(($m.$f), p1.particles, p2.particles))
+            res = map(($m.$f), p1.particles, p2.particles)
+            return StaticParticles{eltype(res),N}(res)
         end
 
         function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{T,N}) where {T,N}
-            StaticParticles{T,N}(map(($m.$f), p1.particles, p2.particles))
+            res = map(($m.$f), p1.particles, p2.particles)
+            return StaticParticles{eltype(res),N}(res)
         end
         function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{S,N}) where {T,S,N} # Needed for particles of different float types :/
-            StaticParticles{promote_type(T,S),N}(map(($m.$f), p1.particles, p2.particles))
+            res = map(($m.$f), p1.particles, p2.particles)
+            return StaticParticles{eltype(res),N}(res)
         end
     end)
 end
@@ -63,8 +71,9 @@ function register_primitive_single(ff, eval=eval)
     m = Base.parentmodule(ff)
     for PT in (:Particles, :StaticParticles)
         eval(quote
-            function ($m.$f)(p::$PT)
-                $PT(map(($m.$f), p.particles))
+            function ($m.$f)(p::$PT{T,N}) where {T,N}
+                res = map(($m.$f), p.particles)
+                return $PT{eltype(res),N}(res)
             end
         end)
     end
