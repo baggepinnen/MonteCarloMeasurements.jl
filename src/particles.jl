@@ -25,7 +25,7 @@ See also [`±`](@ref), [`⊗`](@ref)
 """
     a .. b
 
-Creates $DEFAUL_NUM_PARTICLES `Particles` with mean a `Uniform` distribution between `a` and `b`.
+Creates $DEFAUL_NUM_PARTICLES `Particles` with a `Uniform` distribution between `a` and `b`.
 See also [`±`](@ref), [`⊗`](@ref)
 """
 (..)(a,b) = Particles(DEFAUL_NUM_PARTICLES, Uniform(a,b))

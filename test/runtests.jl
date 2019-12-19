@@ -367,6 +367,8 @@ Random.seed!(0)
         q = 3 ± 0
         @test sqrt(complex(p,p)) == sqrt(complex(2,2))
         @test exp(complex(p,p)) == exp(complex(2,2))
+        @test sqrt!(fill(complex(1.,1.), 500), complex(p,p)) == sqrt(complex(2,2))
+        @test exp!(fill(complex(1.,1.), 500), complex(p,p)) == exp(complex(2,2))
         y = Particles(100)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)

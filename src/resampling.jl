@@ -15,19 +15,19 @@
 #     Σ = sum_all_but(w,maxind) # Σ = ∑wₑ-1
 #     log1p(Σ) + offset, Σ+1
 # end
-
-"""
-    sum_all_but(w, i)
-
-Add all elements of vector `w` except for index `i`. The element at index `i` is assumed to have value 1
-"""
-function sum_all_but(w,i)
-    w[i] -= 1
-    s = sum(w)
-    w[i] += 1
-    s
-end
-
+#
+# """
+#     sum_all_but(w, i)
+#
+# Add all elements of vector `w` except for index `i`. The element at index `i` is assumed to have value 1
+# """
+# function sum_all_but(w,i)
+#     w[i] -= 1
+#     s = sum(w)
+#     w[i] += 1
+#     s
+# end
+# 
 # """
 #     loglik = resample!(p::WeightedParticles)
 # Resample the particles based on the `p.logweights`. After a call to this function, weights will be reset to sum to one. Returns log-likelihood.
