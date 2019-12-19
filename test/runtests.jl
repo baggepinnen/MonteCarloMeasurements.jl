@@ -481,6 +481,11 @@ Random.seed!(0)
 
     end
 
+    @testset "inference" begin
+        @inferred zero(Particles{Float64,1})
+        @inferred zeros(Particles{Float64,1}, 5)
+    end
+
     include("test_forwarddiff.jl")
     include("test_deconstruct.jl")
 
