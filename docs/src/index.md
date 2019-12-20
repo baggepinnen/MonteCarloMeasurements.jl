@@ -63,7 +63,7 @@ julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distributio
 ```
 
 # Why a package
-Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional [benchmarks further down](Benchmark)) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
+Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional [Benchmark](@ref)) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
 ```julia
 using BenchmarkTools
 A = [Particles(1000) for i = 1:3, j = 1:3]
@@ -100,7 +100,7 @@ One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
 - `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
 - The [`±`](@ref) operator (`\pm`) (similar to [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)). We have `μ ± σ = μ + σ*Particles(DEFAUL_NUM_PARTICLES)`, where the global constant `DEFAUL_NUM_PARTICLES = 500`. You can change this if you would like, or simply define your own `±` operator like `±(μ,σ) = μ + σ*Particles(my_default_number, my_default_distribution)`. The upside-down operator [`∓`](@ref) (`\mp`) instead creates a `StaticParticles(100)`.
-- The [`..`](@ref) binary infix operator creates uniformly sampled particles, e.g., `2..3 = Particles(Uniform(2,3))`
+- The `..` binary infix operator creates uniformly sampled particles, e.g., `2..3 = Particles(Uniform(2,3))`
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
 
@@ -181,14 +181,17 @@ true
 julia> mean(p) ≈ m
 true
 ```
-`sigmapoints` also accepts a `Normal/MvNormal` object as input. *Caveat:* If you are creating several one-dimensional uncertain values using sigmaopints independently, they will be strongly correlated. Use the multidimensional constructor! Example:
-```julia
-p = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
-ζ = StaticParticles(sigmapoints(0.3, 0.1^2))             # Wrong!
-ω = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+[`sigmapoints`](@ref) also accepts a `Normal/MvNormal` object as input.
 
-p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
-```
+!!! danger "Caveat"
+    If you are creating several one-dimensional uncertain values using sigmapoints independently, they will be strongly correlated. Use the multidimensional constructor! Example:
+    ```julia
+    p = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+    ζ = StaticParticles(sigmapoints(0.3, 0.1^2))             # Wrong!
+    ω = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+
+    p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
+    ```
 
 # Latin hypercube sampling
 We do not provide functionality for [latin hypercube sampling](https://en.wikipedia.org/wiki/Latin_hypercube_sampling), rather, we show how to use the package [LatinHypercubeSampling.jl](https://github.com/MrUrq/LatinHypercubeSampling.jl) to initialize particles.

@@ -21,6 +21,16 @@ julia> mean(p) ≈ m
 true
 ```
 Make sure to pass the variance (not std) as second argument in case `μ` and `Σ` are scalars.
+
+# Caveat
+If you are creating several one-dimensional uncertain values using sigmapoints independently, they will be strongly correlated. Use the multidimensional constructor! Example:
+```julia
+p = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+ζ = StaticParticles(sigmapoints(0.3, 0.1^2))             # Wrong!
+ω = StaticParticles(sigmapoints(1, 0.1^2))               # Wrong!
+
+p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
+```
 """
 function sigmapoints(m, Σ::AbstractMatrix)
     n = length(m)
