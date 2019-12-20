@@ -10,10 +10,9 @@ This type represents uncertainty using a cloud of particles.
 - `Particles()`
 - `Particles(N::Integer)`
 - `Particles(d::Distribution)`
-- `Particles(N::Integer, d::Distribution)`
-- `Particles(N::Integer, d::Distribution; permute, systematic)`
-- `Particles(v::Array{T,1} where T)`
-- `Particles(m::Array{T,2} where T)`
+- `Particles(N::Integer, d::Distribution; permute=true, systematic=true)`
+- `Particles(v::Vector{T} where T)`
+- `Particles(m::Matrix{T} where T)`: Creates multivariate particles (Vector{Particles})
 """
 struct Particles{T,N} <: AbstractParticles{T,N}
     particles::Vector{T}
