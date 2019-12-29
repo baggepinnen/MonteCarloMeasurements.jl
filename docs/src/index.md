@@ -341,3 +341,6 @@ The table below compares methods for uncertainty propagation with their parallel
 | Measurements.jl          | Extended Kalman filter  | Linearization          |
 | `Particles(sigmapoints)` | Unscented Kalman Filter | Unscented transform    |
 | `Particles`              | [Particle Filter](https://github.com/baggepinnen/LowLevelParticleFilters.jl)         | Monte Carlo (sampling) |
+
+## Faster `exp,log`
+If the user manually loads the library [SLEEFPirates.jl](https://github.com/chriselrod/SLEEFPirates.jl), some functions are overloaded for Particles of `Float64,Float32` eltypes making these functions 2-16 times faster depending on the processor SIMD width.
