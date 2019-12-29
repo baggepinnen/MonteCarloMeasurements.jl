@@ -17,7 +17,7 @@ for ff in (exp,)
 end
 
 
-for ff in (log, sin, cos, tan, asin, acos, atan)
+for ff in (log, sin, cos, asin, acos, atan) # tan is not faster
     f = nameof(ff)
     fs = Symbol(f,"_fast")
     m = Base.parentmodule(ff)
