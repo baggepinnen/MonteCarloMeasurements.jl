@@ -17,9 +17,9 @@ See also [`±`](@ref), [`⊗`](@ref)
 ∓
 
 
-±(μ::Real,σ) = μ + σ*Particles(DEFAUL_NUM_PARTICLES)
+±(μ::Real,σ) = Particles{promote_type(typeof(μ),typeof(σ)),DEFAUL_NUM_PARTICLES}(systematic_sample(DEFAUL_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
-∓(μ::Real,σ) = μ + σ*StaticParticles(DEFAUL_STATIC_NUM_PARTICLES)
+∓(μ::Real,σ) = StaticParticles{promote_type(typeof(μ),typeof(σ)),DEFAUL_STATIC_NUM_PARTICLES}(systematic_sample(DEFAUL_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
 """
