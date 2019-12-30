@@ -35,7 +35,8 @@ p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
 function sigmapoints(m, Σ::AbstractMatrix)
     n = length(m)
     X = sqrt(n*Σ)
-    [X; -X; zeros(1,n)] .+ m'
+    T = promote_type(eltype(m), eltype(X))
+    [X; -X; zeros(T,1,n)] .+ m'
 end
 
 sigmapoints(m, Σ::Number) = sigmapoints(m, diagm(0=>fill(Σ, length(m))))
