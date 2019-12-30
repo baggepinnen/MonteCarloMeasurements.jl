@@ -331,7 +331,9 @@ t1 = @belapsed bode($G,$w)
 | Slowdown static vs. Measurements |  2.1x |
 | Slowdown sigma vs. Measurements |   0.9x|
 
-The benchmarks show that using `Particles` is much faster than doing the Monte-Carlo sampling manually. We also see that we're about 12 times slower than linear uncertainty propagation with Measurements.jl if we are using standard `Particles`, `StaticParticles` are within a factor of 2 of Measurements and `StaticParticles` with [`sigmapoints`](@ref) are actually 10% faster than Measurements (this is because 4 sigmapoints fit perfectly into the processors SIMD registers, making the extra calculations almost free).
+The benchmarks show that using `Particles` is much faster than doing the Monte-Carlo sampling manually. We also see that we're about 12 times slower than linear uncertainty propagation with Measurements.jl if we are using standard `Particles`, `StaticParticles` are within a factor of 2 of Measurements and `StaticParticles` with [`sigmapoints`](@ref) are actually 10% faster than Measurements (this is because 7 sigmapoints fit well into two of the processors SIMD registers, making the extra calculations very cheap).
+
+
 
 ## Comparison to nonlinear filtering
 The table below compares methods for uncertainty propagation with their parallel in nonlinear filtering.
