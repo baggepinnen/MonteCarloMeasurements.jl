@@ -34,7 +34,8 @@ julia = "1.0"
 ControlSystems = "a6e380b2-a6ca-5380-bf3e-84a91bcd477e"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+SLEEFPirates = "476501e8-09a2-5ece-8869-fb82de89a1fa"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ControlSystems", "ForwardDiff", "Test", "Plots"]
+test = ["ControlSystems", "ForwardDiff", "SLEEFPirates", "Test", "Plots"]
