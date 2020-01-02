@@ -1,5 +1,5 @@
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools, LoopVectorization
 using Distributed: pmap
 using Lazy: @forward
 import Base: add_sum
@@ -93,7 +93,6 @@ LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = @bymap eigvals(p)
 
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
-    @require SLEEFPirates="476501e8-09a2-5ece-8869-fb82de89a1fa" include("sleefpirates.jl")
 end
 
 end

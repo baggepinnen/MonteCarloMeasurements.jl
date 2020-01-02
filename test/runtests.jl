@@ -154,7 +154,7 @@ Random.seed!(0)
                 @test pn ≈ 2
                 @test issorted(pn.particles)
 
-                @info "Tests for $PT done"
+
 
                 p = PT{Float64,10}(2)
                 @test p isa PT{Float64,10}
@@ -185,6 +185,26 @@ Random.seed!(0)
                     @test p / 3 isa PT{Float64}
                     @test sqrt(p) isa PT{Float64}
                 end
+
+                @testset "primitives" begin
+                    @info "Testing primitives"
+                    p = PT(10)
+                    for f in [*,+,-,/,
+                        exp,exp2,exp10,expm1,
+                        log,log10,log2,log1p,
+                        sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
+                        asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,sign,abs,sqrt,zero,rad2deg,deg2rad]
+                        f(p)
+                    end
+                    p2 = PT(10)
+                    for f in [+,-,*,/,^,mod,mod1,atan,atand,//,^, max,min,add_sum,hypot]
+                        f(p,p2)
+                    end
+
+                end
+
+
+                @info "Tests for $PT done"
             end
         end
     end

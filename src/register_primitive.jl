@@ -6,9 +6,9 @@
 
 Register both single and multi-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
 """
-function register_primitive(ff, eval=eval)
-    register_primitive_multi(ff, eval)
-    register_primitive_single(ff, eval)
+function register_primitive(ff, eval=eval, mapf=mapf)
+    register_primitive_multi(ff, eval, mapf)
+    register_primitive_single(ff, eval, mapf)
 end
 
 """
@@ -16,9 +16,12 @@ end
 
 Register a multi-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
 """
-function register_primitive_multi(ff, eval=eval)
+function register_primitive_multi(ff, eval=eval, mapfi=map)
     f = nameof(ff)
     m = Base.parentmodule(ff)
+
+    mapf = nameof(mapfi)
+    mm = Base.parentmodule(mapfi)
     for PT in (:Particles, :StaticParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N},a::Real...) where {T,N}
@@ -26,15 +29,15 @@ function register_primitive_multi(ff, eval=eval)
                 return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(a::Real,p::$PT{T,N}) where {T,N}
-                res = map(x->($m.$f)(a,x), p.particles)
+                res = $mm.$mapf(x->($m.$f)(a,x), p.particles)
                 return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(p1::$PT{T,N},p2::$PT{T,N}) where {T,N}
-                res = map(($m.$f), p1.particles, p2.particles)
+                res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
                 return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(p1::$PT{T,N},p2::$PT{S,N}) where {T,S,N} # Needed for particles of different float types :/
-                res = map(($m.$f), p1.particles, p2.particles)
+                res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
                 return $PT{eltype(res),N}(res)
             end
         end)
@@ -42,20 +45,20 @@ function register_primitive_multi(ff, eval=eval)
     # The code below is resolving some method ambiguities
     eval(quote
         function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{T,N}) where {T,N}
-            res = map(($m.$f), p1.particles, p2.particles)
+            res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
             return StaticParticles{eltype(res),N}(res)
         end
         function ($m.$f)(p1::StaticParticles{T,N},p2::Particles{S,N}) where {T,S,N} # Needed for particles of different float types :/
-            res = map(($m.$f), p1.particles, p2.particles)
+            res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
             return StaticParticles{eltype(res),N}(res)
         end
 
         function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{T,N}) where {T,N}
-            res = map(($m.$f), p1.particles, p2.particles)
+            res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
             return StaticParticles{eltype(res),N}(res)
         end
         function ($m.$f)(p1::Particles{T,N},p2::StaticParticles{S,N}) where {T,S,N} # Needed for particles of different float types :/
-            res = map(($m.$f), p1.particles, p2.particles)
+            res = $mm.$mapf(($m.$f), p1.particles, p2.particles)
             return StaticParticles{eltype(res),N}(res)
         end
     end)
@@ -66,13 +69,15 @@ end
 
 Register a single-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
 """
-function register_primitive_single(ff, eval=eval)
+function register_primitive_single(ff, eval=eval, mapfi=map)
     f = nameof(ff)
     m = Base.parentmodule(ff)
+    mapf = nameof(mapfi)
+    mm = Base.parentmodule(mapfi)
     for PT in (:Particles, :StaticParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N}) where {T,N}
-                res = map(($m.$f), p.particles)
+                res = $mm.$mapf(($m.$f), p.particles)
                 return $PT{eltype(res),N}(res)
             end
         end)

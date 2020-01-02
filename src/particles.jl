@@ -107,15 +107,19 @@ end
 
 
 # Two-argument functions
-foreach(register_primitive_multi, [+,-,*,/,//,^,
-max,min,mod,mod1,atan,atand,add_sum,hypot])
+# register_primitive_multi.([], eval, LoopVectorization.vmap)
 # One-argument functions
-foreach(register_primitive_single, [*,+,-,/,
+register_primitive_single.([*,+,-,/,
 exp,exp2,exp10,expm1,
 log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
-asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
-zero,sign,abs,sqrt,rad2deg,deg2rad])
+asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,sign,abs,sqrt], eval, LoopVectorization.vmap)
+
+# Two-argument functions
+register_primitive_multi.([+,-,*,/,^,mod,mod1,atan,atand,//,^,
+max,min,add_sum,hypot])
+# One-argument functions
+register_primitive_single.([zero,rad2deg,deg2rad])
 
 MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
