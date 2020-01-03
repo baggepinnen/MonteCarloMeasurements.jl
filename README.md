@@ -21,6 +21,8 @@ In the figure above, we see the probability-density function of the input `p(x)`
 using MonteCarloMeasurements, Plots
 a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\pm)
 # Part500(3.142 ± 0.1)
+b = 2 ∓ 0.1 # ∓ (\mp) creates StaticParticles (with StaticArrays)
+# SPart100(2.0 ± 0.1)
 std(a)      # Ask about statistical properties
 # 0.09997062445203879
 sin(a)      # Use them like any real number
