@@ -107,10 +107,10 @@ end
 
 
 # Two-argument functions
-foreach(register_primitive_multi, [+,-,*,/,//,^,
-max,min,mod,mod1,atan,atand,add_sum,hypot])
+# foreach(register_primitive_binop, [+,-,*,/,//,^])
+foreach(register_primitive_multi, [+,-,*,/,//,^,max,min,mod,mod1,atan,atand,add_sum,hypot])
 # One-argument functions
-foreach(register_primitive_single, [*,+,-,/,
+foreach(register_primitive_single, [+,-,
 exp,exp2,exp10,expm1,
 log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
