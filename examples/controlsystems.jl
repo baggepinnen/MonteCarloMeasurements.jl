@@ -104,7 +104,8 @@ plot!(w,magG, subplot=3)
 
 ## bode benchmark =========================================
 using MonteCarloMeasurements, BenchmarkTools, Printf, ControlSystems
-
+using ChangePrecision
+@changeprecision Float32 begin
 w = exp10.(LinRange(-3,log10(π),30))
 p = 1. ± 0.1
 ζ = 0.3 ± 0.1
@@ -135,6 +136,7 @@ p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2))
 G = tf([p*ω], [1, 2ζ*ω, ω^2])
 sleep(0.5)
 t5 = @belapsed bode($G,$w)
+end
 ##
 @printf("
 | Benchmark | Result |
