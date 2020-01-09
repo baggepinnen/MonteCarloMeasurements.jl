@@ -346,3 +346,17 @@ The table below compares methods for uncertainty propagation with their parallel
 
 ## Faster `exp,log`
 If the user manually loads the library [SLEEFPirates.jl](https://github.com/chriselrod/SLEEFPirates.jl), some functions are overloaded for Particles of `Float64,Float32` eltypes making these functions 2-16 times faster depending on the processor SIMD width.
+
+
+# Citing
+```
+@misc{bagge_2019_montecarlomeasurements,
+  author       = {Bagge Carlson, Fredrik},
+  language     = {eng},
+  month        = {04},
+  publisher    = {github},
+  title        = {MonteCarloMeasurements.jl : Propagation of distributions by Monte-Carlo sampling: Real number types with uncertainty represented by particle clouds.},
+  url          = {https://github.com/baggepinnen/MonteCarloMeasurements.jl},
+  year         = {2019},
+}
+```
