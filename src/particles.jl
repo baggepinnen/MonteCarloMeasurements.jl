@@ -19,6 +19,7 @@ See also [`±`](@ref), [`⊗`](@ref)
 
 ±(μ::Real,σ) = Particles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAUL_NUM_PARTICLES}(systematic_sample(DEFAUL_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ±(μ::AbstractVector,σ) = Particles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
+±(μ::CuVector,σ) = CuParticles(DEFAUL_NUM_PARTICLES, MvNormal(μ, σ))
 ∓(μ::Real,σ) = StaticParticles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAUL_STATIC_NUM_PARTICLES}(systematic_sample(DEFAUL_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
@@ -79,6 +80,7 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
+shortform(p::CuParticles) = "CuPart"
 function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
     if T <: AbstractFloat && s < eps(p)
@@ -119,7 +121,7 @@ zero,sign,abs,sqrt,rad2deg,deg2rad])
 
 MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :CuParticles)
     # Constructors
     @eval begin
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
@@ -176,7 +178,11 @@ function StaticParticles(d::Distribution;kwargs...)
     StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles)
+function CuParticles(d::Distribution;kwargs...)
+    CuParticles(DEFAUL_NUM_PARTICLES, d; kwargs...)
+end
+
+for PT in (:Particles, :StaticParticles, :CuParticles)
     @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
     @eval begin

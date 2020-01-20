@@ -27,7 +27,9 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-
+struct CuParticles{T,N} <: AbstractParticles{T,N}
+    particles::CuArray{T,1,Nothing}
+end
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired

@@ -4,6 +4,7 @@ authors = ["baggepinnen <baggepinnen@gmail.com>"]
 version = "0.6.4"
 
 [deps]
+CuArrays = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
