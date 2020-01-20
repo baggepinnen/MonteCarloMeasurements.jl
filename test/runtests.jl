@@ -285,6 +285,7 @@ Random.seed!(0)
 
         yp = yn .+ σ.*Particles.(2000)
         xhp = (A'A)\(A'yp)
+        @test xhp ≈ A\yp
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
@@ -345,6 +346,7 @@ Random.seed!(0)
         @test round(p) ≈ 0 atol=0.1
         @test norm(0p) == 0
         @test norm(p) ≈ 0 atol=0.01
+        @test norm2(0p) == 0
         @test norm(p,Inf) > 0
         @test_throws ArgumentError norm(p,1)
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
