@@ -390,21 +390,15 @@ Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
-"""
-    norm(x::AbstractParticles, p=2)
-
-if p == 2: return abs(mean(x))
-elseif p == Inf: return max(extrema(x)...)
-"""
+# """
+#     norm(x::AbstractParticles, p=2)
+#
+# if p == 2: return abs(mean(x))
+# elseif p == Inf: return max(extrema(x)...)
+# """
 function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Integer}=2)
-    if p == 2
-        return abs(mean(x))
-    elseif p == Inf
-        return max(extrema(x)...)
-    end
-    throw(ArgumentError("Cannot take $(p)-norm of particles"))
+    x
 end
-
 
 
 
