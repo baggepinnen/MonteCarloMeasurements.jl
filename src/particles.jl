@@ -392,16 +392,7 @@ Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
-# """
-#     norm(x::AbstractParticles, p=2)
-#
-# if p == 2: return abs(mean(x))
-# elseif p == Inf: return max(extrema(x)...)
-# """
-function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Integer}=2)
-    x
-end
-
+LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
 
