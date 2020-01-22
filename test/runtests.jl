@@ -142,7 +142,7 @@ Random.seed!(0)
                 @test sum(a.*b) ≈ 0
                 @test all(A*b .≈ [0,0,0])
 
-                @test @unsafe all(A\b .≈ zeros(3))
+                @test all(A\b .≈ zeros(3))
                 @test_nowarn @unsafe qr(A)
                 @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
                 pn = Particles(100, Normal(2,1), systematic=false)
@@ -285,6 +285,7 @@ Random.seed!(0)
 
         yp = yn .+ σ.*Particles.(2000)
         xhp = (A'A)\(A'yp)
+        @test xhp ≈ A\yp
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
@@ -343,10 +344,9 @@ Random.seed!(0)
         @test !(!p)
         @test !(0p)
         @test round(p) ≈ 0 atol=0.1
-        @test norm(0p) == 0
-        @test norm(p) ≈ 0 atol=0.01
-        @test norm(p,Inf) > 0
-        @test_throws ArgumentError norm(p,1)
+        @test norm(p) == p
+        @test norm([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
+        @test LinearAlgebra.norm2([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test eps(typeof(p)) == eps(Float64)
         @test eps(p) == eps(Float64)
