@@ -122,11 +122,6 @@ MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)
 for PT in (:Particles, :StaticParticles)
     # Constructors
     @eval begin
-        $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
-        function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
-            v = fill(n,N)
-            $PT{T,N}(v)
-        end
 
         """
             ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
@@ -158,62 +153,24 @@ for PT in (:Particles, :StaticParticles)
             reshape(out, size(p))
         end
     end
-    for ff in (var, std)
-        f = nameof(ff)
-        @eval function (Statistics.$f)(p::$PT{T,N},args...;kwargs...) where {T,N}
-            N == 1 && (return zero(T))
-            $f(p.particles, args...;kwargs...)
-        end
+end
+
+for ff in (var, std)
+    f = nameof(ff)
+    @eval function (Statistics.$f)(p::AbstractParticles{T,N},args...;kwargs...) where {T,N}
+        N == 1 && (return zero(T))
+        $f(p.particles, args...;kwargs...)
     end
-    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle
 end
-
-function Particles(d::Distribution;kwargs...)
-    Particles(DEFAUL_NUM_PARTICLES, d; kwargs...)
-end
-
-function StaticParticles(d::Distribution;kwargs...)
-    StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
+# Instead of @forward
+for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle, Base.iterate, Base.extrema, Base.minimum, Base.maximum]
+    f = nameof(ff)
+    m = Base.parentmodule(ff)
+    @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
 for PT in (:Particles, :StaticParticles)
-    @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
-    @eval begin
-        $PT{T,N}(p::$PT{T,N}) where {T,N} = p
-
-        function $PT(m::Array{T,N}) where {T,N}
-            s1 = size(m, 1)
-            inds = CartesianIndices(axes(m)[2:end])
-            map(inds) do ind
-                $PT{T,s1}(m[:,ind])
-            end
-        end
-
-
-
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
-            if systematic
-                v = systematic_sample(N,d; permute=permute)
-            else
-                v = rand(d, N)
-            end
-            $PT{eltype(v),N}(v)
-        end
-
-
-
-        function $PT(N::Integer, d::MultivariateDistribution)
-            v = rand(d,N)' |> copy # For cache locality
-            $PT(v)
-        end
-
-        nakedtypeof(p::$PT{T,N}) where {T,N} = $PT
-        nakedtypeof(::Type{$PT{T,N}}) where {T,N} = $PT
-    end
-    # @eval begin
-
-    # end
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}

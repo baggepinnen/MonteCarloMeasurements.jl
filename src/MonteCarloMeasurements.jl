@@ -1,7 +1,6 @@
 module MonteCarloMeasurements
 using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
 using Distributed: pmap
-using Lazy: @forward
 import Base: add_sum
 
 using Distributions, StatsBase, Requires
