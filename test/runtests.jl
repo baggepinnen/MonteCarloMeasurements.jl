@@ -1,7 +1,7 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random
-import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
+import MonteCarloMeasurements: ⊗, gradient, optimize
 @info "import Plots"
 import Plots
 @info "import Plots done"
@@ -297,8 +297,8 @@ Random.seed!(0)
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
-        @test MonteCarloMeasurements.particletype(p) == (Float64, 500)
-        @test MonteCarloMeasurements.particletype(typeof(p)) == (Float64, 500)
+        @test MonteCarloMeasurements.particletypetuple(p) == (Float64, 500, Particles)
+        @test MonteCarloMeasurements.particletypetuple(typeof(p)) == (Float64, 500, Particles)
         @test_nowarn display(p)
         @test_nowarn println(p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
@@ -454,17 +454,16 @@ Random.seed!(0)
     @time @testset "bymap" begin
         @info "Testing bymap"
 
-        @test MonteCarloMeasurements.Ngetter(Particles(50)) == 50
-        @test_throws ArgumentError MonteCarloMeasurements.Ngetter(Particles(30), Particles(10))
         p = 0 ± 1
-
-        @test MonteCarloMeasurements.Ngetter([p,p],p) == 500
-        @test MonteCarloMeasurements.Ngetter([p,p]) == 500
+        ps = 0 ∓ 1
 
         f(x) = 2x
         f(x,y) = 2x + y
 
+        @test f(p) ≈ bymap(f,p)
         @test f(p) ≈ @bymap f(p)
+        @test typeof(f(p)) == typeof(@bymap(f(p)))
+        @test typeof(f(ps)) == typeof(@bymap(f(ps)))
         @test f(p,p) ≈ @bymap f(p,p)
         @test f(p,10) ≈ @bymap f(p,10)
         @test !(f(p,10) ≈ @bymap f(p,-10))
@@ -485,8 +484,8 @@ Random.seed!(0)
 
         h(x,y) = x .* y'
         Base.Cartesian.@nextract 4 p d-> 0±1
-        @test all(h([p_1,p_2], [p_3,p_4]) .≈ @bymap h([p_1,p_2], [p_3,p_4]))
-        @test all(h([p_1,p_2], [p_3,p_4]) .≈ @bypmap h([p_1,p_2], [p_3,p_4]))
+        @test all(h([p_1,p_2], [p_3,p_4]) .≈ bymap(h, [p_1,p_2], [p_3,p_4]))
+        @test all(h([p_1,p_2], [p_3,p_4]) .≈ bypmap(h, [p_1,p_2], [p_3,p_4]))
 
         h2(x,y) = x .* y
         Base.Cartesian.@nextract 4 p d-> 0±1
@@ -504,6 +503,7 @@ Random.seed!(0)
     @testset "inference" begin
         @inferred zero(Particles{Float64,1})
         @inferred zeros(Particles{Float64,1}, 5)
+        @inferred bymap(sin, 1 ± 2)
     end
 
     include("test_forwarddiff.jl")

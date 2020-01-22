@@ -21,12 +21,23 @@ end
 """
     struct StaticParticles{T, N} <: AbstractParticles{T, N}
 
-See `?Particles` for help. The difference between `StaticParticles` and `Particles` is that the `StaticParticles` store particles in a static vecetor. This makes runtimes much shorter, but compile times longer. See the documentation for some benchmarks.
+See `?Particles` for help. The difference between `StaticParticles` and `Particles` is that the `StaticParticles` store particles in a static vecetor. This makes runtimes much shorter, but compile times longer. See the documentation for some benchmarks. Only recommended for sample sizes of ≲ 300-400
 """
 struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+for D in (2,3,4,5)
+    for PT in (:Particles, :StaticParticles)
+        @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
+            size(m, 1) == N || throw(ArgumentError("The first dimension of the matrix must be the same as the number N of particles."))
+            inds = CartesianIndices(axes(m)[2:end])
+            map(inds) do ind
+                $PT{T,N}(@view(m[:,ind]))
+            end
+        end
+    end
+end
 
 
 

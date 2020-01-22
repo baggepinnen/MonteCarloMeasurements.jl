@@ -71,7 +71,7 @@ export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit
 
 export unsafe_comparisons, @unsafe, set_comparison_function
 
-export @bymap, @bypmap, Workspace, with_workspace, has_particles, mean_object
+export bymap, bypmap, @bymap, @bypmap, Workspace, with_workspace, has_particles, mean_object
 
 include("types.jl")
 include("register_primitive.jl")
@@ -88,10 +88,10 @@ include("plotting.jl")
 include("optimize.jl")
 
 # This is defined here so that @bymap is loaded
-Base.log(p::Matrix{<:AbstractParticles}) = @bymap log(p) # Matrix more specific than StridedMatrix used in Base.log
-LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = @bymap eigvals(p)
-LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = @bymap LinearAlgebra.norm2(p)
-Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = @bymap x\y
+Base.log(p::Matrix{<:AbstractParticles}) = bymap(log,p) # Matrix more specific than StridedMatrix used in Base.log
+LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = bymap(eigvals,p)
+LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
+Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")

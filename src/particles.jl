@@ -186,9 +186,11 @@ for PT in (:Particles, :StaticParticles)
             s1 = size(m, 1)
             inds = CartesianIndices(axes(m)[2:end])
             map(inds) do ind
-                $PT{T,s1}(@view(m[:,ind]))
+                $PT{T,s1}(m[:,ind])
             end
         end
+
+
 
         function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
