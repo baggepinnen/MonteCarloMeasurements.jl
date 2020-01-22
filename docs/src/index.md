@@ -2,6 +2,7 @@
 ![logo](figs/logo.svg)
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
+[![](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
 
 # MonteCarloMeasurements
 
@@ -349,14 +350,5 @@ If the user manually loads the library [SLEEFPirates.jl](https://github.com/chri
 
 
 # Citing
-```
-@misc{bagge_2019_montecarlomeasurements,
-  author       = {Bagge Carlson, Fredrik},
-  language     = {eng},
-  month        = {04},
-  publisher    = {github},
-  title        = {MonteCarloMeasurements.jl : Propagation of distributions by Monte-Carlo sampling: Real number types with uncertainty represented by particle clouds.},
-  url          = {https://github.com/baggepinnen/MonteCarloMeasurements.jl},
-  year         = {2019},
-}
-```
+See [CITATION.bib](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/CITATION.bib)  
+ArXiv article [MonteCarloMeasurements.jl: Nonlinear Propagation of Arbitrary Multivariate Distributions by means of Method Overloading](https://arxiv.org/abs/2001.07625)
