@@ -341,7 +341,7 @@ Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 ≲(a,b,args...) = a < b
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
-≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) > lim
+≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(a)-mean(p))/(2sqrt(std(p)^2 + std(a)^2)) > lim
 ≳(a::Real,p::AbstractParticles,lim=2) = ≲(p,a,lim)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(a,p,lim)
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)

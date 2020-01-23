@@ -72,6 +72,8 @@ Random.seed!(0)
                 @test !(mean(p) ≉ p)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
+                @test (5 ± 0.1) ≳ (1 ± 0.1)
+                @test (1 ± 0.1) ≲ (5 ± 0.1)
 
                 v = randn(5)
                 @test Vector(PT(v)) == v
