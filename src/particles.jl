@@ -205,7 +205,7 @@ for PT in (:Particles, :StaticParticles)
         `pu = Particles([p1.particles; p2.particles])`
         """
         function Base.union(p1::$PT{T,NT},p2::$PT{T,NS}) where {T,NT,NS}
-            $PT([p1.particles; p2.particles])
+            $PT{T,NT+NS}([p1.particles; p2.particles])
         end
 
         """
