@@ -122,11 +122,6 @@ MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)
 for PT in (:Particles, :StaticParticles)
     # Constructors
     @eval begin
-        $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
-        function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
-            v = fill(n,N)
-            $PT{T,N}(v)
-        end
 
         """
             ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
@@ -158,60 +153,24 @@ for PT in (:Particles, :StaticParticles)
             reshape(out, size(p))
         end
     end
-    for ff in (var, std)
-        f = nameof(ff)
-        @eval function (Statistics.$f)(p::$PT{T,N},args...;kwargs...) where {T,N}
-            N == 1 && (return zero(T))
-            $f(p.particles, args...;kwargs...)
-        end
+end
+
+for ff in (var, std)
+    f = nameof(ff)
+    @eval function (Statistics.$f)(p::AbstractParticles{T,N},args...;kwargs...) where {T,N}
+        N == 1 && (return zero(T))
+        $f(p.particles, args...;kwargs...)
     end
-    @forward @eval($PT).particles Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle
 end
-
-function Particles(d::Distribution;kwargs...)
-    Particles(DEFAUL_NUM_PARTICLES, d; kwargs...)
-end
-
-function StaticParticles(d::Distribution;kwargs...)
-    StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
+# Instead of @forward
+for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle, Base.iterate, Base.extrema, Base.minimum, Base.maximum]
+    f = nameof(ff)
+    m = Base.parentmodule(ff)
+    @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
 for PT in (:Particles, :StaticParticles)
-    @forward @eval($PT).particles Base.iterate, Base.extrema, Base.minimum, Base.maximum
 
-    @eval begin
-        $PT{T,N}(p::$PT{T,N}) where {T,N} = p
-
-        function $PT(m::Array{T,N}) where {T,N}
-            s1 = size(m, 1)
-            inds = CartesianIndices(axes(m)[2:end])
-            map(inds) do ind
-                $PT{T,s1}(@view(m[:,ind]))
-            end
-        end
-
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
-            if systematic
-                v = systematic_sample(N,d; permute=permute)
-            else
-                v = rand(d, N)
-            end
-            $PT{eltype(v),N}(v)
-        end
-
-
-
-        function $PT(N::Integer, d::MultivariateDistribution)
-            v = rand(d,N)' |> copy # For cache locality
-            $PT(v)
-        end
-
-        nakedtypeof(p::$PT{T,N}) where {T,N} = $PT
-        nakedtypeof(::Type{$PT{T,N}}) where {T,N} = $PT
-    end
-    # @eval begin
-
-    # end
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
@@ -246,7 +205,7 @@ for PT in (:Particles, :StaticParticles)
         `pu = Particles([p1.particles; p2.particles])`
         """
         function Base.union(p1::$PT{T,NT},p2::$PT{T,NS}) where {T,NT,NS}
-            $PT([p1.particles; p2.particles])
+            $PT{T,NT+NS}([p1.particles; p2.particles])
         end
 
         """
@@ -382,7 +341,7 @@ Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 ≲(a,b,args...) = a < b
 ≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
 ≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
-≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) > lim
+≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(a)-mean(p))/(2sqrt(std(p)^2 + std(a)^2)) > lim
 ≳(a::Real,p::AbstractParticles,lim=2) = ≲(p,a,lim)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(a,p,lim)
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)
@@ -390,22 +349,7 @@ Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
-"""
-    norm(x::AbstractParticles, p=2)
-
-if p == 2: return abs(mean(x))
-elseif p == Inf: return max(extrema(x)...)
-"""
-function LinearAlgebra.norm(x::AbstractParticles, p::Union{AbstractFloat, Integer}=2)
-    if p == 2
-        return abs(mean(x))
-    elseif p == Inf
-        return max(extrema(x)...)
-    end
-    throw(ArgumentError("Cannot take $(p)-norm of particles"))
-end
-
-
+LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
 

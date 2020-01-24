@@ -1,13 +1,12 @@
 name = "MonteCarloMeasurements"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 authors = ["baggepinnen <baggepinnen@gmail.com>"]
-version = "0.6.4"
+version = "0.7.2"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
-Lazy = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -21,9 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 Distributions = "0.17,0.18,0.19,0.20,0.21, 0.22"
 GenericLinearAlgebra = "<0.3"
-Lazy = "<0.14, 0.14"
 MacroTools = "<0.6"
-Plots = "<0.26.3, 0.27.1, 0.28.4"
 RecipesBase = "<0.8"
 Requires = "<0.6, 1.0"
 StaticArrays = "<0.12, 0.12"

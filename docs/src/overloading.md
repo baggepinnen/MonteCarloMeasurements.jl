@@ -9,17 +9,17 @@ register_primitive(yourfunc)
 This defines both a one-argument method and a multi-arg method for both `Particles` and `StaticParticles`. If you only want to define one of these, see [`register_primitive_single`](@ref)/[`register_primitive_multi`](@ref). If the function is from base or stdlib, you can just add it to the appropriate list in the source and submit a PR :)
 
 ## Monte-Carlo simulation by `map/pmap`
-Some functions will not work when the input arguments are of type `Particles`. For this kind of function, we provide a fallback onto a traditional `map(f,p.particles)`. The only thing you need to do is to decorate the function call with the macro [`@bymap`](@ref) like so:
+Some functions will not work when the input arguments are of type `Particles`. For this kind of function, we provide a fallback onto a traditional `map(f,p.particles)`. The only thing you need to do is to decorate the function call with the function [`bymap`](@ref) or the macro [`@bymap`](@ref) like so:
 ```julia
 f(x) = 3x^2
 p = 1 ± 0.1
-r = @bymap f(p)
+r = @bymap f(p) # bymap(f,p) may give better error traces
 ```
-We further provide the macro [`@bypmap`](@ref) which does exactly the same thing, but with a `pmap` (parallel map) instead, allowing you to run several invocations of `f` in a distributed fashion.
+We further provide the macro [`@bypmap`](@ref) (and [`bypmap`](@ref)) which does exactly the same thing, but with a `pmap` (parallel map) instead, allowing you to run several invocations of `f` in a distributed fashion.
 
-These macros will map the function `f` over each element of `p::Particles{T,N}`, such that `f` is only called with arguments of type `T`, e.g., `Float64`. This handles arguments that are multivaiate particles `<: Vector{<:AbstractParticles}` as well.
+These utilities will map the function `f` over each element of `p::Particles{T,N}`, such that `f` is only called with arguments of type `T`, e.g., `Float64`. This handles arguments that are multivaiate particles `<: Vector{<:AbstractParticles}` as well.
 
-These macros will typically be slower than calling `f(p)`. If `f` is very expensive, [`@bypmap`](@ref) might prove prove faster than calling `f` with `p`, it's worth a try. The usual caveats for distributed computing applies, all code must be loaded on all workers etc.
+These utilities will typically be slower than calling `f(p)`. If `f` is very expensive, [`@bypmap`](@ref) might prove prove faster than calling `f` with `p`, it's worth a try. The usual caveats for distributed computing applies, all code must be loaded on all workers etc.
 
 
 ## Array-to-array functions
@@ -47,7 +47,7 @@ Sometimes, defining a primitive function can be difficult, such as when the unce
 `@unsafe ex` to enable mean comparisons only locally in the expression `ex`.
 
 In some cases, defining a primitive is not possible but allowing unsafe comparisons are not acceptable. One such case is functions that internally calculate eigenvalues of uncertain matrices. The eigenvalue calculation makes use of comparison operators. If the uncertainty is large, eigenvalues might change place in the sorted list of returned eigenvalues, completely ruining downstream computations. For this we recommend, in order of preference
-1. Use [`@bymap`](@ref). Applicable if all uncertain values appears as arguments to your entry function.
+1. Use [`bymap`](@ref). Applicable if all uncertain values appears as arguments to your entry function.
 2. Create a [`Workspace`](@ref) object and call it using your entry function. Applicable if uncertain parameters appear nested in an object that is an argument to your entry function:
 ```julia
 # desired computation: y = f(obj), obj contains uncertain parameters inside

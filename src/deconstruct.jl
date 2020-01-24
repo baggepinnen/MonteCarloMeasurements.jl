@@ -135,21 +135,24 @@ function replace_particles(P,condition::F1=P->P isa AbstractParticles,replacer::
 end
 
 """
-particletype(p::AbstractParticles{T,N}) = (T,N)
+particletypetuple(p::AbstractParticles{T,N}) = (T,N,ParticleType)
 """
-particletype(p::AbstractParticles{T,N}) where {T,N} = (T,N)
-particletype(::Type{<:AbstractParticles{T,N}}) where {T,N} = (T,N)
+particletypetuple(p::Particles{T,N}) where {T,N} = (T,N,Particles)
+particletypetuple(::Type{Particles{T,N}}) where {T,N} = (T,N,Particles)
+particletypetuple(p::StaticParticles{T,N}) where {T,N} = (T,N,StaticParticles)
+particletypetuple(::Type{StaticParticles{T,N}}) where {T,N} = (T,N,StaticParticles)
+particletypetuple(a::AbstractArray) = particletypetuple(eltype(a))
 
 """
 particle_paths(P)
 
-Figure out all paths down through fields of `P` that lead to an instace of `<: AbstractParticles`. The returned structure is a list where each list element is a tuple. The tuple looks like this: (path, particletype, particlenumber)
+Figure out all paths down through fields of `P` that lead to an instace of `<: AbstractParticles`. The returned structure is a list where each list element is a tuple. The tuple looks like this: (path, particletypetuple, particlenumber)
 `path in turn looks like this (:fieldname, fieldtype, size)
 """
 function particle_paths(P, allpaths=[], path=[])
     T = typeof(P)
     if T <: AbstractParticles
-        push!(allpaths, (path,particletype(T)...))
+        push!(allpaths, (path,particletypetuple(T)...))
         return
     end
     if T <: AbstractArray

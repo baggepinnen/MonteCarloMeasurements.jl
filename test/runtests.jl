@@ -1,7 +1,7 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random
-import MonteCarloMeasurements: ±, ∓, ⊗, gradient, optimize
+import MonteCarloMeasurements: ⊗, gradient, optimize
 @info "import Plots"
 import Plots
 @info "import Plots done"
@@ -72,6 +72,8 @@ Random.seed!(0)
                 @test !(mean(p) ≉ p)
                 @test p ≉ 2.1std(p)
                 @test !(p ≉ 1.9std(p))
+                @test (5 ± 0.1) ≳ (1 ± 0.1)
+                @test (1 ± 0.1) ≲ (5 ± 0.1)
 
                 v = randn(5)
                 @test Vector(PT(v)) == v
@@ -142,7 +144,7 @@ Random.seed!(0)
                 @test sum(a.*b) ≈ 0
                 @test all(A*b .≈ [0,0,0])
 
-                @test @unsafe all(A\b .≈ zeros(3))
+                @test all(A\b .≈ zeros(3))
                 @test_nowarn @unsafe qr(A)
                 @test_nowarn Particles(100, MvNormal(2,1)) ./ Particles(100, Normal(2,1))
                 pn = Particles(100, Normal(2,1), systematic=false)
@@ -285,6 +287,7 @@ Random.seed!(0)
 
         yp = yn .+ σ.*Particles.(2000)
         xhp = (A'A)\(A'yp)
+        @test xhp ≈ A\yp
         @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
         @test norm(cov(xhp) .- C1) < 1e-7
@@ -296,8 +299,8 @@ Random.seed!(0)
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
-        @test MonteCarloMeasurements.particletype(p) == (Float64, 500)
-        @test MonteCarloMeasurements.particletype(typeof(p)) == (Float64, 500)
+        @test MonteCarloMeasurements.particletypetuple(p) == (Float64, 500, Particles)
+        @test MonteCarloMeasurements.particletypetuple(typeof(p)) == (Float64, 500, Particles)
         @test_nowarn display(p)
         @test_nowarn println(p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
@@ -343,10 +346,9 @@ Random.seed!(0)
         @test !(!p)
         @test !(0p)
         @test round(p) ≈ 0 atol=0.1
-        @test norm(0p) == 0
-        @test norm(p) ≈ 0 atol=0.01
-        @test norm(p,Inf) > 0
-        @test_throws ArgumentError norm(p,1)
+        @test norm(p) == abs(p)
+        @test norm([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
+        @test LinearAlgebra.norm2([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test eps(typeof(p)) == eps(Float64)
         @test eps(p) == eps(Float64)
@@ -454,17 +456,16 @@ Random.seed!(0)
     @time @testset "bymap" begin
         @info "Testing bymap"
 
-        @test MonteCarloMeasurements.Ngetter(Particles(50)) == 50
-        @test_throws ArgumentError MonteCarloMeasurements.Ngetter(Particles(30), Particles(10))
         p = 0 ± 1
-
-        @test MonteCarloMeasurements.Ngetter([p,p],p) == 500
-        @test MonteCarloMeasurements.Ngetter([p,p]) == 500
+        ps = 0 ∓ 1
 
         f(x) = 2x
         f(x,y) = 2x + y
 
+        @test f(p) ≈ bymap(f,p)
         @test f(p) ≈ @bymap f(p)
+        @test typeof(f(p)) == typeof(@bymap(f(p)))
+        @test typeof(f(ps)) == typeof(@bymap(f(ps)))
         @test f(p,p) ≈ @bymap f(p,p)
         @test f(p,10) ≈ @bymap f(p,10)
         @test !(f(p,10) ≈ @bymap f(p,-10))
@@ -485,8 +486,8 @@ Random.seed!(0)
 
         h(x,y) = x .* y'
         Base.Cartesian.@nextract 4 p d-> 0±1
-        @test all(h([p_1,p_2], [p_3,p_4]) .≈ @bymap h([p_1,p_2], [p_3,p_4]))
-        @test all(h([p_1,p_2], [p_3,p_4]) .≈ @bypmap h([p_1,p_2], [p_3,p_4]))
+        @test all(h([p_1,p_2], [p_3,p_4]) .≈ bymap(h, [p_1,p_2], [p_3,p_4]))
+        @test all(h([p_1,p_2], [p_3,p_4]) .≈ bypmap(h, [p_1,p_2], [p_3,p_4]))
 
         h2(x,y) = x .* y
         Base.Cartesian.@nextract 4 p d-> 0±1
@@ -504,6 +505,7 @@ Random.seed!(0)
     @testset "inference" begin
         @inferred zero(Particles{Float64,1})
         @inferred zeros(Particles{Float64,1}, 5)
+        @inferred bymap(sin, 1 ± 2)
     end
 
     include("test_forwarddiff.jl")

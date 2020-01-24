@@ -2,8 +2,10 @@
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/M/MonteCarloMeasurements.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/latest)
+[![Documentation, stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable)
+[![Documentation, latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/latest)
+[![arXiv article](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
+
 
 This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. **Correlated quantities** are handled as well, see [multivariate particles](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/#Multivariate-particles-1) below.
 
@@ -36,4 +38,4 @@ c = Particles(500, Poisson(3.)) # Create uncertain numbers distributed according
 # Part500(2.896 ± 1.71)
 ```
 
-For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable) or the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples)
+For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
