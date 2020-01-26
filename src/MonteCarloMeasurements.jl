@@ -59,7 +59,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
+export ±, ∓, .., AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -87,8 +87,6 @@ include("plotting.jl")
 include("optimize.jl")
 
 # This is defined here so that @bymap is loaded
-Base.log(p::Matrix{<:AbstractParticles}) = bymap(log,p) # Matrix more specific than StridedMatrix used in Base.log
-LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = bymap(eigvals,p)
 LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 

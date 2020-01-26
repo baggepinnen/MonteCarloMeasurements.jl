@@ -358,6 +358,13 @@ Random.seed!(0)
         @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
         @test sum(mean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
+        @test mean(sum(abs, eigvals([0 1 ± 0.001; -1. 0]) - [ 0.0 - (1.0 ± 0.0005)*im
+                                                0.0 + (1.0 ± 0.0005)*im])) < 0.002
+
+        e = eigvals([1 ± 0.001 0; 0 1.])
+        @test e isa Vector{Particles{Float64,500}}
+        @test e ≈ [1.0 ± 0.00058, 1.0 ± 0.00058]
+
         @test (1 .. 2) isa Particles
         @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())
         @test maximum((1 .. 2)) <= 2
@@ -381,6 +388,14 @@ Random.seed!(0)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
 
+        z = complex(1 ± 0.1, 1 ± 0.1)
+        @unsafe @test abs(sqrt(z ^ 2) - z) < eps()
+        @unsafe @test abs(sqrt(z ^ 2.0) - z) < eps()
+
+        z = complex(1 ± 0.1, 0 ± 0.1)
+        @test real(2 ^ z) ≈ 2 ^ real(z)
+        @test real(2.0 ^ z) ≈ 2.0 ^ real(z)
+        @test real(z ^ z) ≈ real(z) ^ real(z)
         p = 2 ± 0.1
         q = 3 ± 0.1
         @test wasserstein(p,p,1) == 0

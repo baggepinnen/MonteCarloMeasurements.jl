@@ -5,19 +5,56 @@ for PT in (:Particles, :StaticParticles)
 
     end
 
+    for ff in (^,)
+        f = nameof(ff)
+        @eval Base.$f(z::Complex{$PT{T,N}}, x::Real) where {T,N} = ℂ2ℂ_function($f, z, x)
+        @eval Base.$f(z::Real, x::Complex{$PT{T,N}}) where {T,N} = ℂ2ℂ_function($f, z, x)
+        @eval Base.$f(z::Complex{$PT{T,N}}, x::Complex{$PT{T,N}}) where {T,N} = ℂ2ℂ_function($f, z, x)
+
+        @eval Base.$f(z::Complex{$PT{T,N}}, x::Int) where {T,N} = ℂ2ℂ_function($f, z, x)
+        @eval Base.$f(z::Int, x::Complex{$PT{T,N}}) where {T,N} = ℂ2ℂ_function($f, z, x)
+    end
+
 end
 
 
-
+@inline maybe_complex_particles(x,i) = x
+@inline maybe_complex_particles(p::AbstractParticles,i) = complex(real(p.particles[i]), imag(p.particles[i]))
 
 """
     ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
 applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 """
-function ℂ2ℂ_function(f::F, z::Complex{T}) where {F,T<:AbstractParticles}
+function ℂ2ℂ_function(f::F, z::Complex{T}) where {F<:Union{Function,DataType},T<:AbstractParticles}
     rz,iz = z.re,z.im
     s = map(1:length(rz.particles)) do i
         @inbounds f(complex(rz[i], iz[i]))
+    end
+    complex(T(real.(s)), T(imag.(s)))
+end
+
+function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::R) where {F<:Union{Function,DataType},T<:AbstractParticles,R<:Real}
+    rz,iz = z.re,z.im
+    s = map(1:length(rz.particles)) do i
+        @inbounds f(complex(rz[i], iz[i]),  a)
+    end
+    complex(T(real.(s)), T(imag.(s)))
+end
+
+function ℂ2ℂ_function(f::F, z::R, a::Union{Complex{S},S}) where {F<:Union{Function,DataType},S<:AbstractParticles,R<:Real}
+    rz,iz = a.re,a.im
+    s = map(1:length(rz.particles)) do i
+        @inbounds f(z, complex(rz[i], iz[i]))
+    end
+    complex(S(real.(s)), S(imag.(s)))
+end
+
+function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::Union{Complex{S},S}) where {F<:Union{Function,DataType},T<:AbstractParticles,S<:AbstractParticles}
+    rz,iz = z.re,z.im
+    ra,ia = a.re,a.im
+
+    s = map(1:length(rz.particles)) do i
+        @inbounds f(complex(rz[i], iz[i]),  complex(ra[i], ia[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -35,6 +72,8 @@ for ff in (sqrt, exp, sin, cos)
     @eval Base.$f(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function($f, z)
     @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
 end
+
+
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     are = real(a); aim = imag(a); bre = real(b); bim = imag(b)

@@ -125,13 +125,13 @@ for PT in (:Particles, :StaticParticles)
 
         """
             ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
-        Applies  `f : ℝⁿ → ℝⁿ` to an array of particles.
+        Applies  `f : ℝⁿ → ℝⁿ` to an array of particles. E.g., `Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(log,p)`
         """
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
             individuals = map(1:length(p[1])) do i
                 f(getindex.(p,i))
             end
-            RT = promote_type(T,eltype(eltype(individuals)))
+            RT = eltype(eltype(individuals))
             PRT = $PT{RT,N}
             out = similar(p, PRT)
             for i = 1:length(p)
@@ -144,7 +144,7 @@ for PT in (:Particles, :StaticParticles)
             individuals = map(1:length(p[1])) do i
                 f(getindex.(p,i), getindex.(p2,i))
             end
-            RT = promote_type(T,eltype(eltype(individuals)))
+            RT = eltype(eltype(individuals))
             PRT = $PT{RT,N}
             out = similar(p, PRT)
             for i = 1:length(p)
@@ -152,6 +152,49 @@ for PT in (:Particles, :StaticParticles)
             end
             reshape(out, size(p))
         end
+
+        """
+            ℝⁿ2ℂⁿ_function(f::Function, p::AbstractArray{T})
+        Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
+        """
+        function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
+            individuals = map(1:length(p[1])) do i
+                f(getindex.(p,i))
+            end
+            PRT = $PT{T,N}
+            RT = eltype(eltype(individuals))
+            if RT <: Complex
+                CRT = Complex{PRT}
+            else
+                CRT = PRT
+            end
+            out = Array{CRT}(undef, size(individuals[1]))
+            for i = eachindex(out)
+                ind = getindex.(individuals,i)
+                if RT <: Complex
+                    out[i] = complex(PRT(real.(ind)), PRT(imag.(ind)))
+                else
+                    out[i] = PRT(ind)
+                end
+            end
+            out
+        end
+        #
+        # function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
+        #     individuals = map(1:length(p[1])) do i
+        #         f(getindex.(p,i), getindex.(p2,i))
+        #     end
+        #     RT = eltype(eltype(individuals))
+        #     @assert RT <: Complex
+        #     PRT = $PT{T,N}
+        #     CRT = Complex{PRT}
+        #     out = similar(p, CRT)
+        #     for i = 1:length(p)
+        #         ind = getindex.(individuals,i)
+        #         out[i] = complex(PRT(real.(ind)), PRT(imag.(ind)))
+        #     end
+        #     reshape(out, size(p))
+        # end
     end
 end
 
@@ -352,7 +395,8 @@ Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
-
+Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(log,p) # Matrix more specific than StridedMatrix used in Base.log
+LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
 

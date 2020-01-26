@@ -28,7 +28,7 @@ These functions might not work with `Particles` out of the box. Special cases ar
 - `log : ℝ(n×n) → C(n×n)`   matrix logarithm
 - `eigvals : ℝ(n×n) → C(n)` **warning**: eigenvalues are sorted, when two eigenvalues cross, this function is nondifferentiable. Eigenvalues can thus appear to have dramatically widened distributions. Make sure you interpret the result of this call in the right way.
 
-The function  [`ℝⁿ2ℝⁿ_function`](@ref)`(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles.
+The function  [`ℝⁿ2ℝⁿ_function`](@ref)`(f::Function, p::AbstractArray{T})` applies `f : ℝⁿ → ℝⁿ` to an array of particles. See also [`ℝⁿ2ℂⁿ_function`](@ref) which is used to implement, e.g., `log,eigvals`
 
 ## Complex functions
 These functions do not work with `Particles` out of the box. Special cases are currently implemented for
