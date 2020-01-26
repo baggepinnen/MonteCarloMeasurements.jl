@@ -9,6 +9,8 @@ import Plots
 Random.seed!(0)
 
 @testset "MonteCarloMeasurements.jl" begin
+    @info "Testing MonteCarloMeasurements"
+
     # σ/√N = σm
     @time @testset "sampling" begin
         @info "Testing sampling"
@@ -526,6 +528,7 @@ Random.seed!(0)
     include("test_forwarddiff.jl")
     include("test_deconstruct.jl")
     include("test_sleefpirates.jl")
+    include("test_measurements.jl")
 
 end
 

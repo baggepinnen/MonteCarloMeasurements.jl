@@ -7,6 +7,7 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
 
 @testset "deconstruct" begin
+    @info "Testing deconstruct"
     unsafe_comparisons()
     N = 50
     P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])

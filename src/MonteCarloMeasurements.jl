@@ -6,8 +6,8 @@ import Base: add_sum
 using Distributions, StatsBase, Requires
 
 
-const DEFAUL_NUM_PARTICLES = 500
-const DEFAUL_STATIC_NUM_PARTICLES = 100
+const DEFAULT_NUM_PARTICLES = 500
+const DEFAULT_STATIC_NUM_PARTICLES = 100
 
 const COMPARISON_FUNCTION = Ref{Function}(mean)
 const USE_UNSAFE_COMPARIONS = Ref(false)
@@ -93,6 +93,7 @@ Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:Abstract
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
     @require SLEEFPirates="476501e8-09a2-5ece-8869-fb82de89a1fa" include("sleefpirates.jl")
+    @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
 end
 
 end

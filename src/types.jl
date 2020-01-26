@@ -56,7 +56,7 @@ for PT in (:Particles, :StaticParticles)
 
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(N::Integer=DEFAUL_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
+        function $PT(N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
                 v = systematic_sample(N,d; permute=permute)
             else
@@ -77,11 +77,11 @@ for PT in (:Particles, :StaticParticles)
 end
 
 function Particles(d::Distribution;kwargs...)
-    Particles(DEFAUL_NUM_PARTICLES, d; kwargs...)
+    Particles(DEFAULT_NUM_PARTICLES, d; kwargs...)
 end
 
 function StaticParticles(d::Distribution;kwargs...)
-    StaticParticles(DEFAUL_STATIC_NUM_PARTICLES, d; kwargs...)
+    StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, d; kwargs...)
 end
 
 

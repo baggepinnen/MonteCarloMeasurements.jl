@@ -2,6 +2,7 @@ using MonteCarloMeasurements, ForwardDiff, Test
 const FD = ForwardDiff
 
 @testset "forwarddiff" begin
+    @info "Testing ForwardDiff"
     c = 1 ± 0.1 # These are the uncertain parameters
     d = 1 ± 0.1 # These are the uncertain parameters
     # In the cost function below, we ensure that $cx+dy > 10 \; ∀ \; c,d ∈ P$ by looking at the worst case
