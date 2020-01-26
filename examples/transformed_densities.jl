@@ -26,11 +26,11 @@ kdt = kde(f.(rand(d,100000)), npoints=200, bandwidth=0.08)
 plot!(l .+ 0.2kdt.density, kdt.x, lab="True output dens.")
 
 # This is the output density as approximated by linear uncertainty propagation
-plot!(l .+ 0.2pdf.(Ref(dm),xr), xr, lab="Measurements dens.")
+plot!(l .+ 0.2pdf.(Ref(dm),xr), xr, lab="Linear Gaussian propagation")
 
 # Estimate the output density corresponding to the particles
 kd = kde(y, npoints=200, bandwidth=0.08)
-plot!(l .+ 0.2kd.density, kd.x, lab="Particle kernel dens. est.")
+plot!(l .+ 0.2kd.density, kd.x, lab="Particle kernel dens. est.", l=:dash)
 
 # Draw helper lines that show how particles are transformed from input space to output space
 plot!([x x][1:2:end,:]', [noll y][1:2:end,:]', l=(:black, :arrow, :dash, 0.1))
