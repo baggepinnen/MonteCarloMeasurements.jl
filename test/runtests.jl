@@ -358,7 +358,7 @@ Random.seed!(0)
         @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
         @test sum(mean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
-        @test mean(sum(abs, eigvals([0 1 ± 0.001; -1. 0]) - [ 0.0 - (1.0 ± 0.0005)*im
+        @test @unsafe mean(sum(abs, sort(eigvals([0 1 ± 0.001; -1. 0]), by=imag) - [ 0.0 - (1.0 ± 0.0005)*im
                                                 0.0 + (1.0 ± 0.0005)*im])) < 0.002
 
         e = eigvals([1 ± 0.001 0; 0 1.])
