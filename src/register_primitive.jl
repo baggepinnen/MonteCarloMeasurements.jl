@@ -39,7 +39,7 @@ function register_primitive_multi(ff, eval=eval)
     #         end
     #     end)
     # end
-    for PT in (:Particles, :StaticParticles)
+    for PT in (:Particles, :StaticParticles, :StridedParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N},a::Real...) where {T,N}
                 res = ($m.$f).(p.particles, maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
@@ -79,6 +79,25 @@ function register_primitive_multi(ff, eval=eval)
             return StaticParticles{eltype(res),N}(res)
         end
     end)
+
+    # eval(quote
+    #     function ($m.$f)(p::StridedParticles{T,N},a::Real...) where {T,N}
+    #         res = @strided ($m.$f).(p.particles, maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
+    #         return StridedParticles{eltype(res),N}(res)
+    #     end
+    #     function ($m.$f)(a::Real,p::StridedParticles{T,N}) where {T,N}
+    #         res = @strided ($m.$f).(a, p.particles)
+    #         return StridedParticles{eltype(res),N}(res)
+    #     end
+    #     function ($m.$f)(p1::StridedParticles{T,N},p2::StridedParticles{T,N}) where {T,N}
+    #         res = @strided ($m.$f).(p1.particles, p2.particles)
+    #         return StridedParticles{eltype(res),N}(res)
+    #     end
+    #     function ($m.$f)(p1::StridedParticles{T,N},p2::StridedParticles{S,N}) where {T,S,N} # Needed for particles of different float types :/
+    #         res = @strided ($m.$f).(p1.particles, p2.particles)
+    #         return StridedParticles{eltype(res),N}(res)
+    #     end
+    # end)
 end
 
 """
@@ -89,7 +108,7 @@ Register a single-argument function so that it works with particles. If you want
 function register_primitive_single(ff, eval=eval)
     f = nameof(ff)
     m = Base.parentmodule(ff)
-    for PT in (:Particles, :StaticParticles)
+    for PT in (:Particles, :StaticParticles, :StridedParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N}) where {T,N}
                 res = ($m.$f).(p.particles)
@@ -97,4 +116,10 @@ function register_primitive_single(ff, eval=eval)
             end
         end)
     end
+    # eval(quote
+    #     function ($m.$f)(p::StridedParticles{T,N}) where {T,N}
+    #         res = @strided ($m.$f).(p.particles)
+    #         return StridedParticles{eltype(res),N}(res)
+    #     end
+    # end)
 end

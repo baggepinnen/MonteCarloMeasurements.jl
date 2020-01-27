@@ -3,7 +3,7 @@ using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinea
 using Distributed: pmap
 import Base: add_sum
 
-using Distributions, StatsBase, Requires
+using Distributions, StatsBase, Requires, Strided
 
 
 const DEFAULT_NUM_PARTICLES = 500
@@ -59,7 +59,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
+export ±, ∓, .., AbstractParticles,Particles,StaticParticles,StridedParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 

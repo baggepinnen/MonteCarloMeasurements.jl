@@ -79,6 +79,7 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
+shortform(p::StridedParticles) = "StrPart"
 function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
     if T <: AbstractFloat && s < eps(p)
@@ -119,7 +120,7 @@ zero,sign,abs,sqrt,rad2deg,deg2rad])
 
 MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :StridedParticles)
     # Constructors
     @eval begin
 
@@ -212,7 +213,7 @@ for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quanti
     @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :StridedParticles)
 
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
@@ -273,7 +274,7 @@ for PT in (:Particles, :StaticParticles)
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
     @eval Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N}
 
-    for PT2 in (:Particles, :StaticParticles)
+    for PT2 in (:Particles, :StaticParticles, :StridedParticles)
         if PT == PT2
             @eval Base.promote_rule(::Type{$PT{S,N}}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         elseif any(==(:StaticParticles), (PT, PT2))
