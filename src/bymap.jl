@@ -18,24 +18,32 @@ particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
 @inline vecindex(p::AbstractParticles{T,N},i::AbstractVector) where {T,N} = StaticParticles{T,length(i)}(getindex(p,i))
 @inline vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), fieldcount(typeof(p))))...)
 
+
+
 function indexof_particles(args)
-    inds = findall(a-> a <: SomeKindOfParticles, args)
+    inds = findall(a-> a <: SomeKindOfParticles, [args...])
     inds === nothing && throw(ArgumentError("At least one argument should be <: AbstractParticles. If particles appear nested as fields inside an argument, see `with_workspace` and `Workspace`"))
     all(nparticles(a) == nparticles(args[inds[1]]) for a in args[inds]) || throw(ArgumentError("All p::Particles must have the same number of particles."))
     (inds...,)
     # TODO: test all same number of particles
 end
 
-
-@inline function arggetter(i,a::Union{SomeKindOfParticles, NamedTuple})
-    vecindex(a,i)
+@gg function argsigetter(a)
+    T,N,PT = particletypetuple(a)
+    :($T,$N,$PT,i->(StaticParticles(a[i]),))
 end
 
-
-
-@inline function arggetter(i,a)
-    a
+@gg function argsigetter(a1,a2)
+    args = (a1,a2)
+    inds = indexof_particles(args)
+    T,N,PT = particletypetuple(args[first(inds)])
+    nargs = length(args)
+    :($T,$N,$PT,i->(arggetter(i, a1), arggetter(i, a1)))
 end
+
+@inline arggetter(i,a::Union{SomeKindOfParticles, NamedTuple}) = vecindex(a,i)
+
+@inline arggetter(i,a) = a
 
 """
     @bymap f(p, args...)
@@ -112,39 +120,32 @@ end
 
 Base.getindex(p::AbstractParticles, i::UnitRange) = getindex(p.particles, i)
 
-function chunkmap(f::F, chunk_size::Int, args::Number...) where F
-    pinds = indexof_particles(typeof.(args))
-    T,N,PT = particletypetuple(args[first(pinds)])
+function chunkmap(f::F, chunk_size::Int, args::Tuple) where F
+    T,N,PT,argsi = argsigetter(args...)
     # @assert nextpow(2,N) == N "N must currently be a power of two for chunkmap"
+    nargs = length(args)
+
     @assert N % chunk_size == 0 "chunk_size must be a factor of N for chunkmap"
-    # nt = Threads.nthreads()
     nsim::Int = N÷chunk_size
+    # nt = Threads.nthreads()
     @assert nsim > 1
-    argsi = ntuple(j->arggetter(1:chunk_size,args[j]), length(args))
-    res1 = f(argsi...)
-    chunkmap_inner(f, res1, nsim, chunk_size, args, typeof(argsi))
-    # if res1 isa (Array{TT,0} where TT) || res1 isa Number
-    #     PTNT(individuals)
-    # elseif eltype(individuals) <: AbstractArray{TT,1} where TT
-    #     PTNT(copy(reduce(hcat,individuals)'))
-    # elseif eltype(individuals) <: AbstractArray{TT,2} where TT
-    #     # @show PT{eltype(individuals),N}
-    #     reshape(PTNT(copy(reduce(hcat,vec.(individuals))')), size(individuals[1],1),size(individuals[1],2))::Matrix{PTNT}
-    # else
-    #     error("Output with dimension >2 is currently not supported by `bymap`. Consider if `ℝⁿ2ℝⁿ_function($(f), $(args...))` works for your use case.")
-    # end
+    res1 = f(argsi(1:chunk_size)...)
+    chunkmap_inner(f, res1, nsim, chunk_size, argsi)
+
 end
 
-function chunkmap_inner(f::F, res1::T, nsim, chunk_size, args, argsiT) where {F,T}
+function chunkmap_inner(f::F, res1::T, nsim, chunk_size, argsi) where {F,T}
+    # nargs = length(args)
     individuals = Vector{T}(undef, nsim)
     individuals[1] = res1
     # @show typeof(args)
     Threads.@threads for i in Base.OneTo(nsim-1)
         inds = i*chunk_size .+ (1:chunk_size)
-        argsi = ntuple(j->arggetter(inds,args[j]), length(args))
-        individuals[i+1] = f(argsi...)
+        # argsi = @ntuple($nargs, j->arggetter(inds, args[j]))
+        individuals[i+1] = f(argsi(inds)...)
     end
     p = pmerge(Particles{T,nsim}(individuals))
+
 end
 
 function pmerge(pi::Particles{<:StaticParticles{T,Ni}, No}) where {T,Ni,No}
@@ -160,3 +161,9 @@ pmerge(pi::AbstractArray{<:StaticParticles}) = pmerge.(pi)
 
 
 # TODO: arggetter must be generated function
+
+@gg function f(x...)
+    quote
+        x
+    end
+end
