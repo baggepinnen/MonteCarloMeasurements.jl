@@ -15,6 +15,8 @@ particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
 
 vecindex(p,i) = getindex(p,i)
 vecindex(p::ParticleArray,i) = getindex.(p,i)
+vecindex(p,i::AbstractVector) = StaticParticles(getindex(p,i))
+vecindex(p::ParticleArray,i::AbstractVector) = StaticParticles(getindex.(p,i))
 vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), fieldcount(typeof(p))))...)
 
 function indexof_particles(args)
@@ -29,6 +31,8 @@ end
 function arggetter(i,a::Union{SomeKindOfParticles, NamedTuple})
     vecindex(a,i)
 end
+
+
 
 function arggetter(i,a)
     a
@@ -104,5 +108,37 @@ macro bypmap(ex)
     @capture(ex, f_(args__)) || error("expected a function call")
     quote
         bypmap($(esc(f)),$(esc.(args)...))
+    end
+end
+
+Base.getindex(p::AbstractParticles, i::UnitRange) = getindex(p.particles, i)
+
+function chunkmap(f::F, chunk_size::Int, args...) where F
+    inds = indexof_particles(typeof.(args))
+    T,N,PT = particletypetuple(args[first(inds)])
+    # @assert nextpow(2,N) == N "N must currently be a power of two for chunkmap"
+    @assert N % chunk_size == 0 "chunk_size must be a factor of N for chunkmap"
+    nt = Threads.nthreads()
+    nsim = N÷chunk_size
+    @assert nsim > 1
+    argsi = ntuple(j->arggetter(1:chunk_size,args[j]), length(args))
+    res1 = f(argsi...)
+    individuals = Vector{typeof(res1)}(undef, nsim)
+    individuals[1] = res1
+    Threads.@threads for i in 2:nsim
+        inds = (i-1)*chunk_size .+ 1:chunk_size
+        argsi = ntuple(j->arggetter(i,args[j]), length(args))
+        individuals[i] = f(argsi...)
+    end
+    PTNT = PT{eltype(eltype(individuals)),nsim}
+    if (eltype(individuals) <: AbstractArray{TT,0} where TT) || eltype(individuals) <: Number
+        PTNT(individuals)
+    elseif eltype(individuals) <: AbstractArray{TT,1} where TT
+        PTNT(copy(reduce(hcat,individuals)'))
+    elseif eltype(individuals) <: AbstractArray{TT,2} where TT
+        # @show PT{eltype(individuals),N}
+        reshape(PTNT(copy(reduce(hcat,vec.(individuals))')), size(individuals[1],1),size(individuals[1],2))::Matrix{PTNT}
+    else
+        error("Output with dimension >2 is currently not supported by `bymap`. Consider if `ℝⁿ2ℝⁿ_function($(f), $(args...))` works for your use case.")
     end
 end
