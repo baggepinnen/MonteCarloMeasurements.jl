@@ -39,7 +39,7 @@ function register_primitive_multi(ff, eval=eval)
     #         end
     #     end)
     # end
-    for PT in (:Particles, :StaticParticles)
+    for PT in (:Particles, :StaticParticles, :CuParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N},a::Real...) where {T,N}
                 res = ($m.$f).(p.particles, maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
@@ -89,7 +89,7 @@ Register a single-argument function so that it works with particles. If you want
 function register_primitive_single(ff, eval=eval)
     f = nameof(ff)
     m = Base.parentmodule(ff)
-    for PT in (:Particles, :StaticParticles)
+    for PT in (:Particles, :StaticParticles, :CuParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N}) where {T,N}
                 res = ($m.$f).(p.particles)

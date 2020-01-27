@@ -27,7 +27,11 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-for PT in (:Particles, :StaticParticles)
+struct CuParticles{T,N} <: AbstractParticles{T,N}
+    particles::CuArray{T,1,Nothing}
+end
+
+for PT in (:Particles, :StaticParticles, :CuParticles)
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
             size(m, 1) == N || throw(ArgumentError("The first dimension of the matrix must be the same as the number N of particles."))
