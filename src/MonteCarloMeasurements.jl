@@ -1,5 +1,5 @@
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools, GeneralizedGenerated
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools, GeneralizedGenerated, UnsafeArrays
 using Distributed: pmap
 import Base: add_sum
 

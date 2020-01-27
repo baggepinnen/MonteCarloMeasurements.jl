@@ -119,7 +119,7 @@ zero,sign,abs,sqrt,rad2deg,deg2rad])
 
 MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :GenericParticles)
     # Constructors
     @eval begin
 
@@ -212,7 +212,7 @@ for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quanti
     @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in (:Particles, :StaticParticles, :GenericParticles)
 
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N

@@ -15,7 +15,7 @@ particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
 
 @inline vecindex(p,i) = getindex(p,i)
 @inline vecindex(p::ParticleArray,i) = getindex.(p,i)
-@inline vecindex(p::AbstractParticles{T,N},i::AbstractVector) where {T,N} = StaticParticles{T,length(i)}(getindex(p,i))
+@inline vecindex(p::AbstractParticles{T,N},i::AbstractVector) where {T,N} = GenericParticles{T,length(i)}(uview(p,i))
 @inline vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), fieldcount(typeof(p))))...)
 
 
@@ -30,7 +30,7 @@ end
 
 @gg function argsigetter(a)
     T,N,PT = particletypetuple(a)
-    :($T,$N,$PT,i->(StaticParticles(a[i]),))
+    :($T,$N,$PT,i->(GenericParticles(uview(a,i)),))
 end
 
 @gg function argsigetter(a1,a2)
@@ -148,7 +148,7 @@ function chunkmap_inner(f::F, res1::T, nsim, chunk_size, argsi) where {F,T}
 
 end
 
-function pmerge(pi::Particles{<:StaticParticles{T,Ni}, No}) where {T,Ni,No}
+function pmerge(pi::Particles{<:AbstractParticles{T,Ni}, No}) where {T,Ni,No}
     v = Vector{T}(undef, Ni*No)
     inds = 1:Ni
     for (i,p) in enumerate(pi)
@@ -157,13 +157,4 @@ function pmerge(pi::Particles{<:StaticParticles{T,Ni}, No}) where {T,Ni,No}
     Particles{T,Ni*No}(v)
 end
 
-pmerge(pi::AbstractArray{<:StaticParticles}) = pmerge.(pi)
-
-
-# TODO: arggetter must be generated function
-
-@gg function f(x...)
-    quote
-        x
-    end
-end
+pmerge(pi::AbstractArray{<:AbstractParticles}) = pmerge.(pi)

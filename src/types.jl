@@ -27,7 +27,11 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-for PT in (:Particles, :StaticParticles)
+struct GenericParticles{T,N,VT} <: AbstractParticles{T,N}
+    particles::VT
+end
+
+for PT in (:Particles, :StaticParticles, :GenericParticles)
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
             size(m, 1) == N || throw(ArgumentError("The first dimension of the matrix must be the same as the number N of particles."))
@@ -82,6 +86,10 @@ end
 
 function StaticParticles(d::Distribution;kwargs...)
     StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, d; kwargs...)
+end
+
+function GenericParticles(d::Distribution;kwargs...)
+    GenericParticles(DEFAULT_NUM_PARTICLES, d; kwargs...)
 end
 
 
