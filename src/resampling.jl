@@ -27,7 +27,7 @@
 #     w[i] += 1
 #     s
 # end
-# 
+#
 # """
 #     loglik = resample!(p::WeightedParticles)
 # Resample the particles based on the `p.logweights`. After a call to this function, weights will be reset to sum to one. Returns log-likelihood.
@@ -67,10 +67,11 @@
 # end
 
 """
-    bootstrap(p::Particles)
+    bootstrap([rng::AbstractRNG,] p::Particles)
 
 Return Particles resampled with replacement.
 """
-function bootstrap(p::T) where T <: AbstractParticles
-    T(p.particles[rand(1:length(p))])
+function bootstrap(rng::AbstractRNG, p::T) where T <: AbstractParticles
+    T(p.particles[rand(rng, 1:length(p))])
 end
+bootstrap(p::T) where T <: AbstractParticles = bootstrap(Random.GLOBAL_RNG, p)

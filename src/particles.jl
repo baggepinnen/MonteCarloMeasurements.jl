@@ -38,23 +38,26 @@ See also [`outer_product`](@ref), [`±`](@ref)
 ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
 """
-    p = outer_product(dists::Vector{<:Distribution}, N=100_000)
+    p = outer_product([rng::AbstractRNG,] dists::Vector{<:Distribution}, N=100_000)
 
 Creates a multivariate systematic sample where each dimension is sampled according to the corresponding univariate distribution in `dists`. Returns `p::Vector{Particles}` where each Particles has a length approximately equal to `N`.
 The particles form the outer product between `d` systematically sampled vectors with length given by the d:th root of N, where `d` is the length of `dists`, All particles will be independent and have marginal distributions given by `dists`.
 
 See also `MonteCarloMeasurements.⊗`
 """
-function outer_product(dists::AbstractVector{<:Distribution}, N=100_000)
+function outer_product(rng::AbstractRNG, dists::AbstractVector{<:Distribution}, N=100_000)
     d = length(dists)
     N = floor(Int,N^(1/d))
     dims = map(dists) do dist
-        v = systematic_sample(N,dist; permute=true)
+        v = systematic_sample(rng,N,dist; permute=true)
     end
     cart_prod = vec(collect(Iterators.product(dims...)))
     p = map(1:d) do i
         Particles(getindex.(cart_prod,i))
     end
+end
+function outer_product(dists::AbstractVector{<:Distribution}, N=100_000)
+    return outer_product(Random.GLOBAL_RNG, dists, N)
 end
 
 # StaticParticles(N::Integer = DEFAULT_NUM_PARTICLES; permute=true) = StaticParticles{Float64,N}(SVector{N,Float64}(systematic_sample(N, permute=permute)))
