@@ -4,7 +4,6 @@ function perturb(rng::AbstractRNG, p, Cp)
     d = MvNormal(mean(p), 1.1Cp + 1e-12I)
     Particles(rng, length(p[1]), d)
 end
-perturb(p, Cp) = perturb(Random.GLOBAL_RNG, p, Cp)
 
 
 
@@ -24,7 +23,7 @@ function optimize(rng::AbstractRNG,f,p,τ=1; τi=1.005, iters=10000, tol=1e-8)
         foreach(x->(x.particles .= x.particles[j]), p); # @test length(unique(p[1].particles)) == length(unique(j))
         Cp = cov(p)
         tr(Cp) < tol && (@info "Converged at iteration $i"; return p)
-        p = perturb(rng,p, Cp)
+        p = perturb(rng, p, Cp)
         τ *= τi
     end
     p
