@@ -113,7 +113,7 @@ register_primitive_single.([*,+,-,/,
 exp,exp2,exp10,expm1,
 log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
-asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,sign,abs,sqrt], eval, LoopVectorization.vmap)
+asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,sign,abs,sqrt], eval, map)
 
 # Two-argument functions
 register_primitive_multi.([+,-,*,/,^,mod,mod1,atan,atand,//,^,

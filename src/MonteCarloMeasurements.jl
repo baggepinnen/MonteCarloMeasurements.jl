@@ -86,6 +86,7 @@ include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
+include("loopvec.jl")
 
 # This is defined here so that @bymap is loaded
 Base.log(p::Matrix{<:AbstractParticles}) = @bymap log(p) # Matrix more specific than StridedMatrix used in Base.log
