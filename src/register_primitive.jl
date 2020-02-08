@@ -42,7 +42,7 @@ function register_primitive_multi(ff, eval=eval)
     for PT in (:Particles, :StaticParticles)
         eval(quote
             function ($m.$f)(p::$PT{T,N},a::Real...) where {T,N}
-                res = ($m.$f).(p.particles, maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
+                res = ($m.$f).(p.particles, MonteCarloMeasurements.maybe_particles.(a)...) # maybe_particles introduced to handle >2 arg operators
                 return $PT{eltype(res),N}(res)
             end
             function ($m.$f)(a::Real,p::$PT{T,N}) where {T,N}

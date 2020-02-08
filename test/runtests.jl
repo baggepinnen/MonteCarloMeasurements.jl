@@ -158,6 +158,24 @@ Random.seed!(0)
                 @test pn ≈ 2
                 @test issorted(pn.particles)
 
+                rng = MersenneTwister(657)
+                pn1 = Particles(rng, 100, Normal(2,1), systematic=true, permute=true)
+                rng = MersenneTwister(657)
+                pn2 = Particles(rng, 100, Normal(2,1), systematic=true, permute=true)
+                @test pn1 == pn2
+
+                rng = MersenneTwister(27)
+                pn1 = Particles(rng, Normal(2,1), systematic=true, permute=true)
+                rng = MersenneTwister(27)
+                pn2 = Particles(rng, Normal(2,1), systematic=true, permute=true)
+                @test pn1 == pn2
+
+                rng = MersenneTwister(932)
+                pn1 = Particles(rng, 100, systematic=true, permute=true)
+                rng = MersenneTwister(932)
+                pn2 = Particles(rng, 100, systematic=true, permute=true)
+                @test pn1 == pn2
+
                 @info "Tests for $PT done"
 
                 p = PT{Float64,10}(2)
@@ -404,6 +422,11 @@ Random.seed!(0)
         @test wasserstein(p,p,1) == 0
         @test wasserstein(p,q,1) >= 0
         @test bootstrap(p) ≈ p
+        rng = MersenneTwister(453)
+        p1 = bootstrap(rng,p)
+        rng = MersenneTwister(453)
+        p2 = bootstrap(rng,p)
+        @test p1 == p2
     end
 
     @time @testset "mutation" begin
@@ -436,6 +459,12 @@ Random.seed!(0)
         @test length(p) == 2
         @test length(p[1]) <= 100_000
         @test cov(p) ≈ I atol=1e-1
+
+        rng = MersenneTwister(38)
+        p1 = outer_product(rng, Normal.(μ,σ))
+        rng = MersenneTwister(38)
+        p2 = outer_product(rng, Normal.(μ,σ))
+        @test p1 == p2
     end
 
     @time @testset "plotting" begin
@@ -468,6 +497,13 @@ Random.seed!(0)
             popt = optimize(rosenbrock2d, deepcopy(p))
             popt ≈ [1,1]
         end
+
+        p = -1ones(2) .+ 2 .*Particles.(200) # Optimum is in [1,1]
+        rng = MersenneTwister(876)
+        popt1 = optimize(rng, rosenbrock2d, deepcopy(p))
+        rng = MersenneTwister(876)
+        popt2 = optimize(rng, rosenbrock2d, deepcopy(p))
+        @test popt1 == popt2
     end
 
 
