@@ -202,6 +202,7 @@ Random.seed!(0)
                 p = PT(100, MvNormal(2,1))
                 @test_nowarn sum(p)
                 @test cov(p) ≈ I atol=0.6
+                @test cor(p) ≈ I atol=0.6
                 @test mean(p) ≈ [0,0] atol=0.2
                 m = Matrix(p)
                 @test size(m) == (100,2)
