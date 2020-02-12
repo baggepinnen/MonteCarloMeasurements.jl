@@ -9,8 +9,8 @@ This type represents uncertainty using a cloud of particles.
 # Constructors:
 - `Particles()`
 - `Particles(N::Integer)`
-- `Particles(d::Distribution)`
-- `Particles(N::Integer, d::Distribution; permute=true, systematic=true)`
+- `Particles([rng::AbstractRNG,] d::Distribution)`
+- `Particles([rng::AbstractRNG,] N::Integer, d::Distribution; permute=true, systematic=true)`
 - `Particles(v::Vector{T} where T)`
 - `Particles(m::Matrix{T} where T)`: Creates multivariate particles (Vector{Particles})
 """
@@ -34,7 +34,7 @@ end
 for PT in (:Particles, :StaticParticles, :CuParticles)
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
-            size(m, 1) == N || throw(ArgumentError("The first dimension of the matrix must be the same as the number N of particles."))
+            size(m, 1) == N || throw(ArgumentError("The first dimension of the array must be the same as the number N of particles."))
             inds = CartesianIndices(axes(m)[2:end])
             map(inds) do ind
                 $PT{T,N}(@view(m[:,ind]))
@@ -60,33 +60,38 @@ for PT in (:Particles, :StaticParticles, :CuParticles)
 
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
+        function $PT(rng::AbstractRNG, N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
-                v = systematic_sample(N,d; permute=permute)
+                v = systematic_sample(rng,N,d; permute=permute)
             else
-                v = rand(d, N)
+                v = rand(rng, d, N)
             end
             $PT{eltype(v),N}(v)
         end
+        function $PT(N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
+            return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
+        end
 
-
-        function $PT(N::Integer, d::MultivariateDistribution)
-            v = rand(d,N)' |> copy # For cache locality
+        function $PT(rng::AbstractRNG, N::Integer, d::MultivariateDistribution)
+            v = rand(rng,d,N)' |> copy # For cache locality
             $PT(v)
         end
+        $PT(N::Integer, d::MultivariateDistribution) = $PT(Random.GLOBAL_RNG, N, d)
 
         nakedtypeof(p::$PT{T,N}) where {T,N} = $PT
         nakedtypeof(::Type{$PT{T,N}}) where {T,N} = $PT
     end
 end
 
-function Particles(d::Distribution;kwargs...)
-    Particles(DEFAULT_NUM_PARTICLES, d; kwargs...)
+function Particles(rng::AbstractRNG, d::Distribution;kwargs...)
+    Particles(rng, DEFAULT_NUM_PARTICLES, d; kwargs...)
 end
+Particles(d::Distribution; kwargs...) = Particles(Random.GLOBAL_RNG, d; kwargs...)
 
-function StaticParticles(d::Distribution;kwargs...)
-    StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, d; kwargs...)
+function StaticParticles(rng::AbstractRNG, d::Distribution;kwargs...)
+    StaticParticles(rng, DEFAULT_STATIC_NUM_PARTICLES, d; kwargs...)
 end
+StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, d; kwargs...)
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
