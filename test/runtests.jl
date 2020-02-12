@@ -314,6 +314,7 @@ Random.seed!(0)
         @test norm(cov(xhp) .- C1) < 1e-7
         @test xhp ≈ x
         @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
+        A = nothing; GC.gc(true) # make sure this big matrix is deallocated
     end
 
     @time @testset "misc" begin
