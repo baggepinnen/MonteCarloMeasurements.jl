@@ -30,7 +30,7 @@ end
 for PT in (:Particles, :StaticParticles)
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
-            size(m, 1) == N || throw(ArgumentError("The first dimension of the matrix must be the same as the number N of particles."))
+            size(m, 1) == N || throw(ArgumentError("The first dimension of the array must be the same as the number N of particles."))
             inds = CartesianIndices(axes(m)[2:end])
             map(inds) do ind
                 $PT{T,N}(@view(m[:,ind]))
