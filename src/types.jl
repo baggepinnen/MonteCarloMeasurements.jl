@@ -93,5 +93,9 @@ function StaticParticles(rng::AbstractRNG, d::Distribution;kwargs...)
 end
 StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, d; kwargs...)
 
+Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))
+
+CuParticles(p::AbstractParticles{T,N}) where {T,N} = CuParticles{T,N}(cu(p.particles))
+
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired

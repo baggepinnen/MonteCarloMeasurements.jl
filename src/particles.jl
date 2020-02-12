@@ -17,10 +17,10 @@ See also [`±`](@ref), [`⊗`](@ref)
 ∓
 
 
-±(μ::Real,σ) = Particles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_NUM_PARTICLES}(systematic_sample(DEFAUL_NUM_PARTICLES,Normal(μ,σ); permute=true))
+±(μ::Real,σ) = Particles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_NUM_PARTICLES}(systematic_sample(DEFAULT_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ±(μ::AbstractVector,σ) = Particles(DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
-±(μ::CuVector,σ) = CuParticles(DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
-∓(μ::Real,σ) = StaticParticles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_STATIC_NUM_PARTICLES}(systematic_sample(DEFAUL_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
+±(μ::CuVector,σ) = CuParticles(1000DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
+∓(μ::Real,σ) = StaticParticles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_STATIC_NUM_PARTICLES}(systematic_sample(DEFAULT_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
 """
