@@ -6,7 +6,7 @@ import Base: add_sum
 using Distributions, StatsBase, Requires
 
 
-const DEFAULT_NUM_PARTICLES = 500
+const DEFAULT_NUM_PARTICLES = 10000
 const DEFAULT_STATIC_NUM_PARTICLES = 100
 
 const COMPARISON_FUNCTION = Ref{Function}(mean)

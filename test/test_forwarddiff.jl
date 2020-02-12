@@ -3,8 +3,8 @@ const FD = ForwardDiff
 
 @testset "forwarddiff" begin
     @info "Testing ForwardDiff"
-    c = 1 ± 0.1 # These are the uncertain parameters
-    d = 1 ± 0.1 # These are the uncertain parameters
+    c = 1 + 0.1Particles(500) # These are the uncertain parameters
+    d = 1 + 0.1Particles(500) # These are the uncertain parameters
     # In the cost function below, we ensure that $cx+dy > 10 \; ∀ \; c,d ∈ P$ by looking at the worst case
     function cost(params)
         x,y = params
@@ -12,7 +12,7 @@ const FD = ForwardDiff
     end
 
     params = [1., 2] # Initial guess
-    paramsp = [1., 2] .± 0.001 # Initial guess
+    paramsp = [1., 2] .+ 0.001 .* Particles(500) # Initial guess
     @test cost(params) == -7    # Try the cost function
 
 
