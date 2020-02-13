@@ -27,11 +27,9 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-struct CuParticles{T,N} <: AbstractParticles{T,N}
-    particles::CuArray{T,1,Nothing}
-end
 
-for PT in (:Particles, :StaticParticles, :CuParticles)
+
+for PT in (:Particles, :StaticParticles)
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
             size(m, 1) == N || throw(ArgumentError("The first dimension of the array must be the same as the number N of particles."))
@@ -92,10 +90,6 @@ function StaticParticles(rng::AbstractRNG, d::Distribution;kwargs...)
     StaticParticles(rng, DEFAULT_STATIC_NUM_PARTICLES, d; kwargs...)
 end
 StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, d; kwargs...)
-
-Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))
-
-CuParticles(p::AbstractParticles{T,N}) where {T,N} = CuParticles{T,N}(cu(p.particles))
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
