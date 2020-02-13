@@ -295,7 +295,7 @@ Ideally, half of the particles should turn out negative and half positive when a
 | Correlated quantities | Use MonteCarloMeasurements |
 | Large uncertainties in input | Use MonteCarloMeasurements |
 | Small uncertainties in input in relation to the curvature of the function | Use Measurements |
-| Interested in low probability events / extremas  | Use MonteCarloMeasurements |
+| Interested in low probability events / extremas  | Use MonteCarloMeasurements / [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl)|
 | Limited computational budget | Use Measurements or [`StaticParticles`](@ref) with [`sigmapoints`](https://github.com/baggepinnen/MonteCarloMeasurements.jl#sigma-points). See benchmark below. |
 | Non-Gaussian input distribution  | Use MonteCarloMeasurements |
 | Calculate tail integrals accurately | This requires some form of [importance sampling](https://en.wikipedia.org/wiki/Importance_sampling#Application_to_simulation), not yet fully supported |
