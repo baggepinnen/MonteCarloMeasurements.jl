@@ -25,7 +25,7 @@ For a comparison of uncertainty propagation and nonlinear filtering, see [notes]
 using MonteCarloMeasurements, Distributions
 
 julia> 1 ± 0.1
-Part500(1.0 ± 0.1)
+Part10000(1.0 ± 0.1)
 
 julia> p = StaticParticles(100)
 SPart100(0.0 ± 0.999)
@@ -99,8 +99,8 @@ B = similar(A, Float64)
 The most basic constructor of [`Particles`](@ref) acts more or less like `randn(N)`, i.e., it creates a particle cloud with distribution `Normal(0,1)`. To create a particle cloud with distribution `Normal(μ,σ)`, you can call `μ + σ*Particles(N)`, or `Particles(N, Normal(μ,σ))`. This last constructor works with any distribution from which one can sample.
 One can also call (`Particles/StaticParticles`)
 - `Particles(v::Vector)` pre-sampled particles
-- `Particles(N = 500, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
-- The [`±`](@ref) operator (`\pm`) (similar to [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)). We have `μ ± σ = μ + σ*Particles(DEFAULT_NUM_PARTICLES)`, where the global constant `DEFAULT_NUM_PARTICLES = 500`. You can change this if you would like, or simply define your own `±` operator like `±(μ,σ) = μ + σ*Particles(my_default_number, my_default_distribution)`. The upside-down operator [`∓`](@ref) (`\mp`) instead creates a `StaticParticles(100)`.
+- `Particles(N = 10000, d::Distribution = Normal(0,1))` samples `N` particles from the distribution `d`.
+- The [`±`](@ref) operator (`\pm`) (similar to [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)). We have `μ ± σ = μ + σ*Particles(DEFAULT_NUM_PARTICLES)`, where the global constant `DEFAULT_NUM_PARTICLES = 10000`. You can change this if you would like, or simply define your own `±` operator like `±(μ,σ) = μ + σ*Particles(my_default_number, my_default_distribution)`. The upside-down operator [`∓`](@ref) (`\mp`) instead creates a `StaticParticles(100)`.
 - The `..` binary infix operator creates uniformly sampled particles, e.g., `2..3 = Particles(Uniform(2,3))`
 
 **Common univariate distributions are sampled systematically**, meaning that a single random number is drawn and used to seed the sample. This will reduce the variance of the sample. If this is not desired, call `Particles(N, [d]; systematic=false)` The systematic sample can maintain its originally sorted order by calling `Particles(N, permute=false)`, but the default is to permute the sample so as to not have different `Particles` correlate strongly with each other.
@@ -122,7 +122,7 @@ Independent multivariate systematic samples can be created using the function [`
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
-2-element Array{Particles{Float64,500},1}:
+2-element Array{Particles{Float64,10000},1}:
  1.0 ± 1.0
  5.0 ± 2.0
 
@@ -132,7 +132,7 @@ julia> A = randn(2,2)
   1.41308   0.196504
 
 julia> y = A*p
-2-element Array{Particles{Float64,500},1}:
+2-element Array{Particles{Float64,10000},1}:
  -8.04 ± 3.1
   2.4 ± 1.5
 
