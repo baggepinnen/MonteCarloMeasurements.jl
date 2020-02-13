@@ -369,8 +369,8 @@ Random.seed!(0)
         @test !(0p)
         @test round(p) ≈ 0 atol=0.1
         @test norm(p) == abs(p)
-        @test norm([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
-        @test LinearAlgebra.norm2([p,p]) ≈ sqrt(2p^2) atol=sqrt(eps())
+        @test mean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps())
+        @test mean(LinearAlgebra.norm2([p,p]) - sqrt(2p^2)) < sqrt(eps())
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test eps(typeof(p)) == eps(Float64)
         @test eps(p) == eps(Float64)
