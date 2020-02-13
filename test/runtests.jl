@@ -1,7 +1,7 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random
-import MonteCarloMeasurements: ⊗, gradient, optimize
+import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
 import Plots
 @info "import Plots done"
@@ -261,10 +261,10 @@ Random.seed!(0)
         m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
         C = randn(2,2)
         C = cholesky(C'C + 5I).L
-        particles = transform_moments((C*randn(2,500))', m, Σ)
+        particles = transform_moments((C*randn(2,DEFAULT_NUM_PARTICLES))', m, Σ)
         @test mean(particles, dims=1)[:] ≈ m
         @test cov(particles) ≈ Σ
-        particles = transform_moments((C*randn(2,500))', m, Σ, preserve_latin=true)
+        particles = transform_moments((C*randn(2,DEFAULT_NUM_PARTICLES))', m, Σ, preserve_latin=true)
         @test mean(particles, dims=1)[:] ≈ m
         @test Diagonal(cov(particles)) ≈ Diagonal(Σ) atol=2
     end
@@ -314,15 +314,15 @@ Random.seed!(0)
         @test norm(cov(xhp) .- C1) < 1e-7
         @test xhp ≈ x
         @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
-        A = nothing; GC.gc(true) # make sure this big matrix is deallocated
+        yp = nothing; GC.gc(true) # make sure this big matrix is deallocated
     end
 
     @time @testset "misc" begin
         @info "Testing misc"
         p = 0 ± 1
         @test p[1] == p.particles[1]
-        @test MonteCarloMeasurements.particletypetuple(p) == (Float64, 500, Particles)
-        @test MonteCarloMeasurements.particletypetuple(typeof(p)) == (Float64, 500, Particles)
+        @test MonteCarloMeasurements.particletypetuple(p) == (Float64, DEFAULT_NUM_PARTICLES, Particles)
+        @test MonteCarloMeasurements.particletypetuple(typeof(p)) == (Float64, DEFAULT_NUM_PARTICLES, Particles)
         @test_nowarn display(p)
         @test_nowarn println(p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
@@ -333,10 +333,10 @@ Random.seed!(0)
         @test_nowarn println([p, p])
         @test_nowarn println([p, 0p])
 
-        @test Particles{Float64,500}(p) == p
+        @test Particles{Float64,DEFAULT_NUM_PARTICLES}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
-        @test length(p) == 500
+        @test length(p) == DEFAULT_NUM_PARTICLES
         @test ndims(p) == 0
         @test eltype(typeof(p)) == typeof(p)
         @test eltype(p) == typeof(p)
@@ -384,7 +384,7 @@ Random.seed!(0)
                                                 0.0 + (1.0 ± 0.0005)*im])) < 0.002
 
         e = eigvals([1 ± 0.001 0; 0 1.])
-        @test e isa Vector{Particles{Float64,500}}
+        @test e isa Vector{Particles{Float64,DEFAULT_NUM_PARTICLES}}
         @test e ≈ [1.0 ± 0.00058, 1.0 ± 0.00058]
 
         @test (1 .. 2) isa Particles
@@ -404,8 +404,8 @@ Random.seed!(0)
         q = 3 ± 0
         @test sqrt(complex(p,p)) == sqrt(complex(2,2))
         @test exp(complex(p,p)) == exp(complex(2,2))
-        @test sqrt!(fill(complex(1.,1.), 500), complex(p,p)) == sqrt(complex(2,2))
-        @test exp!(fill(complex(1.,1.), 500), complex(p,p)) == exp(complex(2,2))
+        @test sqrt!(fill(complex(1.,1.), DEFAULT_NUM_PARTICLES), complex(p,p)) == sqrt(complex(2,2))
+        @test exp!(fill(complex(1.,1.), DEFAULT_NUM_PARTICLES), complex(p,p)) == exp(complex(2,2))
         y = Particles(100)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
