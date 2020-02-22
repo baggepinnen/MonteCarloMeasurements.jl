@@ -82,11 +82,12 @@ ribbonplot
 
 
 
-@recipe function plt(y::MvParticles, q=0.025)
+@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025)
     label --> "Mean with ($q, $(1-q)) quantiles"
     ribbon := quantiles(y, q)
     mean.(y)
 end
+
 
 @recipe function plt(func::Function, x::MvParticles, q=0.025)
     y = func.(x)
