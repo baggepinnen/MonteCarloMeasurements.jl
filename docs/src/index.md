@@ -280,6 +280,13 @@ p = 0 ± 1
 ```
 Ideally, half of the particles should turn out negative and half positive when applying `negsquare(p)`. However, this will not happen as the `x > 0` is not defined for uncertain values. To circumvent this, define `negsquare` as a primitive using [`register_primitive`](@ref) described in [Overloading a new function](@ref). Particles will then be propagated one by one through the entire function `negsquare`. Common such functions from `Base`, such as `max/min` etc. are already registered.
 
+## Comparison mode
+Some functions perform checks like `if error < tol`. If `error isa Particles`, this will use a very conservative check by default by checking that all particles ∈ `error` fulfill the check. There are a few different options available for how to compare two uncertain quantities, chosen by specifying a comparison mode. The modes are chosen by `unsafe_comparisons(mode)` and the options are
+- `:safe`: the default described above, throws an error if uncertain values share support.
+- `:montecarlo`: slightly less conservative than `:safe`, checks if either all pairwise particles fulfill the comparison, *or* all pairwise particles fail the comparison. If some pairs pass and some fail, an error is thrown.
+- `:reduction`: Reduce uncertain values to a single number, e.g. by calling `mean` (default) before performing the comparison, never throws an error.
+
+To sum up, if two uncertain values are compared, and they have no mutual support, then all comparison modes are equal. If they share support, `:safe` will error and `:montecarlo` will work if the all pairwise particles either pass or fail the comparison. `:reduction` will always work, but is maximally unsafe in the sense that it might not perform a meaningful check for your application.
 
 
 

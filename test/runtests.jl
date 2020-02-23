@@ -33,6 +33,7 @@ Random.seed!(0)
         @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
 
         @info "Done"
+        PT = Particles
         for PT = (Particles, StaticParticles)
             @testset "$(repr(PT))" begin
                 @info "Running tests for $PT"
@@ -87,20 +88,44 @@ Random.seed!(0)
                     @test_throws ErrorException p>p
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
-                    @unsafe begin
-                        @test -10 < p
-                        @test p <= p
-                        @test p >= p
-                        @test !(p < p)
-                        @test !(p > p)
-                        @test (p < 1+p)
-                        @test (p+1 > p)
+
+                    for mode in (:montecarlo, :reduction, :safe)
+                        @show mode
+                        unsafe_comparisons(mode, verbose=false)
+                        @test p<100+p
+                        @test p+100>p
+                        @test p+100>=p
+                        @test p<=100+p
+
+                        @test p<100
+                        @test 100>p
+                        @test 100>=p
+                        @test p<=100
+                        @unsafe begin
+                            @test -10 < p
+                            @test p <= p
+                            @test p >= p
+                            @test !(p < p)
+                            @test !(p > p)
+                            @test (p < 1+p)
+                            @test (p+1 > p)
+                        end
                     end
+
                     @test_throws ErrorException p<p
                     @test_throws ErrorException p>p
                     @test_throws ErrorException @unsafe error("") # Should still be safe after error
+
                     @test_throws ErrorException p>=p
                     @test_throws ErrorException p<=p
+                    unsafe_comparisons(:montecarlo, verbose=false)
+                    @test p>=p
+                    @test p<=p
+                    @test !(p<p)
+                    @test !(p>p)
+
+                    unsafe_comparisons(false)
+
                     @unsafe tv = 2
                     @test tv == 2
                     @unsafe tv1,tv2 = 1,2

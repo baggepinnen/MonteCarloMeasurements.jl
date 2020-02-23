@@ -372,26 +372,54 @@ Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = 
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
 
 
-function _comparison_operator(p)
-    length(p) == 1 && return
-    USE_UNSAFE_COMPARIONS[] || error("Comparison operators are not well defined for uncertain values and are currently turned off. Call `unsafe_comparisons(true)` to enable comparison operators for particles using the current reduction function $(COMPARISON_FUNCTION[]). Change this function using `set_comparison_function(f)`.")
+function zip_longest(a,b)
+    l = max(length(a), length(b))
+    Iterators.take(zip(Iterators.cycle(a), Iterators.cycle(b)), l)
+end
+
+function safe_comparison(a,b,op::F) where F
+    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return true
+    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return false
+    _comparison_error()
+end
+
+function do_comparison(a,b,op::F) where F
+    mode = COMPARISON_MODE[]
+    if mode === :reduction
+        op(COMPARISON_FUNCTION[](a), COMPARISON_FUNCTION[](b))
+    elseif mode === :montecarlo
+        all(((a,b),)->op(a,b), zip_longest(a,b)) && return true
+        !any(((a,b),)->op(a,b), zip_longest(a,b)) && return false
+        _comparison_error()
+    elseif mode === :safe
+        safe_comparison(a,b,op)
+    else
+        error("Got unsupported comparison mode.")
+    end
+end
+
+function _comparison_error()
+    msg = "Comparison of uncertain values using comparison mode $(COMPARISON_MODE[]) failed. Comparison operators are not well defined for uncertain values. Call `unsafe_comparisons(true)` to enable comparison operators for particles using the current reduction function $(COMPARISON_FUNCTION[]). Change this function using `set_comparison_function(f)`. "
+    if COMPARISON_MODE[] === :safe
+        msg *= "For safety reasons, the default safe comparison function is maximally conservative and tests if the extreme values of the distributions fulfil the comparison operator."
+    elseif COMPARISON_MODE[] === :montecarlo
+        msg *= "For safety reasons, montecarlo comparison is conservative and tests if pairwise particles fulfil the comparison operator. If some do *and* some do not, this error is thrown. Consider if you can define a primitive function ([docs](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/overloading/#Overloading-a-new-function-1)) or switch to `unsafe_comparisons(:reduction)`"
+    end
+
+    error(msg)
 end
 
 function Base.:<(a::Real,p::AbstractParticles)
-    _comparison_operator(p)
-    a < COMPARISON_FUNCTION[](p)
+    do_comparison(a,p,<)
 end
 function Base.:<(p::AbstractParticles,a::Real)
-    _comparison_operator(p)
-    COMPARISON_FUNCTION[](p) < a
+    do_comparison(p,a,<)
 end
 function Base.:<(p::AbstractParticles, a::AbstractParticles)
-    _comparison_operator(p)
-    COMPARISON_FUNCTION[](p) < COMPARISON_FUNCTION[](a)
+    do_comparison(p,a,<)
 end
 function Base.:(<=)(p::AbstractParticles{T,N}, a::AbstractParticles{T,N}) where {T,N}
-    _comparison_operator(p)
-    COMPARISON_FUNCTION[](p) <= COMPARISON_FUNCTION[](a)
+    do_comparison(p,a,<=)
 end
 
 """
