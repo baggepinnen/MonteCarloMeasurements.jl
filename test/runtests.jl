@@ -123,7 +123,7 @@ Random.seed!(0)
                     @test p<=p
                     @test !(p<p)
                     @test !(p>p)
-                    @test_throws ErrorException p < Particles(shuffle(p.particles))
+                    @test_throws ErrorException p < Particles(Random.shuffle(p.particles))
                     unsafe_comparisons(false)
 
                     @unsafe tv = 2
