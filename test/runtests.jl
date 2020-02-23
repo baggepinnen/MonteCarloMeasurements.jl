@@ -171,6 +171,7 @@ Random.seed!(0)
                 @test sum(a.*b) ≈ 0
                 @test all(A*b .≈ [0,0,0])
                 @test A*b .+ 1 ≈ [1,1,1]
+                @test [1,1,1] ≈ A*b .+ 1
 
                 @test all(A\b .≈ zeros(3))
                 @test_nowarn @unsafe qr(A)
