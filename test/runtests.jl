@@ -328,6 +328,7 @@ Random.seed!(0)
         @test_nowarn show(stdout, MIME"text/x-latex"(), p); println()
         @test_nowarn println(0p)
         @test_nowarn show(stdout, MIME"text/x-latex"(), 0p); println()
+        @test_nowarn show(stdout, MIME"text/x-latex"(), p + im*p); println()
 
         @test_nowarn display([p, p])
         @test_nowarn println([p, p])

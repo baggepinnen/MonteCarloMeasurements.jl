@@ -95,6 +95,24 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     print(io, "$(sPT)$N(", to_num_str(p, 4),")")
 end
 
+function Base.show(io::IO, z::Complex{<:AbstractParticles})
+    r, i = reim(z)
+    compact = get(io, :compact, false)
+    print(io, "(")
+    show(io, r)
+    print(io, ")")
+    if maximum(i) < 0
+        i = -i
+        print(io, compact ? "-" : " - ")
+    else
+        print(io, compact ? "+" : " + ")
+    end
+    print(io, "(")
+    show(io, i)
+    print(io, ")")
+    print(io, "im")
+end
+
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     print(io, to_num_str(p, 3))
 end
