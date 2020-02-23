@@ -365,7 +365,7 @@ Random.seed!(0)
         @test_nowarn show(stdout, MIME"text/plain"(), p + im*p); println()
         @test_nowarn show(stdout, MIME"text/plain"(), p - im*p); println()
         @test_nowarn show(stdout, MIME"text/plain"(), im*p); println()
-        @test_nowarn show(stdout, MIME"text/plain"(), -im*p); println()
+        @test_nowarn show(stdout, MIME"text/plain"(), -im*p -10im); println()
 
         @test_nowarn display([p, p])
         @test_nowarn println([p, p])
