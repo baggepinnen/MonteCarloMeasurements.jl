@@ -95,7 +95,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     print(io, "$(sPT)$N(", to_num_str(p, 4),")")
 end
 
-function Base.show(io::IO, z::Complex{<:AbstractParticles})
+function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
     r, i = reim(z)
     compact = get(io, :compact, false)
     print(io, "(")
@@ -123,6 +123,26 @@ end
 for mime in (MIME"text/x-tex", MIME"text/x-latex")
     @eval function Base.show(io::IO, ::$mime, p::AbstractParticles)
         print(io, "\$"); show(io, p); print("\$")
+    end
+
+    @eval function Base.show(io::IO, ::$mime, z::Complex{<:AbstractParticles})
+        print(io, "\$")
+        r, i = reim(z)
+        compact = get(io, :compact, false)
+        print(io, "(")
+        show(io, r)
+        print(io, ")")
+        if maximum(i) < 0
+            i = -i
+            print(io, compact ? "-" : " - ")
+        else
+            print(io, compact ? "+" : " + ")
+        end
+        print(io, "(")
+        show(io, i)
+        print(io, ")")
+        print(io, "i")
+        print("\$")
     end
 end
 
