@@ -123,7 +123,7 @@ Random.seed!(0)
                     @test p<=p
                     @test !(p<p)
                     @test !(p>p)
-
+                    @test_throws ErrorException p < Particles(shuffle(p.particles))
                     unsafe_comparisons(false)
 
                     @unsafe tv = 2
@@ -170,6 +170,7 @@ Random.seed!(0)
                 b = [PT(100) for i = 1:3]
                 @test sum(a.*b) ≈ 0
                 @test all(A*b .≈ [0,0,0])
+                @test A*b .+ 1 ≈ [1,1,1]
 
                 @test all(A\b .≈ zeros(3))
                 @test_nowarn @unsafe qr(A)
@@ -358,6 +359,14 @@ Random.seed!(0)
         @test_nowarn show(stdout, MIME"text/x-latex"(), im*p); println()
         @test_nowarn show(stdout, MIME"text/x-latex"(), -im*p); println()
 
+        @test_nowarn show(stdout, MIME"text/plain"(), p); println()
+        @test_nowarn println(0p)
+        @test_nowarn show(stdout, MIME"text/plain"(), 0p); println()
+        @test_nowarn show(stdout, MIME"text/plain"(), p + im*p); println()
+        @test_nowarn show(stdout, MIME"text/plain"(), p - im*p); println()
+        @test_nowarn show(stdout, MIME"text/plain"(), im*p); println()
+        @test_nowarn show(stdout, MIME"text/plain"(), -im*p); println()
+
         @test_nowarn display([p, p])
         @test_nowarn println([p, p])
         @test_nowarn println([p, 0p])
@@ -378,9 +387,14 @@ Random.seed!(0)
             @test promote_type(PT{Float64,10}, PT{Float64,10}) == PT{Float64,10}
             @test promote_type(PT{Float64,10}, PT{Int,10}) == PT{Float64,10}
             @test promote_type(PT{Int,5}, PT{Float64,10}) == PT
+
+            @test promote_type(PT{Float64,10}, PT{Float32,10}) == PT{Float64,10}
+            @test promote_type(StaticParticles{Float64,10}, PT{Float32,10}) == StaticParticles{Float64,10}
         end
         @test promote_type(Particles{Float64,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
         @test promote_type(Particles{Int,10}, StaticParticles{Float64,10}) == StaticParticles{Float64,10}
+        @test promote_type(Particles{Float64,10}, StaticParticles{Float32,10}) == StaticParticles{Float64,10}
+        @test promote_type(Particles{Int,10}, StaticParticles{Float32,10}) == StaticParticles{Float32,10}
         @test convert(Float64, 0p) isa Float64
         @test convert(Float64, 0p) == 0
         @test convert(Int, 0p) isa Int
@@ -397,6 +411,9 @@ Random.seed!(0)
         @test !(!p)
         @test !(0p)
         @test round(p) ≈ 0 atol=0.1
+        @test round(Int,p) == 0
+        @test round(Int,p) isa Int
+        @test sincos(p) == (sin(p), cos(p))
         @test norm(p) == abs(p)
         @test mean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
         @test mean(LinearAlgebra.norm2([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac

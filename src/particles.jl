@@ -362,7 +362,6 @@ Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,M
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
-Distributions.MvNormal(p::AbstractParticles) = MvNormal(mean(p), cov(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
 
 meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
