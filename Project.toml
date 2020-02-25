@@ -1,7 +1,7 @@
 name = "MonteCarloMeasurements"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 authors = ["baggepinnen <baggepinnen@gmail.com>"]
-version = "0.8.2"
+version = "0.8.3"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -12,6 +12,7 @@ MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+RobustFactorizations = "46548c09-8ea8-44c1-9654-b3d0e351469d"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

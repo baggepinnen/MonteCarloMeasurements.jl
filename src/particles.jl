@@ -160,6 +160,10 @@ zero,sign,abs,sqrt,rad2deg,deg2rad])
 
 MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
 
+function MvParticles(v::AbstractVector{<:Tuple})
+    Particles.([getindex.(v,i) for i in 1:length(v[1])])
+end
+
 for PT in (:Particles, :StaticParticles)
     # Constructors
     @eval begin
