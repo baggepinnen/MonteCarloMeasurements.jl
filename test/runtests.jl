@@ -611,6 +611,36 @@ Random.seed!(0)
         g2(a,nt::NamedTuple) = a + nt.x^2 + nt.y^2
         @test g2(p_3, (x=p_1, y=p_2)) == p_3 + p_1^2 + p_2^2
 
+
+
+        @testset "@prob" begin
+            @info "Testing @prob"
+            p = Particles()
+            q = Particles()
+
+            @test mean((p).particles .< 1) == @prob p < 1
+            @test mean((p+2).particles .< 1) == @prob p+2 < 1
+            @test mean((2+p).particles .< 1) == @prob 2+p < 1
+            @test mean((p+p).particles .< 1) == @prob p+p < 1
+            @test mean((p).particles .< p.particles) == @prob p < p
+            @test mean((p+1).particles .< p.particles) == @prob p+1 < p
+
+            @test mean((p+q).particles .< 1) == @prob p+q < 1
+            @test mean((p).particles .< q.particles) == @prob p < q
+            @test mean((p+1).particles .< q.particles) == @prob p+1 < q
+
+            @test mean((p+q).particles .> 1) == @prob p+q > 1
+            @test mean((p).particles .> q.particles) == @prob p > q
+            @test mean((p+1).particles .> q.particles) == @prob p+1 > q
+
+            @test mean((p+q).particles .>= 1) == @prob p+q >= 1
+            @test mean((p).particles .>= q.particles) == @prob p >= q
+            @test mean((p+1).particles .>= q.particles) == @prob p+1 >= q
+
+            @test mean((abs(p)).particles .> sin(q).particles) == @prob abs(p) > sin(q)
+
+        end
+
     end
 
     @testset "inference" begin

@@ -106,3 +106,15 @@ macro bypmap(ex)
         bypmap($(esc(f)),$(esc.(args)...))
     end
 end
+
+
+
+macro prob(ex)
+    ex.head == :call && ex.args[1] ∈ (:<,:>,:<=,:>=) || error("Expected an expression on any of the forms `a < b, a > b, a <= b, a >= b`")
+    op = ex.args[1]
+    a  = ex.args[2]
+    b  = ex.args[3]
+    quote
+        mean($op.(MonteCarloMeasurements.maybe_particles($(esc(a))), MonteCarloMeasurements.maybe_particles($(esc(b)))))
+    end
+end

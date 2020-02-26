@@ -288,7 +288,18 @@ Some functions perform checks like `if error < tol`. If `error isa Particles`, t
 
 To sum up, if two uncertain values are compared, and they have no mutual support, then all comparison modes are equal. If they share support, `:safe` will error and `:montecarlo` will work if the all pairwise particles either pass or fail the comparison. `:reduction` will always work, but is maximally unsafe in the sense that it might not perform a meaningful check for your application.
 
+### Calculating probability
+If you would like to calculate the empirical probability that a value represented by `Particles` fulfils a condition, you may use the macro [`@prob`](@ref):
+```julia
+julia> p = Particles()
+Part10000(0.0 ± 1.0)
 
+julia> @prob p < 1
+0.8413
+
+julia> mean(p.particles .< 1)
+0.8413
+```
 
 
 
