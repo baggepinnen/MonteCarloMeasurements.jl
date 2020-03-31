@@ -19,6 +19,14 @@ The application we consider is optimization of a PID controller. Normally, we ar
 ## [Autodiff and Robust optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl)
 Another example using MonteCarloMeasurements to perform [robust optimization](https://en.wikipedia.org/wiki/Robust_optimization), this time with automatic differentiation. We use Optim.jl to solve a linear program with probabilistic constraints using 4 different methods, two gradient free, one first-order and one second-order method. We demonstrate calculation of gradients of uncertain functions with uncertain inputs using both Zygote.jl and ForwardDiff.jl.
 
+## Unitful interaction
+Particles with units can be created using the package [Unitful.jl](https://github.com/PainterQubits/Unitful.jl). The interaction is only supported through the construct `Particles{Quantity}`, whereas the reverse construct `Quantity{Particles}` is likely to result in problems. Unitful particles are thus created like this
+```@repl
+using MonteCarloMeasurements, Unitful # hide
+(1±0.1)u"V"
+(1..2)u"m"
+```
+
 
 ## Monte-Carlo sampling properties
 The variance introduced by Monte-Carlo sampling has some fortunate and some unfortunate properties. It decreases as 1/N, where N is the number of particles/samples. This unfortunately means that to get half the standard deviation in your estimate, you need to quadruple the number of particles. On the other hand, this variance does not depend on the dimension of the space, which is very fortunate.
