@@ -29,7 +29,9 @@ end
 
 
 
-for PT in (:Particles, :StaticParticles)
+const ParticleSymbols = (:Particles, :StaticParticles)
+
+for PT in ParticleSymbols
     for D in (2,3,4,5)
         @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
             size(m, 1) == N || throw(ArgumentError("The first dimension of the array must be the same as the number N of particles."))
