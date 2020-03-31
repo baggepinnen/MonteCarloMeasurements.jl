@@ -7,8 +7,12 @@ end
 # @recipe f(::Type{<:AbstractParticles}, p::AbstractParticles) = p.particles # Does not seem to be needed
 
 function handle_args(p)
-    length(p.args) < 2 && throw(ArgumentError("This function is called with at least two arguments (x, y, ..."))
-    x,y = p.args[1:2]
+    if length(p.args) < 2
+        y = p.args[1]
+        x = 1:length(y)
+    else
+        x,y = p.args[1:2]
+    end
     y isa AbstractArray{<:AbstractParticles} || throw(ArgumentError("The second argument must be a vector of some kind of Particles"))
     x,y
 end
