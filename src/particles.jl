@@ -164,7 +164,7 @@ function MvParticles(v::AbstractVector{<:Tuple})
     Particles.([getindex.(v,i) for i in 1:length(v[1])])
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in ParticleSymbols
     # Constructors
     @eval begin
 
@@ -257,7 +257,7 @@ for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quanti
     @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
-for PT in (:Particles, :StaticParticles)
+for PT in ParticleSymbols
 
     @eval begin
         Base.length(::Type{$PT{T,N}}) where {T,N} = N
@@ -265,7 +265,7 @@ for PT in (:Particles, :StaticParticles)
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
-        Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(promote_type(T,S).(f.particles))
+        Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(convert.(promote_type(T,S),f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
             N == 1 && (return S(p[1]))
             std(p) < eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
@@ -318,7 +318,7 @@ for PT in (:Particles, :StaticParticles)
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
     @eval Base.promote_rule(::Type{Bool}, ::Type{$PT{T,N}}) where {T,N} = $PT{promote_type(Bool,T),N}
 
-    for PT2 in (:Particles, :StaticParticles)
+    for PT2 in ParticleSymbols
         if PT == PT2
             @eval Base.promote_rule(::Type{$PT{S,N}}, ::Type{$PT{T,N}}) where {S,T,N} = $PT{promote_type(S,T),N}
         elseif any(==(:StaticParticles), (PT, PT2))
