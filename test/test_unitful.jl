@@ -17,6 +17,8 @@ register_primitive(unitful_testfunction) # must be outside testset
     for PT in (Particles, StaticParticles)
         p1 = PT(100, Uniform(-0.5,1.5)) * 1u"V"
         p2 = PT(100, Uniform(-0.5,1.5)) * u"V"
+        @test_nowarn println(p1)
+        @test_nowarn display(p1)
 
         @test typeof(p1) == typeof(p2)
 
