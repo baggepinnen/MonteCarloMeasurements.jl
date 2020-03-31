@@ -4,11 +4,11 @@ for ff in (exp,)
     m = Base.parentmodule(ff)
     for PT in (:Particles, :StaticParticles)
         eval(quote
-            @inline function ($m.$f)(p::$PT{Float64,N}) where {Float64,N}
+            @inline function ($m.$f)(p::$PT{Float64,N}) where N
                 res = (SLEEFPirates.$f).(p.particles)
                 return $PT{Float64,N}(res)
             end
-            @inline function ($m.$f)(p::$PT{Float32,N}) where {Float32,N}
+            @inline function ($m.$f)(p::$PT{Float32,N}) where N
                 res = (SLEEFPirates.$f).(p.particles)
                 return $PT{Float32,N}(res)
             end
@@ -23,11 +23,11 @@ for ff in (log, sin, cos, asin, acos, atan) # tan is not faster
     m = Base.parentmodule(ff)
     for PT in (:Particles, :StaticParticles)
         eval(quote
-        @inline function ($m.$f)(p::$PT{Float64,N}) where {Float64,N}
+        @inline function ($m.$f)(p::$PT{Float64,N}) where N
             res = (SLEEFPirates.$fs).(p.particles)
             return $PT{Float64,N}(res)
         end
-        @inline function ($m.$f)(p::$PT{Float32,N}) where {Float32,N}
+        @inline function ($m.$f)(p::$PT{Float32,N}) where N
             res = (SLEEFPirates.$fs).(p.particles)
             return $PT{Float32,N}(res)
         end
