@@ -108,6 +108,7 @@ function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
     @require SLEEFPirates="476501e8-09a2-5ece-8869-fb82de89a1fa" include("sleefpirates.jl")
     @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
+    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
 end
 
 end

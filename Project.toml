@@ -1,8 +1,7 @@
 name = "MonteCarloMeasurements"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 authors = ["baggepinnen <baggepinnen@gmail.com>"]
-version = "0.8.6"
-
+version = "0.8.7"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -35,6 +34,7 @@ Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 SLEEFPirates = "476501e8-09a2-5ece-8869-fb82de89a1fa"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["ControlSystems", "ForwardDiff", "Measurements", "SLEEFPirates", "Test", "Plots"]
+test = ["ControlSystems", "ForwardDiff", "Measurements", "SLEEFPirates", "Test", "Plots", "Unitful"]
