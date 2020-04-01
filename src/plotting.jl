@@ -12,8 +12,11 @@ function handle_args(p)
         x = 1:length(y)
     else
         x,y = p.args[1:2]
+        if !isa(y,AbstractArray)
+            y = x
+            x = 1:length(y)
+        end
     end
-    y isa AbstractArray{<:AbstractParticles} || throw(ArgumentError("The second argument must be a vector of some kind of Particles"))
     x,y
 end
 
@@ -35,7 +38,7 @@ end
 @userplot Errorbarplot
 @recipe function plt(p::Errorbarplot)
     x,y = handle_args(p)
-    q = length(p.args) >= 3 ? p.args[3] : 0.025
+    q = length(p.args) >= 3 ? p.args[3] : length(p.args) == 2 && p.args[2] isa Number ? p.args[2] : 0.025
     m = mean.(y)
     label --> "Mean with $q quantile"
     yerror := quantiles(y, q)
