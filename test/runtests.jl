@@ -25,6 +25,13 @@ Random.seed!(0)
         systematic_sample(10000, TDist(1)) #|> Base.Fix1(fit, TDist)
         @test systematic_sample(10000, Beta(1,1)) |> Base.Fix1(fit, Beta) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
 
+        for i = 1:100
+            @test MonteCarloMeasurements.ess(Particles(10000)) > 7000
+            x = randn(5000)
+            v = vec([x';x'])
+            @test 3000 < MonteCarloMeasurements.ess(Particles(v)) < 5300
+        end
+
     end
     @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
