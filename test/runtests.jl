@@ -533,7 +533,7 @@ Random.seed!(0)
 
     @time @testset "plotting" begin
         @info "Testing plotting"
-        p = 0 ± 1
+        p = Particles(100)
         v = [p,p]
         @test_nowarn Plots.plot(p)
         @test_nowarn Plots.plot(v)
@@ -547,6 +547,17 @@ Random.seed!(0)
         @test_nowarn mcplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v,(0.1,0.9))
+
+        @test_nowarn errorbarplot(v)
+        @test_nowarn mcplot(v)
+        @test_nowarn ribbonplot(v)
+        @test_nowarn ribbonplot(v,(0.1,0.9))
+
+        @test_nowarn errorbarplot(v, 0.1)
+        @test_nowarn mcplot(v, 0.1)
+        @test_nowarn ribbonplot(v, 0.1)
+
+        @test_throws ArgumentError errorbarplot(1:2, (1:2) .± 0.1, 1,1)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
