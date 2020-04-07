@@ -39,7 +39,7 @@ end
 plot!(svec, vars, lab="Systematic sampling")
 plot!(svec, N->1/N^2, lab="\$1/N^2\$", l=(:dash,))
 ```
-![variance plot](figs/variance.svg)
+![variance plot](assets/variance.svg)
 
 As we can see, the variance of the standard random sampling decreases as expected. We also see that the variance for the systematic sample is considerably lower, and also scales as (almost) 1/N².
 
@@ -86,7 +86,7 @@ plot()
 sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
 sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
 ```
-![window](figs/short_timescale.svg)
+![window](assets/short_timescale.svg)
 
 The mean and errorbars for both Measurements and MonteCarloMeasurements line up perfectly when integrating over 5 seconds.
 
@@ -97,7 +97,7 @@ plot()
 sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
 sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
 ```
-![window](figs/long_timescale.svg)
+![window](assets/long_timescale.svg)
 
 We now integrated over 200 seconds and look at the last 5 seconds. This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the starting amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
 ```julia
@@ -105,7 +105,7 @@ plot()
 sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,))
 sim(MonteCarloMeasurements.:∓, tspan, mcplot!, label = "", xlims=(tspan[2]-5,tspan[2]), l=(:black,0.1))
 ```
-![window](figs/long_timescale_mc.svg)
+![window](assets/long_timescale_mc.svg)
 
 It now becomes clear that each trajectory has a constant amplitude (although individual trajectories amplitudes vary slightly due to the uncertainty in the initial angle), but the phase is all mixed up due to the slightly different frequencies!
 

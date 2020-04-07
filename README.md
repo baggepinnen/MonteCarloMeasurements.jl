@@ -1,4 +1,4 @@
-![logo](docs/src/figs/logo.svg)
+![logo](docs/src/assets/logo.svg)
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/M/MonteCarloMeasurements.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
@@ -15,7 +15,7 @@ A number of type `Particles` behaves just as any other `Number` while partaking 
 
 Below, we show an example where an input uncertainty is propagated through `σ(x)`
 
-![transformed densities](docs/src/figs/transformed_densities.svg)
+![transformed densities](docs/src/assets/transformed_densities.svg)
 
 In the figure above, we see the probability-density function of the input `p(x)` depicted on the x-axis. The density of the output `p(y) = f(x)` is shown on the y-axis. Linear uncertainty propagation does this by linearizing `f(x)` and using the equations for an affine transformation of a Gaussian distribution, and hence produces a Gaussian approximation to the output density. The particles form a sampled approximation of the input density `p(x)`. After propagating them through `f(x)`, they form a sampled approximation to `p(y)` which correspond very well to the true output density, even though only 20 particles were used in this example. The figure can be reproduced by `examples/transformed_densities.jl`.
 
