@@ -8,8 +8,8 @@ end
 
 
 const RealOrTuple = Union{Real, Tuple}
-handle_args(y::MvParticles, q::RealOrTuple=0.025) = 1:length(y), y, q
-handle_args(x::AbstractVector, y::MvParticles, q::RealOrTuple=0.025) = x, y, q
+handle_args(y::AbstractVecOrMat{<:AbstractParticles}, q::RealOrTuple=0.025) = 1:size(y,1), y, q
+handle_args(x::AbstractVector, y::AbstractVecOrMat{<:AbstractParticles}, q::RealOrTuple=0.025) = x, y, q
 handle_args(p) = handle_args(p.args...)
 handle_args(args...) = throw(ArgumentError("The plot function should be called with the signature plotfun([x=1:length(y)], y::Vector{Particles}, [q=0.025])"))
 
@@ -37,13 +37,30 @@ end
     x,m
 end
 
+function to1series(x,y)
+    r,c = size(y)
+    y2 = vec([y; fill(Inf, 1, c)])
+    x2 = repeat([x; Inf], c)
+    x2,y2
+end
+
 @userplot MCplot
 @recipe function plt(p::MCplot)
     x,y,q = handle_args(p)
+    N = nparticles(y)
+    selected = q > 1 ? randperm(N)[1:q] : 1:N
+    N = length(selected)
     label --> ""
-    alpha --> 1/log(nparticles(y))
-    m = Matrix(y)'
-    x,m
+    alpha --> 1/log(N)
+    if y isa Matrix
+        for c in 1:size(y,2)
+            m = Matrix(y[:,c])'
+            @series to1series(x, m[:, selected])
+        end
+    else
+        m = Matrix(y)'
+        @series to1series(x, m[:, selected])
+    end
 end
 
 @userplot Ribbonplot
@@ -64,9 +81,9 @@ If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01,
 errorbarplot
 
 """
-mcplot(x,y,[q=0.025])
+mcplot(x,y,[N=0])
 
-Plots all trajectories represented by a vector of particles
+Plots all trajectories represented by a vector of particles. `N > 1` controls the number of trajectories to plot.
 """
 mcplot
 
