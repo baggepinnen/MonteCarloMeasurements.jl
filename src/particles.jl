@@ -158,11 +158,22 @@ sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
 asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
 zero,sign,abs,sqrt,rad2deg,deg2rad])
 
-MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
+MvParticles(x::AbstractVector{<:AbstractArray{<:Number}}) = Particles(copy(reduce(hcat, x)'))
+MvParticles(v::AbstractVector{<:Number}) = Particles(v)
+
 
 function MvParticles(v::AbstractVector{<:Tuple})
     Particles.([getindex.(v,i) for i in 1:length(v[1])])
 end
+
+function MvParticles(s::Vector{NamedTuple{vs, T}}) where {vs, T}
+    nt = NamedTuple()
+    for k in keys(s[1])
+        nt = merge(nt, [k => MvParticles(getproperty.(s,k))])
+    end
+    nt
+end
+
 
 for PT in ParticleSymbols
     # Constructors

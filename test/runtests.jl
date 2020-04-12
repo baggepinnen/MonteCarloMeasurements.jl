@@ -233,6 +233,14 @@ Random.seed!(0)
                 @test pv[2][2] == v[2][2]
                 @test MonteCarloMeasurements.nparticles(pv) == 2
 
+                v = [(a=1,b=randn(2)), (a=3,b=randn(2))]
+                pv = MvParticles(v)
+                @test length(pv) == 2
+                @test pv.a[1] == v[1].a
+                @test pv.a[2] == v[2].a
+                @test pv.b == Particles([v[1].b v[2].b]')
+                @test MonteCarloMeasurements.nparticles(pv) == 2
+
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
                     @test p isa PT{Int}
