@@ -1,6 +1,6 @@
 # # ControlSystems using MonteCarloMeasurements
 # In this example, we will create a transfer function with uncretain coefficients, and use it to calculate bode diagrams and simulate the system.
-using ControlSystems, MonteCarloMeasurements, StatsPlots
+using ControlSystems, MonteCarloMeasurements, StatsPlots, GenericLinearAlgebra
 using Test, LinearAlgebra, Statistics
 import MonteCarloMeasurements: ⊗
 unsafe_comparisons(true, verbose=false) # This file requires mean comparisons for displaying transfer functions in text form as well as for discretizing a LTIsystem

@@ -1,5 +1,5 @@
 @info "Running tests"
-using MonteCarloMeasurements, Distributions
+using MonteCarloMeasurements, Distributions, GenericLinearAlgebra
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
