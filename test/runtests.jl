@@ -25,6 +25,13 @@ Random.seed!(0)
         systematic_sample(10000, TDist(1)) #|> Base.Fix1(fit, TDist)
         @test systematic_sample(10000, Beta(1,1)) |> Base.Fix1(fit, Beta) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
 
+        for i = 1:100
+            @test MonteCarloMeasurements.ess(Particles(10000)) > 7000
+            x = randn(5000)
+            v = vec([x';x'])
+            @test 3000 < MonteCarloMeasurements.ess(Particles(v)) < 5300
+        end
+
     end
     @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
@@ -224,6 +231,14 @@ Random.seed!(0)
                 @test pv[1][2] == v[2][1]
                 @test pv[2][1] == v[1][2]
                 @test pv[2][2] == v[2][2]
+                @test MonteCarloMeasurements.nparticles(pv) == 2
+
+                v = [(a=1,b=randn(2)), (a=3,b=randn(2))]
+                pv = MvParticles(v)
+                @test length(pv) == 2
+                @test pv.a[1] == v[1].a
+                @test pv.a[2] == v[2].a
+                @test pv.b == Particles([v[1].b v[2].b]')
                 @test MonteCarloMeasurements.nparticles(pv) == 2
 
                 @testset "discrete distributions" begin
@@ -526,7 +541,7 @@ Random.seed!(0)
 
     @time @testset "plotting" begin
         @info "Testing plotting"
-        p = 0 ± 1
+        p = Particles(100)
         v = [p,p]
         @test_nowarn Plots.plot(p)
         @test_nowarn Plots.plot(v)
@@ -540,6 +555,17 @@ Random.seed!(0)
         @test_nowarn mcplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v,(0.1,0.9))
+
+        @test_nowarn errorbarplot(v)
+        @test_nowarn mcplot(v)
+        @test_nowarn ribbonplot(v)
+        @test_nowarn ribbonplot(v,(0.1,0.9))
+
+        @test_nowarn errorbarplot(v, 0.1)
+        @test_nowarn mcplot(v, 0.1)
+        @test_nowarn ribbonplot(v, 0.1)
+
+        @test_throws ArgumentError errorbarplot(1:2, (1:2) .± 0.1, 1,1)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
@@ -561,6 +587,22 @@ Random.seed!(0)
         rng = MersenneTwister(876)
         popt2 = optimize(rng, rosenbrock2d, deepcopy(p))
         @test popt1 == popt2
+    end
+
+
+    @testset "Particle BLAS" begin
+        @info "Testing Particle BLAS"
+        p = ones(10) .∓ 1
+        A = randn(20,10)
+        @test mean(sum(abs, A*p - MonteCarloMeasurements.pgemv(A,p))) < 1e-12
+        #
+        # @btime $A*$p
+        # @btime pgemv($A,$p)
+        #
+        # @btime sum($A*$p)
+        # @btime sum(pgemv($A,$p))
+        #
+
     end
 
 

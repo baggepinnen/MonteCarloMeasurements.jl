@@ -1,5 +1,5 @@
 
-![logo](figs/logo.svg)
+![logo](assets/logo.svg)
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 [![](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
@@ -14,7 +14,7 @@ A number of type `Particles` behaves just as any other `Number` while partaking 
 
 Below, we show an example where an input uncertainty is propagated through `σ(x)`
 
-![transformed densities](figs/transformed_densities.svg)
+![transformed densities](assets/transformed_densities.svg)
 
 In the figure above, we see the probability-density function of the input `p(x)` depicted on the x-axis. The density of the output `p(y) = f(x)` is shown on the y-axis. Linear uncertainty propagation does this by linearizing `f(x)` and using the equations for an affine transformation of a Gaussian distribution, and hence produces a Gaussian approximation to the output density. The particles form a sampled approximation of the input density `p(x)`. After propagating them through `f(x)`, they form a sampled approximation to `p(y)` which correspond very well to the true output density, even though only 20 particles were used in this example. The figure can be reproduced by `examples/transformed_densities.jl`.
 
@@ -250,22 +250,22 @@ dc = dcgain(G)[]
 # Part500(1.01 ± 0.147)
 density(dc, title="Probability density of DC-gain")
 ```
-![A density](figs/dens.svg)
+![A density](assets/dens.svg)
 ```julia
 w = exp10.(LinRange(-1,1,200)) # Frequency vector
 mag, phase = bode(G,w) .|> vec
 
 errorbarplot(w,mag, yscale=:log10, xscale=:log10)
 ```
-![A bodeplot with errorbars](figs/errorbar.svg)
+![A bodeplot with errorbars](assets/errorbar.svg)
 ```julia
 mcplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![A bodeplot with lots of lines](figs/mc.svg)
+![A bodeplot with lots of lines](assets/mc.svg)
 ```julia
 ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
-![A bodeplot with a ribbon](figs/rib.svg)
+![A bodeplot with a ribbon](assets/rib.svg)
 
 
 

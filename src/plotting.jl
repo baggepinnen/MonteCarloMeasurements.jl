@@ -6,16 +6,12 @@ end
 
 # @recipe f(::Type{<:AbstractParticles}, p::AbstractParticles) = p.particles # Does not seem to be needed
 
-function handle_args(p)
-    if length(p.args) < 2
-        y = p.args[1]
-        x = 1:length(y)
-    else
-        x,y = p.args[1:2]
-    end
-    y isa AbstractArray{<:AbstractParticles} || throw(ArgumentError("The second argument must be a vector of some kind of Particles"))
-    x,y
-end
+
+const RealOrTuple = Union{Real, Tuple}
+handle_args(y::MvParticles, q::RealOrTuple=0.025) = 1:length(y), y, q
+handle_args(x::AbstractVector, y::MvParticles, q::RealOrTuple=0.025) = x, y, q
+handle_args(p) = handle_args(p.args...)
+handle_args(args...) = throw(ArgumentError("The plot function should be called with the signature plotfun([x=1:length(y)], y::Vector{Particles}, [q=0.025])"))
 
 function quantiles(y,q::Number)
     m = mean.(y)
@@ -34,8 +30,7 @@ end
 
 @userplot Errorbarplot
 @recipe function plt(p::Errorbarplot)
-    x,y = handle_args(p)
-    q = length(p.args) >= 3 ? p.args[3] : 0.025
+    x,y,q = handle_args(p)
     m = mean.(y)
     label --> "Mean with $q quantile"
     yerror := quantiles(y, q)
@@ -44,7 +39,7 @@ end
 
 @userplot MCplot
 @recipe function plt(p::MCplot)
-    x,y = handle_args(p)
+    x,y,q = handle_args(p)
     label --> ""
     alpha --> 1/log(nparticles(y))
     m = Matrix(y)'
@@ -53,8 +48,7 @@ end
 
 @userplot Ribbonplot
 @recipe function plt(p::Ribbonplot)
-    x,y = handle_args(p)
-    q = length(p.args) >= 3 ? p.args[3] : 0.025
+    x,y,q = handle_args(p)
     label --> "Mean with $q quantile"
     m = mean.(y)
     ribbon := quantiles(y, q)

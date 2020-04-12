@@ -158,11 +158,22 @@ sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
 asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
 zero,sign,abs,sqrt,rad2deg,deg2rad])
 
-MvParticles(x::AbstractVector{<:AbstractArray}) = Particles(copy(reduce(hcat, x)'))
+MvParticles(x::AbstractVector{<:AbstractArray{<:Number}}) = Particles(copy(reduce(hcat, x)'))
+MvParticles(v::AbstractVector{<:Number}) = Particles(v)
+
 
 function MvParticles(v::AbstractVector{<:Tuple})
     Particles.([getindex.(v,i) for i in 1:length(v[1])])
 end
+
+function MvParticles(s::Vector{NamedTuple{vs, T}}) where {vs, T}
+    nt = NamedTuple()
+    for k in keys(s[1])
+        nt = merge(nt, [k => MvParticles(getproperty.(s,k))])
+    end
+    nt
+end
+
 
 for PT in ParticleSymbols
     # Constructors
@@ -488,3 +499,22 @@ LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticl
 #     end
 #     out
 # end
+
+
+
+## Particle BLAS
+
+"""
+    pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
+
+Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply
+"""
+function pgemv(
+    A,
+    p::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    pm = reinterpret(T, p)
+    M = reshape(pm, N, :)'
+    AM = A * M
+    reinterpret(StaticParticles{T,N}, vec(AM'))
+end
