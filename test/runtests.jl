@@ -590,6 +590,22 @@ Random.seed!(0)
     end
 
 
+    @testset "Particle BLAS" begin
+        @info "Testing Particle BLAS"
+        p = ones(10) .∓ 1
+        A = randn(20,10)
+        @test mean(sum(abs, A*p - MonteCarloMeasurements.pgemv(A,p))) < 1e-12
+        #
+        # @btime $A*$p
+        # @btime pgemv($A,$p)
+        #
+        # @btime sum($A*$p)
+        # @btime sum(pgemv($A,$p))
+        #
+
+    end
+
+
     @time @testset "bymap" begin
         @info "Testing bymap"
 

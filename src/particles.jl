@@ -499,3 +499,22 @@ LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticl
 #     end
 #     out
 # end
+
+
+
+## Particle BLAS
+
+"""
+    pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
+
+Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply
+"""
+function pgemv(
+    A,
+    p::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    pm = reinterpret(T, p)
+    M = reshape(pm, N, :)'
+    AM = A * M
+    reinterpret(StaticParticles{T,N}, vec(AM'))
+end
