@@ -84,7 +84,7 @@ export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit
 
 export unsafe_comparisons, @unsafe, set_comparison_function
 
-export bymap, bypmap, @bymap, @bypmap, @prob, Workspace, with_workspace, has_particles, mean_object
+export bymap, bypmap, @bymap, @bypmap, @prob, Workspace, with_workspace, has_particles, mean_object, change_representation
 
 include("types.jl")
 include("register_primitive.jl")
@@ -99,6 +99,7 @@ include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
+include("particle_distributions.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)

@@ -703,6 +703,7 @@ Random.seed!(0)
     include("test_deconstruct.jl")
     include("test_sleefpirates.jl")
     include("test_measurements.jl")
+    include("test_particle_distributions.jl")
 
 end
 

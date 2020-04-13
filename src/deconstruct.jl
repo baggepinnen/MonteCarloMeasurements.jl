@@ -1,4 +1,48 @@
 """
+    change_representation(F, p::T) where T
+
+Convert from type `Particles{F}` to `F{Particles}`
+
+Example:
+```julia
+@unsafe d = Normal(Particles(),10+Particles())
+d2 = change_representation(Normal, d);
+d3 = change_representation(Normal, d2)
+d3.μ == d.μ
+d3.σ == d.σ
+```
+"""
+function change_representation(F, p::AbstractParticles{T,N}) where {T,N}
+    fields = map(fieldnames(T)) do fn
+        getfield.(p.particles, fn)
+    end
+    F(Particles.(fields)...)
+end
+
+"""
+    change_representation(F, p::T) where T
+
+Convert from type `F{Particles}` to `Particles{F}`
+
+Example:
+```julia
+@unsafe d = Normal(Particles(),10+Particles())
+d2 = change_representation(Normal, d);
+d3 = change_representation(Normal, d2)
+d3.μ == d.μ
+d3.σ == d.σ
+```
+"""
+function change_representation(F, p::T) where T
+    fields = map(fieldnames(T)) do fn
+        getfield(p, fn)
+    end
+    N = nparticles(fields[1])
+    Fs = [F(getindex.(fields,i)...) for i in 1:N]
+    Particles(Fs)
+end
+
+"""
     has_particles(P)
 Determine whether or no the object `P` has some kind of particles inside it. This function examins fields of `P` recursively and looks inside arrays etc.
 """
