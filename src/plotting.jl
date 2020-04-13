@@ -37,6 +37,7 @@ end
     x,m
 end
 
+"This is a helper function to make multiple series into one series separated by `Inf`. This makes plotting vastly more efficient."
 function to1series(x,y)
     r,c = size(y)
     y2 = vec([y; fill(Inf, 1, c)])

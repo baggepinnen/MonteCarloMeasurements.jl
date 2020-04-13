@@ -553,11 +553,15 @@ Random.seed!(0)
 
         @test_nowarn errorbarplot(1:2,v)
         @test_nowarn mcplot(1:2,v)
+        @test_nowarn mcplot(1:2,v, 10)
+        @test_nowarn mcplot(1:2,[v v])
         @test_nowarn ribbonplot(1:2,v)
         @test_nowarn ribbonplot(1:2,v,(0.1,0.9))
 
         @test_nowarn errorbarplot(v)
         @test_nowarn mcplot(v)
+        @test_nowarn mcplot(v, 10)
+        @test_nowarn mcplot([v v])
         @test_nowarn ribbonplot(v)
         @test_nowarn ribbonplot(v,(0.1,0.9))
 
