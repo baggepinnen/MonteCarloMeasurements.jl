@@ -33,8 +33,18 @@ end
     x,y,q = handle_args(p)
     m = mean.(y)
     label --> "Mean with $q quantile"
-    yerror := quantiles(y, q)
-    x,m
+    Q = quantiles(y, q)
+    if y isa Matrix
+        for c in 1:size(y,2)
+            @series begin
+                yerror := (Q[1][:,c], Q[2][:,c])
+                x,m[:,c]
+            end
+        end
+    else
+        yerror := Q
+        @series x,m
+    end
 end
 
 "This is a helper function to make multiple series into one series separated by `Inf`. This makes plotting vastly more efficient."
