@@ -14,3 +14,6 @@ end
 function StaticParticles(m::Measurements.Measurement{T}) where T
     StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, m)
 end
+
+Measurements.value(p::AbstractParticles) = mean(p)
+Measurements.uncertainty(p::AbstractParticles) = std(p)
