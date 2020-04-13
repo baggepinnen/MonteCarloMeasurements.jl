@@ -86,6 +86,8 @@ export unsafe_comparisons, @unsafe, set_comparison_function
 
 export bymap, bypmap, @bymap, @bypmap, @prob, Workspace, with_workspace, has_particles, mean_object, change_representation
 
+export ParticleDistribution
+
 include("types.jl")
 include("register_primitive.jl")
 include("sampling.jl")
