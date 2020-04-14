@@ -149,7 +149,7 @@ end
 
 # Two-argument functions
 # foreach(register_primitive_binop, [+,-,*,/,//,^])
-foreach(register_primitive_multi, [+,-,*,/,//,^,max,min,mod,mod1,atan,atand,add_sum,hypot])
+foreach(register_primitive_multi, [+,-,*,/,//,^,max,min,mod,mod1,atan,atand,add_sum,hypot,round,ceil,floor])
 # One-argument functions
 foreach(register_primitive_single, [+,-,
 exp,exp2,exp10,expm1,
@@ -163,7 +163,7 @@ MvParticles(v::AbstractVector{<:Number}) = Particles(v)
 
 
 function MvParticles(v::AbstractVector{<:Tuple})
-    Particles.([getindex.(v,i) for i in 1:length(v[1])])
+    Particles.([getindex.(v,i) for i in 1:nparticles(v)])
 end
 
 function MvParticles(s::Vector{NamedTuple{vs, T}}) where {vs, T}
@@ -184,7 +184,7 @@ for PT in ParticleSymbols
         Applies  `f : ℝⁿ → ℝⁿ` to an array of particles. E.g., `Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(log,p)`
         """
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
+            individuals = map(1:nparticles(p)) do i
                 f(getindex.(p,i))
             end
             RT = eltype(eltype(individuals))
@@ -197,7 +197,7 @@ for PT in ParticleSymbols
         end
 
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
+            individuals = map(1:nparticles(p)) do i
                 f(getindex.(p,i), getindex.(p2,i))
             end
             RT = eltype(eltype(individuals))
@@ -214,7 +214,7 @@ for PT in ParticleSymbols
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
         function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
+            individuals = map(1:nparticles(p)) do i
                 f(getindex.(p,i))
             end
             PRT = $PT{T,N}
@@ -262,16 +262,32 @@ for ff in (var, std)
     end
 end
 # Instead of @forward
-for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle, Base.iterate, Base.extrema, Base.minimum, Base.maximum]
+for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle]
     f = nameof(ff)
     m = Base.parentmodule(ff)
     @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
+for ff in [Base.extrema, Base.minimum, Base.maximum]
+    f = nameof(ff)
+    m = Base.parentmodule(ff)
+    pname = Symbol("p", f)
+    @eval export $pname
+    @eval ($pname)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
+end
+
+for ff in [Base.ceil, Base.round, Base.floor]
+    f = nameof(ff)
+    m = Base.parentmodule(ff)
+    pname = Symbol("p", f)
+    @eval export $pname
+    @eval ($pname)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(mean(p.particles), args...; kwargs...)
+end
+
 for PT in ParticleSymbols
 
     @eval begin
-        Base.length(::Type{$PT{T,N}}) where {T,N} = N
+        Base.length(::Type{$PT{T,N}}) where {T,N} = 1
         Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
@@ -289,7 +305,6 @@ for PT in ParticleSymbols
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT{T,N}(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
-        Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
         Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
             N == 1 && (return p[1])
@@ -313,8 +328,8 @@ for PT in ParticleSymbols
         A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
         """
         function Base.intersect(p1::$PT,p2::$PT)
-            mi = max(minimum(p1),minimum(p2))
-            ma = min(maximum(p1),maximum(p2))
+            mi = max(pminimum(p1),pminimum(p2))
+            ma = min(pmaximum(p1),pmaximum(p2))
             f = x-> mi <= x <= ma
             $PT([filter(f, p1.particles); filter(f, p2.particles)])
         end
@@ -350,8 +365,10 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
 Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
-Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
-Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
+function Base.getindex(p::AbstractParticles, i::Integer)
+    i == 1 || throw(BoundsError("An object of type Particles behaves like a scalar and can not be indexed. To access the indivudual particles, access the field `p.particles`."))
+    p
+end
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
 Base.Array(p::AbstractParticles) = p.particles
@@ -379,8 +396,10 @@ Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.parti
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
 
-meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
-meanvar(p::AbstractParticles) = var(p)/length(p)
+"meanstd(p::AbstractParticles) the std of the mean of the particles"
+meanstd(p::AbstractParticles) = std(p)/sqrt(nparticles(p))
+"meanvar(p::AbstractParticles) the var of the mean of the particles"
+meanvar(p::AbstractParticles) = var(p)/nparticles(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
@@ -392,8 +411,8 @@ function zip_longest(a,b)
 end
 
 function safe_comparison(a,b,op::F) where F
-    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return true
-    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return false
+    all(((a,b),)->op(a,b), Iterators.product(pextrema(a),pextrema(b))) && return true
+    !any(((a,b),)->op(a,b), Iterators.product(pextrema(a),pextrema(b))) && return false
     _comparison_error()
 end
 

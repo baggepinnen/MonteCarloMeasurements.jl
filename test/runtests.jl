@@ -57,8 +57,8 @@ Random.seed!(0)
                 @test cov(p) ≈ 1 atol=0.2
                 @test std(p) ≈ 1 atol=0.2
                 @test var(p) ≈ 1 atol=0.2
-                @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
-                @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
+                @test meanvar(p) ≈ 1/(nparticles(p)) atol=5e-3
+                @test meanstd(p) ≈ 1/sqrt(nparticles(p)) atol=5e-3
                 @test minmax(1+p,p) == (p, 1+p)
 
                 @test !(p ≲ p)
@@ -130,7 +130,7 @@ Random.seed!(0)
                     @test p<=p
                     @test !(p<p)
                     @test !(p>p)
-                    @test_throws ErrorException p < Particles(p.particles[randperm(length(p))])
+                    @test_throws ErrorException p < Particles(p.particles[randperm(nparticles(p))])
                     unsafe_comparisons(false)
 
                     @unsafe tv = 2
@@ -399,7 +399,7 @@ Random.seed!(0)
         @test Particles{Float64,DEFAULT_NUM_PARTICLES}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
-        @test length(p) == DEFAULT_NUM_PARTICLES
+        @test nparticles(p) == DEFAULT_NUM_PARTICLES
         @test ndims(p) == 0
         @test eltype(typeof(p)) == typeof(p)
         @test eltype(p) == typeof(p)
@@ -435,9 +435,19 @@ Random.seed!(0)
         @test !iszero(p)
         @test !(!p)
         @test !(0p)
-        @test round(p) ≈ 0 atol=0.1
+        @test round(p) ≈ p
         @test round(Int,p) == 0
         @test round(Int,p) isa Int
+
+        @test pround(p) == 0
+        @test pceil(p) == 1
+        @test pfloor(p) == 0
+
+        @test pextrema(p)[1] < -3.8
+        @test pextrema(p)[2] > 3.8
+        @test pextrema(p) == (pminimum(p),pmaximum(p))
+
+
         @test sincos(p) == (sin(p), cos(p))
         @test norm(p) == abs(p)
         @test mean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
@@ -468,8 +478,8 @@ Random.seed!(0)
         @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])
 
         @test intersect(p,p) == union(p,p)
-        @test length(intersect(p, 1+p)) < 2length(p)
-        @test length(union(p, 1+p)) == 2length(p)
+        @test nparticles(intersect(p, 1+p)) < 2nparticles(p)
+        @test nparticles(union(p, 1+p)) == 2nparticles(p)
 
         p = 2 ± 0
         q = 3 ± 0
@@ -521,15 +531,15 @@ Random.seed!(0)
         σ = ones(d)
         p = μ ⊗ σ
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
+        @test nparticles(p) <= 100_000
         @test cov(p) ≈ I atol=1e-1
         p = μ ⊗ 1
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
+        @test nparticles(p) <= 100_000
         @test cov(p) ≈ I atol=1e-1
         p = 0 ⊗ σ
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
+        @test nparticles(p) <= 100_000
         @test cov(p) ≈ I atol=1e-1
 
         rng = MersenneTwister(38)
