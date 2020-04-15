@@ -1,5 +1,5 @@
-struct ParticleDistribution{D,P}
-    d::D
+struct ParticleDistribution{D,N,P}
+    d::Vector{D}
     constructor::P
 end
 
@@ -18,33 +18,40 @@ ParticleNormal{Float64}(
 )
 
 julia> rand(pd)
-2.2224400199728356
+Part10000(1.012 ± 1.01)
 """
 function ParticleDistribution(constructor::Type{<:Distribution}, p...)
-    dists = [constructor(getindex.(p, i)...) for i in 1:nparticles(p[1])]
-    ParticleDistribution(dists, constructor)
+    N = nparticles(p[1])
+    dists = [constructor(getindex.(p, i)...) for i in 1:N]
+    ParticleDistribution{eltype(dists), N, typeof(constructor)}(dists, constructor)
 end
 
 Base.length(d::ParticleDistribution) = length(d.d[1])
-Base.eltype(d::ParticleDistribution) = eltype(eltype(d.d))
+Base.eltype(d::ParticleDistribution{D,N}) where {D,N} = Particles{eltype(D),N}
 
-function Base.rand(rng::AbstractRNG, d::ParticleDistribution)
-    ind = rand(rng, 1:length(d.d))
-    rand(rng, d.d[ind])
+Particles(a::BitArray) = Particles(Vector(a))
+
+function Base.rand(rng::AbstractRNG, d::ParticleDistribution{D,N}) where {D,N}
+    eltype(d)(rand.(rng, d.d))
 end
 
 Base.rand(d::ParticleDistribution) = rand(Random.GLOBAL_RNG, d)
 
-function Base.show(io::IO, d::ParticleDistribution)
-    T = eltype(d.d)
-    fields = map(fieldnames(T)) do fn
+function Base.show(io::IO, d::ParticleDistribution{D}) where D
+    fields = map(fieldnames(D)) do fn
         getfield.(d.d, fn)
     end
-    println(io, "Particle", T, "(")
-    for (i,fn) in enumerate(fieldnames(T))
+    println(io, "Particle", D, "(")
+    for (i,fn) in enumerate(fieldnames(D))
         println(io, " ", string(fn), ": ", Particles(fields[i]))
     end
     print(io, ")")
 end
 
 Base.getindex(d::ParticleDistribution, i...) = getindex(d.d, i...)
+
+
+function Distributions.logpdf(pd::ParticleDistribution{D,N}, x) where {D,N}
+    T = float(eltype(D))
+    Particles{T,N}(logpdf.(pd.d, x))
+end

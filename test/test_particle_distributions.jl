@@ -1,3 +1,4 @@
+using MonteCarloMeasurements, Distributions
 @testset "Particle Distributions" begin
     @info "Testing Particle Distributions"
 
@@ -11,6 +12,8 @@ pd = ParticleDistribution(Bernoulli, Particles(1000, Beta(2, 3)))
 @test length(pd) == 1
 @test rand(pd) isa eltype(pd)
 @test length(pd.d) == 1000
+@test_nowarn display(pd)
+@test logpdf(pd, 1).particles == [logpdf(d,1) for d in pd.d]
 
 pd = ParticleDistribution(
     Normal,
@@ -22,8 +25,9 @@ pd = ParticleDistribution(
 @test length(pd) == 1
 @test rand(pd) isa eltype(pd)
 @test length(pd.d) == 1000
-
 @test_nowarn display(pd)
+@test logpdf(pd, 1).particles == [logpdf(d,1) for d in pd.d]
+
 
 
 # @btime rand($pd) #  27.726 ns (0 allocations: 0 bytes)
