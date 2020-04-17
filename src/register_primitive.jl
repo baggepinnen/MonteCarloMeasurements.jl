@@ -5,6 +5,14 @@
     register_primitive(f, eval=eval)
 
 Register both single and multi-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
+
+Example:
+```julia
+module MyMod
+using MonteCarloMeasurements
+register_primitive(floor, MyMod.eval)
+end
+```
 """
 function register_primitive(ff, eval=eval)
     register_primitive_multi(ff, eval)
@@ -15,6 +23,14 @@ end
     register_primitive_multi(ff, eval=eval)
 
 Register a multi-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
+
+Example:
+```julia
+module MyMod
+using MonteCarloMeasurements
+register_primitive(floor, MyMod.eval)
+end
+```
 """
 function register_primitive_multi(ff, eval=eval)
     f = nameof(ff)
@@ -85,6 +101,14 @@ end
     register_primitive_single(ff, eval=eval)
 
 Register a single-argument function so that it works with particles. If you want to register functions from within a module, you must pass the modules `eval` function.
+
+Example:
+```julia
+module MyMod
+using MonteCarloMeasurements
+register_primitive(floor, MyMod.eval)
+end
+```
 """
 function register_primitive_single(ff, eval=eval)
     f = nameof(ff)
