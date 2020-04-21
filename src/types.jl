@@ -27,9 +27,12 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+struct CuParticles{T,N} <: AbstractParticles{T,N}
+    particles::CuArray{T,1,Nothing}
+end
 
 
-const ParticleSymbols = (:Particles, :StaticParticles)
+const ParticleSymbols = (:Particles, :StaticParticles, :CuParticles)
 
 for PT in ParticleSymbols
     for D in (2,3,4,5)
@@ -95,3 +98,7 @@ StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, 
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
+
+Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))
+
+CuParticles(p::AbstractParticles{T,N}) where {T,N} = CuParticles{T,N}(cu(p.particles))
