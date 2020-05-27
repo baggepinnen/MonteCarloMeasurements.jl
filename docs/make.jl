@@ -1,4 +1,4 @@
-using Documenter, MonteCarloMeasurements
+using Documenter, MonteCarloMeasurements, Unitful
 
 makedocs(sitename="MonteCarloMeasurements Documentation", doctest = false, modules=[MonteCarloMeasurements],
   pages = [
