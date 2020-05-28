@@ -23,6 +23,8 @@ end
 
 """
     ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
+
+Helper function for uncertainty propagation through complex-valued functions of complex arguments.
 applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 """
 function ℂ2ℂ_function(f::F, z::Complex{T}) where {F<:Union{Function,DataType},T<:AbstractParticles}

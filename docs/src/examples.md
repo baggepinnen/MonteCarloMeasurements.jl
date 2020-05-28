@@ -20,10 +20,10 @@ The application we consider is optimization of a PID controller. Normally, we ar
 Another example using MonteCarloMeasurements to perform [robust optimization](https://en.wikipedia.org/wiki/Robust_optimization), this time with automatic differentiation. We use Optim.jl to solve a linear program with probabilistic constraints using 4 different methods, two gradient free, one first-order and one second-order method. We demonstrate calculation of gradients of uncertain functions with uncertain inputs using both Zygote.jl and ForwardDiff.jl.
 
 ## Unitful interaction
-Particles with units can be created using the package [Unitful.jl](https://github.com/PainterQubits/Unitful.jl). The interaction is only supported through the construct `Particles{Quantity}`, whereas the reverse construct `Quantity{Particles}` is likely to result in problems. Unitful particles are thus created like this
+Particles with units can be created using the package [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) for uncertainty propagation with automatic unit checks. The interaction is only supported through the construct `Particles{Quantity}`, whereas the reverse construct `Quantity{Particles}` is likely to result in problems. Unitful particles are thus created like this
 ```@repl
-using MonteCarloMeasurements, Unitful # hide
-(1±0.1)u"V"
+using MonteCarloMeasurements, Unitful
+(1 ± 0.1)u"V"
 (1..2)u"m"
 ```
 

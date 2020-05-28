@@ -49,6 +49,8 @@ end
 """
     bymap(f, args...)
 
+Uncertainty propagation using the `map` function.
+
 Call `f` with particles or vectors of particles by using `map`. This can be utilized if registering `f` using [`register_primitive`](@ref) fails. See also [`Workspace`](@ref) if `bymap` fails.
 """
 function bymap(f::F, args...) where F
@@ -71,10 +73,9 @@ function bymap(f::F, args...) where F
     end
 end
 
-# p = 1 ± 1
-# bymap(sin, p) == sin(p)
-
-
+"""
+Distributed uncertainty propagation using the `pmap` function. See [`bymap`](@ref) for more details.
+"""
 function bypmap(f::F, args...) where F
     inds = indexof_particles(typeof.(args))
     T,N,PT = particletypetuple(args[first(inds)])
@@ -108,7 +109,11 @@ macro bypmap(ex)
 end
 
 
+"""
+    prob(ex)
 
+Calculate the probability that an event on any of the forms `a < b, a > b, a <= b, a >= b` occurs, where `a` and/or `b` are of type `AbstractParticles`.
+"""
 macro prob(ex)
     ex.head == :call && ex.args[1] ∈ (:<,:>,:<=,:>=) || error("Expected an expression on any of the forms `a < b, a > b, a <= b, a >= b`")
     op = ex.args[1]

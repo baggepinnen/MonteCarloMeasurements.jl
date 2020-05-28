@@ -181,6 +181,8 @@ for PT in ParticleSymbols
 
         """
             ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
+
+        Helper function for performing uncertainty propagation through vector-valued functions with vector inputs.
         Applies  `f : ℝⁿ → ℝⁿ` to an array of particles. E.g., `Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(log,p)`
         """
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
@@ -211,6 +213,8 @@ for PT in ParticleSymbols
 
         """
             ℝⁿ2ℂⁿ_function(f::Function, p::AbstractArray{T})
+
+        Helper function for performing uncertainty propagation through complex-valued functions with vector inputs.
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
         function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
@@ -298,7 +302,7 @@ for PT in ParticleSymbols
         end
 
         """
-        union(p1::AbstractParticles, p2::AbstractParticles)
+            union(p1::AbstractParticles, p2::AbstractParticles)
 
         A `Particles` containing all particles from both `p1` and `p2`. Note, this will be twice as long as `p1` or `p2` and thus of a different type.
         `pu = Particles([p1.particles; p2.particles])`
@@ -308,7 +312,7 @@ for PT in ParticleSymbols
         end
 
         """
-        intersect(p1::AbstractParticles, p2::AbstractParticles)
+            intersect(p1::AbstractParticles, p2::AbstractParticles)
 
         A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
         """
