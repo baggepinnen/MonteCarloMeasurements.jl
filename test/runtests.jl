@@ -601,7 +601,8 @@ Random.seed!(0)
         @info "Testing Particle BLAS"
         p = ones(10) .∓ 1
         A = randn(20,10)
-        @test mean(sum(abs, A*p - MonteCarloMeasurements.pgemv(A,p))) < 1e-12
+        @test mean(sum(abs, A*p - MonteCarloMeasurements._pgemv(A,p))) < 1e-12
+        @test mean(sum(abs, A*Particles.(p) - A*p)) < 1e-12
         #
         # @btime $A*$p
         # @btime pgemv($A,$p)

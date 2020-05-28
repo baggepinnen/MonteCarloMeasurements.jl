@@ -508,12 +508,13 @@ LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticl
 
 ## Particle BLAS
 
+# pgemv is up to twice as fast as the naive way already for A(2,2)-A(20,20)
 """
-    pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
+    _pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
 
-Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply
+Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply. This function is automatically used when applicable and there is no need to call it manually.
 """
-function pgemv(
+function _pgemv(
     A,
     p::Vector{StaticParticles{T,N}},
 ) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
@@ -522,3 +523,5 @@ function pgemv(
     AM = A * M
     reinterpret(StaticParticles{T,N}, vec(AM'))
 end
+
+Base.:*(A::Matrix{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pgemv(A,p)
