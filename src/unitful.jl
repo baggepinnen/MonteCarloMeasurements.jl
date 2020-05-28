@@ -2,7 +2,7 @@ import .Unitful: Quantity, FreeUnits
 
 function to_num_str(p::AbstractParticles{T}, d=3) where T <: Quantity
     s = std(p)
-    if T <: AbstractFloat && s < eps(p)
+    if s.val < eps(p)
         string(mean(p))
     else
         string(mean(p), " ± ", s)
@@ -18,9 +18,7 @@ for PT in ParticleSymbols
         end
 
         function Base.convert(::Type{$PT{Quantity{S,D,U},N}}, y::Quantity) where {S, D, U, T, N}
-
             $PT{Quantity{S,D,U},N}(fill(y, N))
-
         end
     end
 
@@ -38,11 +36,6 @@ for PT in ParticleSymbols
             end
 
             # Below is just the reverse signature of above
-            function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T, N}
-                NT = promote_type(T, S)
-                $PT{Quantity{NT,D,U},N}($(op).(y, p.particles))
-            end
-
             function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T <: Quantity, N}
                 QT = Base.promote_op($op, typeof(y), T)
                 $PT{QT,N}($(op).(y, p.particles))

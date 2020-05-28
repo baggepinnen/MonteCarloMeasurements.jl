@@ -21,6 +21,9 @@ register_primitive(unitful_testfunction) # must be outside testset
         @test_nowarn println(p1)
         @test_nowarn display(p1)
 
+        @test_nowarn println(0p1)
+        @test_nowarn display(0p1)
+
         @test typeof(p1) == typeof(p2)
 
         p3 = unitful_testfunction(p1)
@@ -35,10 +38,11 @@ register_primitive(unitful_testfunction) # must be outside testset
         @test (1 ± 0.5)u"m" + (1 ± 0)u"m" ≈ (2 ± 0.5)u"m"
         @test (1 ± 0.5)u"m" + 1u"m" ≈ (2 ± 0.5)u"m"
 
-
         @test 1u"m" * (1 ± 0.5)u"kg" ≈ (1 ± 0.5)u"kg*m"
         @test 1u"m" / (1 ± 0.5)u"kg" ≈ (1 ± 0.5)u"m/kg"
         @test 1u"m" + (1 ± 0.5)u"m" ≈ (2 ± 0.5)u"m"
+
+        typeof(promote(1u"V", (1.0 ± 0.1)u"V")) <: Tuple{Particles{<:Quantity}, Particles{<:Quantity}}
     end
 
 end
