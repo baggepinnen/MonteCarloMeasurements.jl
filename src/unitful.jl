@@ -22,14 +22,35 @@ for PT in ParticleSymbols
             $PT{Quantity{S,D,U},N}(fill(y, N))
 
         end
+    end
 
-        function Base.:*(p::$PT{T,N}, y::Quantity{S,D,U}) where {S, D, U, T, N}
-            NT = promote_type(S,T)
-            $PT{Quantity{NT,D,U},N}(p.particles .* y)
-        end
+    for op in (*, /)
+        f = nameof(op)
+        @eval begin
+            function Base.$f(p::$PT{T,N}, y::Quantity{S,D,U}) where {S, D, U, T, N}
+                NT = promote_type(T, S)
+                $PT{Quantity{NT,D,U},N}($(op).(p.particles , y))
+            end
 
-        function Base.:*(p::$PT, y::FreeUnits)
-            $PT(p.particles .* y)
+            function Base.$f(p::$PT{T,N}, y::Quantity{S,D,U}) where {S, D, U, T <: Quantity, N}
+                QT = Base.promote_op($op, T, typeof(y))
+                $PT{QT,N}($(op).(p.particles, y))
+            end
+
+            # Below is just the reverse signature of above
+            function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T, N}
+                NT = promote_type(T, S)
+                $PT{Quantity{NT,D,U},N}($(op).(y, p.particles))
+            end
+
+            function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T <: Quantity, N}
+                QT = Base.promote_op($op, typeof(y), T)
+                $PT{QT,N}($(op).(y, p.particles))
+            end
+
+            function Base.$f(p::$PT, y::FreeUnits)
+                $PT($(op).(p.particles, y))
+            end
         end
 
     end
