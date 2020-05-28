@@ -661,6 +661,16 @@ Random.seed!(0)
         g2(a,nt::NamedTuple) = a + nt.x^2 + nt.y^2
         @test g2(p_3, (x=p_1, y=p_2)) == p_3 + p_1^2 + p_2^2
 
+        @test_throws ErrorException bymap(x->ones(3,3,3,3), p)
+        @test_throws ErrorException bypmap(x->ones(3,3,3,3), p)
+        @test MonteCarloMeasurements.arggetter(1,1) == 1
+
+        @test MonteCarloMeasurements.particletype(p) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.particletype(Particles{Float64,DEFAULT_NUM_PARTICLES}) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.particletype([p,p]) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.nparticles(p) == DEFAULT_NUM_PARTICLES
+
+
 
 
         @testset "@prob" begin

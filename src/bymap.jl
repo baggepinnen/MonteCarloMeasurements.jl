@@ -30,9 +30,8 @@ function arggetter(i,a::Union{SomeKindOfParticles, NamedTuple})
     vecindex(a,i)
 end
 
-function arggetter(i,a)
-    a
-end
+arggetter(i,a) = a
+
 
 """
     @bymap f(p, args...)
