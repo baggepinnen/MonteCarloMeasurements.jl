@@ -62,7 +62,7 @@ end
     selected = q > 1 ? randperm(N)[1:q] : 1:N
     N = length(selected)
     label --> ""
-    alpha --> 1/log(N)
+    seriesalpha --> 1/log(N)
     if y isa Matrix
         for c in 1:size(y,2)
             m = Matrix(y[:,c])'
@@ -130,7 +130,7 @@ end
         @series begin
             seriestype --> :scatter
             primary := false
-            alpha --> 0.1
+            seriesalpha --> 0.1
             Matrix(x), Matrix(y)
         end
     else

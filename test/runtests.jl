@@ -1,6 +1,6 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
-using Test, LinearAlgebra, Statistics, Random
+using Test, LinearAlgebra, Statistics, Random, GenericLinearAlgebra
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
 import Plots
@@ -20,6 +20,7 @@ Random.seed!(0)
             @test -0.9 < std(systematic_sample(100)) < 1.1
             @test -0.9 < std(systematic_sample(10000)) < 1.1
         end
+        params = Distributions.params
         @test systematic_sample(10000, Normal(1,1)) |> Base.Fix1(fit, Normal) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
         systematic_sample(10000, Gamma(1,1)) #|> Base.Fix1(fit, Gamma)
         systematic_sample(10000, TDist(1)) #|> Base.Fix1(fit, TDist)

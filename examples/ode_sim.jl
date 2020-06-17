@@ -1,4 +1,4 @@
-using MonteCarloMeasurements, Measurements, Plots, BenchmarkTools, OrdinaryDiffEq, PrettyTables, SLEEFPirates, ChangePrecision, LinearAlgebra, Savefig
+using MonteCarloMeasurements, Measurements, Plots, BenchmarkTools, OrdinaryDiffEq, PrettyTables, ChangePrecision, LinearAlgebra, Savefig
 # pgfplots()
 default(size=(600,400))
 function sim((±)::F, tspan, plotfun=plot!, args...; kwargs...) where F
