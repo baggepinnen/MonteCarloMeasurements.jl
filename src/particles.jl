@@ -484,6 +484,8 @@ Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
+Base.rtoldefault(::Type{<:AbstractParticles{T,N}}) where {T,N} = sqrt(eps(T))
+
 LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
