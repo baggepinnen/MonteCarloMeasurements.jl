@@ -25,22 +25,24 @@ For a comparison of uncertainty propagation and nonlinear filtering, see [notes]
 using MonteCarloMeasurements, Distributions
 
 julia> 1 ± 0.1
-Part10000(1.0 ± 0.1)
+Particles{Float64,2000}
+ 1.0 ± 0.1
 
 julia> p = StaticParticles(100)
-SPart100(0.0 ± 0.999)
+StaticParticles{Float64,100}
+ 0 ± 0.999
 
 julia> std(p)
-0.9986403042113867
+0.9986403042113866
 
 julia> var(p)
-0.997282457195411
+0.9972824571954108
 
 julia> mean(p)
--4.6074255521943994e-17
+-6.661338147750939e-17
 
 julia> f = x -> 2x + 10
-#95 (generic function with 1 method)
+#27 (generic function with 1 method)
 
 julia> f(p) ≈ 10 # ≈ determines if f(p) is within 2σ of 10
 true
@@ -49,18 +51,19 @@ julia> f(p) ≲ 15 # ≲ (\lesssim) tests if f(p) is significantly less than 15
 true
 
 julia> Normal(f(p)) # Fits a normal distribution
-Normal{Float64}(μ=9.9872274542161, σ=2.1375718437608633)
+Normal{Float64}(μ=10.000000000000002, σ=1.9972806084227737)
 
 julia> fit(Normal, f(p)) # Same as above
-Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
+Normal{Float64}(μ=10.000000000000002, σ=1.9872691137573264)
 
 julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
-Part100(1.0 ± 0.58)
+Particles{Float64,100}
+ 1.0 ± 0.58
 
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
 2-element Array{Particles{Float64,1000},1}:
- 0.0254 ± 1.4
- 0.0641 ± 2.0
+ -0.0546 ± 1.4
+ -0.128 ± 2.0
 ```
 
 # Why a package
@@ -122,7 +125,7 @@ Independent multivariate systematic samples can be created using the function [`
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
-2-element Array{Particles{Float64,10000},1}:
+2-element Array{Particles{Float64,2000},1}:
  1.0 ± 1.0
  5.0 ± 2.0
 
@@ -132,7 +135,7 @@ julia> A = randn(2,2)
   1.41308   0.196504
 
 julia> y = A*p
-2-element Array{Particles{Float64,10000},1}:
+2-element Array{Particles{Float64,2000},1}:
  -8.04 ± 3.1
   2.4 ± 1.5
 
@@ -148,8 +151,8 @@ julia> A*Diagonal([1^2, 2^2])*A'
 ```
 To create particles that exhibit a known covariance/correlation, use the appropriate constructor, e.g.,
 ```julia
-julia> p = Particles(10000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
-2-element Array{Particles{Float64,10000},1}:
+julia> p = Particles(2000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
+2-element Array{Particles{Float64,2000},1}:
  19.3 ± 48.0
  11.9 ± 43.0
 
@@ -292,13 +295,14 @@ To sum up, if two uncertain values are compared, and they have no mutual support
 If you would like to calculate the empirical probability that a value represented by `Particles` fulfils a condition, you may use the macro [`@prob`](@ref):
 ```julia
 julia> p = Particles()
-Part10000(0.0 ± 1.0)
+Particles{Float64,2000}
+ 0 ± 1.0
 
 julia> @prob p < 1
-0.8413
+0.8415
 
 julia> mean(p.particles .< 1)
-0.8413
+0.8415
 ```
 
 

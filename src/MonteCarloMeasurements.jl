@@ -7,18 +7,20 @@ A number of type `Particles` behaves just as any other `Number` while partaking 
 ```julia
 julia> using MonteCarloMeasurements, Plots
 
-
 julia> a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\\pm)
-Part10000(3.142 ± 0.1)
+Particles{Float64,2000}
+ 3.14159 ± 0.1
 
 julia> b = 2 ∓ 0.1 # ∓ (\\mp) creates StaticParticles (with StaticArrays)
-SPart100(2.0 ± 0.0999)
+StaticParticles{Float64,100}
+ 2.0 ± 0.0999
 
 julia> std(a)      # Ask about statistical properties
-0.09999840436602016
+0.09999231528930486
 
 julia> sin(a)      # Use them like any real number
-Part10000(1.209e-16 ± 0.0995)
+Particles{Float64,2000}
+ 1.2168e-16 ± 0.0995
 
 julia> plot(a)     # Plot them
 
@@ -29,20 +31,21 @@ julia> plot(b)                   # Vectors of particles can be plotted
 julia> using Distributions
 
 julia> c = Particles(500, Poisson(3.)) # Create uncertain numbers distributed according to a given distribution
-Part500(2.938 ± 1.75)
+Particles{Int64,500}
+ 2.882 ± 1.7
 ```
 
 For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
 """
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, SLEEFPirates
 using Distributed: pmap
 import Base: add_sum
 
 using Distributions, StatsBase, Requires
 
 
-const DEFAULT_NUM_PARTICLES = 10000
+const DEFAULT_NUM_PARTICLES = 2000
 const DEFAULT_STATIC_NUM_PARTICLES = 100
 
 """
