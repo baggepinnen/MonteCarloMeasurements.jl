@@ -82,17 +82,24 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
-function to_num_str(p::AbstractParticles{T}, d=3) where T
+function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
     s = std(p)
+    # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
         string(round(mean(p), sigdigits=d))
     else
-        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=d-1))
+        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
+
+
+function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
+    print(io, to_num_str(p, 3))
+end
+
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
-    sPT = shortform(p)
-    print(io, "$(sPT)$N(", to_num_str(p, 4),")")
+    sPT = MonteCarloMeasurements.shortform(p)
+    print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3),"\n")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
@@ -113,9 +120,6 @@ function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
     print(io, "im")
 end
 
-function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
-    print(io, to_num_str(p, 3))
-end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
 #     print(io, "(", N, " $sPT with mean ", round.(mean(p), sigdigits=3), " and std ", round.(sqrt.(diag(cov(p))), sigdigits=3),")")
