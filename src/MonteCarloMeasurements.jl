@@ -35,7 +35,7 @@ Part500(2.938 ± 1.75)
 For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
 """
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools
 using Distributed: pmap
 import Base: add_sum
 
@@ -135,6 +135,7 @@ include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
+include("sleefpirates.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
@@ -142,7 +143,6 @@ Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:Abstract
 
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
-    @require SLEEFPirates="476501e8-09a2-5ece-8869-fb82de89a1fa" include("sleefpirates.jl")
     @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
     @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
 end
