@@ -84,7 +84,7 @@ end
 end
 
 """
-errorbarplot(x,y,[q=0.025])
+    errorbarplot(x,y,[q=0.025])
 
 Plots a vector of particles with error bars at quantile `q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
@@ -92,14 +92,14 @@ If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01,
 errorbarplot
 
 """
-mcplot(x,y,[N=0])
+    mcplot(x,y,[N=0])
 
 Plots all trajectories represented by a vector of particles. `N > 1` controls the number of trajectories to plot.
 """
 mcplot
 
 """
-ribbonplot(x,y,[q=0.025])
+    ribbonplot(x,y,[q=0.025])
 
 Plots a vector of particles with a ribbon covering quantiles `q, 1-q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
