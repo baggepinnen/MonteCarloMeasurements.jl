@@ -32,7 +32,7 @@ julia> p = StaticParticles(100)
 StaticParticles{Float64,100}
  0 ± 0.999
 
-julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar to rand
+julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar to randn
 StaticParticles{Float64,25}
  2.0 ± 0.498
 
