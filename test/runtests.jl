@@ -211,6 +211,12 @@ Random.seed!(0)
                 pn2 = Particles(rng, 100, systematic=true, permute=true)
                 @test pn1 == pn2
 
+                @test PT(Float32) isa PT{Float32}
+                @test PT(Float64) isa PT{Float64}
+                @test PT(Float32, 250) isa PT{Float32, 250}
+                @test PT(Float32, 250, Normal(0.1f0)) isa PT{Float32, 250}
+                @test_throws ArgumentError PT(Float32, 250, Gamma(0.1))
+
                 @info "Tests for $PT done"
 
                 p = PT{Float64,10}(2)

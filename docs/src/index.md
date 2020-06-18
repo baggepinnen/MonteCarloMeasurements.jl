@@ -32,6 +32,10 @@ julia> p = StaticParticles(100)
 StaticParticles{Float64,100}
  0 ± 0.999
 
+julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar to rand
+StaticParticles{Float64,25}
+ 2.0 ± 0.498
+
 julia> std(p)
 0.9986403042113866
 
@@ -69,31 +73,32 @@ julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distributio
 # Why a package
 Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional [Benchmark](@ref)) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
 ```julia
-using BenchmarkTools
-A = [Particles(1000) for i = 1:3, j = 1:3]
-B = similar(A, Float64)
-@btime qr($A)
-  119.243 μs (257 allocations: 456.58 KiB)
-@btime foreach(_->qr($B), 1:1000) # Manually do qr 1000 times
-  3.916 ms (4000 allocations: 500.00 KiB)
+using MonteCarloMeasurements, BenchmarkTools
+unsafe_comparisons(true)
+A = [randn() + Particles(1000) for i = 1:3, j = 1:3]
+B = mean.(A)
+@btime qr($A);
+  # 119.243 μs (257 allocations: 456.58 KiB)
+@btime foreach(_->qr($B), 1:1000); # Manually do qr 1000 times
+  # 3.916 ms (4000 allocations: 500.00 KiB)
 ```
 that's about a 30-fold reduction in time, and the repeated `qr` didn't even bother to sample new input points or store and handle the statistics of the result.
 The type `StaticParticles` contains a statically sized, stack-allocated vector from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl). This type is suitable if the number of particles is small, say < 500 ish (but expect long compilation times if > 100, especially on julia < v1.1).
 ```julia
-A = [StaticParticles(100) for i = 1:3, j = 1:3]
-B = similar(A, Float64)
-@btime qr($(copy(A)))
-  8.392 μs (16 allocations: 18.94 KiB)
+A = [randn() + StaticParticles(100) for i = 1:3, j = 1:3]
+B = mean.(A)
+@btime qr($(A));
+  # 8.392 μs (16 allocations: 18.94 KiB)
 @btime map(_->qr($B), 1:100);
-  690.590 μs (403 allocations: 50.92 KiB)
-# Wow that's over 80 times faster
+  # 690.590 μs (403 allocations: 50.92 KiB)
+# Over 80 times faster
 # Bigger matrix
-A = [StaticParticles(100) for i = 1:30, j = 1:30]
-B = similar(A, Float64)
-@btime qr($(copy(A)))
-  1.823 ms (99 allocations: 802.63 KiB)
+A = [randn() + StaticParticles(100) for i = 1:30, j = 1:30]
+B = mean.(A)
+@btime qr($(A));
+  # 1.823 ms (99 allocations: 802.63 KiB)
 @btime map(_->qr($B), 1:100);
-  75.068 ms (403 allocations: 2.11 MiB)
+  # 75.068 ms (403 allocations: 2.11 MiB)
 # 40 times faster
 ```
 [`StaticParticles`](@ref) allocate much less memory than regular [`Particles`](@ref), but are more stressful for the compiler to handle.

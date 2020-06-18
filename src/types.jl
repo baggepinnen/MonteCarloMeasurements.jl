@@ -27,7 +27,7 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
-
+DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
 
 const ParticleSymbols = (:Particles, :StaticParticles)
 
@@ -60,7 +60,7 @@ for PT in ParticleSymbols
 
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(rng::AbstractRNG, N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
+        function $PT(rng::AbstractRNG, N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
                 v = systematic_sample(rng,N,d; permute=permute)
             else
@@ -68,7 +68,12 @@ for PT in ParticleSymbols
             end
             $PT{eltype(v),N}(v)
         end
-        function $PT(N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
+        function $PT(N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
+            return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
+        end
+
+        function $PT(::Type{T}, N::Integer=DNP($PT), d::Distribution=Normal(T(0),T(1)); kwargs...) where {T <: Real}
+            eltype(d) == T || throw(ArgumentError("Element type of the provided distribution $d does not match $T. The element type of a distribution is the element type of a value sampled from it. Some distributions, like `Gamma(0.1f0)` generated `Float64` random number even though it appears like it should generate `Float32` numbers."))
             return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
         end
 
