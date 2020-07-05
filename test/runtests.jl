@@ -617,8 +617,8 @@ Random.seed!(0)
         @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
 
 
-        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2.0,p,copy(p))))) < 1e-12
-        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2.0,p,copy(p))))) < 1e-12
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
 
 
         y = randn(20) .∓ 1

@@ -583,7 +583,7 @@ function _paxpy!(
     X = reinterpret(T, x)
     Y = reinterpret(T, y)
     LinearAlgebra.axpy!(a,X,Y)
-    StaticParticles{T,N}(reinterpret(StaticParticles{T,N}, Y))
+    reinterpret(StaticParticles{T,N}, Y)
 end
 
 LinearAlgebra.axpy!(
