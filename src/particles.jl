@@ -562,7 +562,7 @@ Base.:*(A::Matrix{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,F
 Perform `v'p::Vector{StaticParticles{T,N}` using BLAS matrix-vector multiply. This function is automatically used when applicable and there is no need to call it manually.
 """
 function _pdot(
-    v::Vector{T},
+    v::AbstractVector{T},
     p::Vector{StaticParticles{T,N}},
 ) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
     pm = reinterpret(T, p)
@@ -571,5 +571,42 @@ function _pdot(
     StaticParticles{T,N}(Mv)
 end
 
-LinearAlgebra.dot(v::Vector{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
-LinearAlgebra.dot(p::Vector{StaticParticles{T,N}}, v::Vector{T}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+LinearAlgebra.dot(v::AbstractVector{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+LinearAlgebra.dot(p::Vector{StaticParticles{T,N}}, v::AbstractVector{T}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+
+
+function _paxpy!(
+    a::T,
+    x::Vector{StaticParticles{T,N}},
+    y::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    X = reinterpret(T, x)
+    Y = reinterpret(T, y)
+    LinearAlgebra.axpy!(a,X,Y)
+    StaticParticles{T,N}(reinterpret(StaticParticles{T,N}, Y))
+end
+
+LinearAlgebra.axpy!(
+    a::T,
+    x::Vector{StaticParticles{T,N}},
+    y::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _paxpy!(a,x,y)
+
+
+
+
+
+function LinearAlgebra.mul!(
+    y::Vector{StaticParticles{T,N}},
+    A::AbstractMatrix{T},
+    b::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    Bv = reinterpret(T, b)
+    B = reshape(Bv, N, :)'
+    # Y0 = A*B
+    # reinterpret(StaticParticles{T,N}, vec(Y0'))
+    Yv = reinterpret(T, y)
+    Y = reshape(Yv, :, N)
+    mul!(Y,A,B)
+    reinterpret(StaticParticles{T,N}, vec(Y'))
+end

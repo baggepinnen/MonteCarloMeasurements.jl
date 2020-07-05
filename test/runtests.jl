@@ -616,6 +616,14 @@ Random.seed!(0)
         @test mean(sum(abs, p'v - MonteCarloMeasurements._pdot(v,p))) < 1e-12
         @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
 
+
+        @test mean(sum(abs, axpy!(2,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2,p,copy(p))))) < 1e-12
+        @test mean(sum(abs, axpy!(2,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2,p,copy(p))))) < 1e-12
+
+
+        y = randn(20) .∓ 1
+        @test mean(sum(abs, mul!(y,A,p) - mul!(Particles.(y),A,Particles.(p)))) < 1e-12
+
         #
         # @btime $A*$p
         # @btime _pgemv($A,$p)
@@ -629,6 +637,11 @@ Random.seed!(0)
         # @btime sum($v'*$p)
         # @btime sum(_pdot($v,$p))
 
+        # @btime mul!($y,$A,$p)
+        # @btime MonteCarloMeasurements.pmul!($y,$A,$p)
+        # 178.373 μs (6 allocations: 336 bytes)
+        # 22.320 μs (0 allocations: 0 bytes)
+        # 3.705 μs (0 allocations: 0 bytes)
     end
 
 
