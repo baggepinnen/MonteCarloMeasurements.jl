@@ -610,13 +610,24 @@ Random.seed!(0)
         A = randn(20,10)
         @test mean(sum(abs, A*p - MonteCarloMeasurements._pgemv(A,p))) < 1e-12
         @test mean(sum(abs, A*Particles.(p) - A*p)) < 1e-12
+
+        v = randn(10)
+        @test mean(sum(abs, v'p - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test mean(sum(abs, p'v - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
+
         #
         # @btime $A*$p
-        # @btime pgemv($A,$p)
+        # @btime _pgemv($A,$p)
         #
         # @btime sum($A*$p)
-        # @btime sum(pgemv($A,$p))
+        # @btime sum(_pgemv($A,$p))
         #
+        # @btime $v'*$p
+        # @btime _pdot($v,$p)
+        #
+        # @btime sum($v'*$p)
+        # @btime sum(_pdot($v,$p))
 
     end
 

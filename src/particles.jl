@@ -381,6 +381,7 @@ Base.Matrix(v::MvParticles) = Array(v)
 Statistics.mean(v::MvParticles) = mean.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
+Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
@@ -531,3 +532,22 @@ function _pgemv(
 end
 
 Base.:*(A::Matrix{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pgemv(A,p)
+
+
+"""
+    _pdot(v::Vector{T}, p::Vector{StaticParticles{T, N}}) where {T, N}
+
+Perform `v'p::Vector{StaticParticles{T,N}` using BLAS matrix-vector multiply. This function is automatically used when applicable and there is no need to call it manually.
+"""
+function _pdot(
+    v::Vector{T},
+    p::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    pm = reinterpret(T, p)
+    M = reshape(pm, N, :)
+    Mv = M*v
+    StaticParticles{T,N}(Mv)
+end
+
+LinearAlgebra.dot(v::Vector{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+LinearAlgebra.dot(p::Vector{StaticParticles{T,N}}, v::Vector{T}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
