@@ -617,12 +617,20 @@ Random.seed!(0)
         @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
 
 
-        @test mean(sum(abs, axpy!(2,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2,p,copy(p))))) < 1e-12
-        @test mean(sum(abs, axpy!(2,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2,p,copy(p))))) < 1e-12
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2.0,p,copy(p))))) < 1e-12
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(axpy!(2.0,p,copy(p))))) < 1e-12
 
 
         y = randn(20) .∓ 1
         @test mean(sum(abs, mul!(y,A,p) - mul!(Particles.(y),A,Particles.(p)))) < 1e-12
+
+        for PT in (Particles, StaticParticles)
+            for x in (1.0, 1 + PT()), y in (1.0, 1 + PT()), z in (1.0, 1 + PT())
+                x == y == z == 1.0 && continue
+                @test (x*y+z).particles ≈ muladd(x,y,z).particles
+            end
+        end
+
 
         #
         # @btime $A*$p
