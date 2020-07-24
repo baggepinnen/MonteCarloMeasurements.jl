@@ -314,6 +314,7 @@ julia> mean(p.particles .< 1)
 
 
 # When to use what?
+This table serves as a primitive guide to selecting an uncertainty propagation strategy. If you are unsure about the properties of your function, also have a look at [Comparison between linear uncertainty propagation and Monte-Carlo sampling](@ref)
 
 | Situation       | Action       |
 |-----------------|--------------|
