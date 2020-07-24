@@ -3,6 +3,8 @@
 This page will highlight some situations in which linear uncertainty propagation breaks down by showing the input density along the x-axis and the various approximations to the output density on the y-axis. The figures will be similar to the one below, but we'll leave out some of the guiding lines and particles for clarity
 ![transformed densities](assets/transformed_densities.svg)
 
+All examples will use Gaussian input densities since linear uncertainty propagation is only applicable in this case.
+
 We start by defining a function that plots everything for us
 
 ```@example comparison
@@ -11,13 +13,13 @@ using MonteCarloMeasurements, Measurements, Plots, Distributions
 using Measurements: value, uncertainty
 
 function plot_dens(f, d, l, r, N=10_000; kwargs...)
-    xr   = LinRange(l,r,100) # x values for plotting
-    yr   = f.(xr)
+    xr = LinRange(l,r,100) # x values for plotting
+    yr = f.(xr)
 
     # Estimate the output density corresponding to the particles
-    x    = Particles(N,d) # Create particles distributed according to d, sort for visualization
-    yp   = f(x)
-    y    = yp.particles # corresponding output particles
+    x  = Particles(N,d) # Create particles distributed according to d, sort for visualization
+    yp = f(x)
+    y  = yp.particles # corresponding output particles
     edges1, edges2 = Plots._hist_edges((xr,y), 30)
     histogram(fill(l, length(y)), y , bins=edges2, orientation=:h, alpha=0.4, normalize=true, lab="Particle density")
 
@@ -29,16 +31,13 @@ function plot_dens(f, d, l, r, N=10_000; kwargs...)
 
     # This is the output density as approximated by linear uncertainty propagation
     my   = f(Measurements.:±(mean(d), std(d))) # output measurement
-    if uncertainty(my) == 0
-        # plot!([l,l+(r-l)/3], [value(my),value(my)], m=(:o,), lab="Linear Gaussian propagation")
+    if uncertainty(my) == 0 # Draw a stick
         plot!([0,0+(r-l)/3], [value(my),value(my)], m=(:o,), lab="Linear Gaussian propagation")
-
     else
-        yxr = LinRange(value(my)-2.5uncertainty(my),value(my)+2.5uncertainty(my),100)
+        yxr  = LinRange(value(my)-2.5uncertainty(my),value(my)+2.5uncertainty(my),100)
         dm   = Normal(value(my), uncertainty(my)) # Output density according to Measurements
-        ym = pdf.(dm,yxr)
+        ym   = pdf.(dm,yxr)
         ym .*= 0+(r-l)/3/maximum(ym)
-        # plot!(l .+ 0.2pdf.(Ref(dm),xr), xr, lab="Linear Gaussian propagation")
         plot!(0 .+ ym, yxr, lab="Linear Gaussian propagation")
     end
     fig
