@@ -58,7 +58,7 @@ as we can see, the linear method outputs a Dirac distribution (no uncertainty) a
 
 The next function has a discontinuity (≈ infinite curvature)
 ```@example comparison
-plot_dens(x->sign(x)+1, Normal(0.5,1), -3, 3, legend=:bottom)
+plot_dens(x->sign(x)+1, Normal(0.5,1), -3, 3, legend=:bottomright)
 savefig("sign.html"); nothing # hide
 ```
 
