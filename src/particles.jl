@@ -401,6 +401,7 @@ Base.Matrix(v::MvParticles) = Array(v)
 # end
 
 Statistics.mean(v::MvParticles) = mean.(v)
+Statistics.median(v::MvParticles) = median.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
 Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
