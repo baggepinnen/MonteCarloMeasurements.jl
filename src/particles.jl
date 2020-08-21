@@ -401,12 +401,14 @@ Base.Matrix(v::MvParticles) = Array(v)
 # end
 
 Statistics.mean(v::MvParticles) = mean.(v)
-Statistics.median(v::MvParticles) = median.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
 Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
+
+Statistics.median(v::MvParticles; type = :marginal) = Statistics.median(v, Val(type))
+Statistics.median(v::MvParticles, ::Val{:marginal}) = median.(v)
 
 Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
 Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
