@@ -473,8 +473,18 @@ end
 Determine if two particles are not significantly different
 """
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
-Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
+function Base.:≈(a::Real,p::AbstractParticles, lim=2)
+    m = mean(p)
+    s = std(p, mean=m)
+    s == 0 && (return m == a)
+    abs(mean(p)-a)/std(p) < lim
+end
+function Base.:≈(p::AbstractParticles, a::Real, lim=2)
+    m = mean(p)
+    s = std(p, mean=m)
+    s == 0 && (return m == a)
+    abs(mean(p)-a)/std(p) < lim
+end
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::MvParticles, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))

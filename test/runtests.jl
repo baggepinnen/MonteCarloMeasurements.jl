@@ -86,6 +86,12 @@ Random.seed!(0)
                 @test (5 ± 0.1) ≳ (1 ± 0.1)
                 @test (1 ± 0.1) ≲ (5 ± 0.1)
 
+                a = rand()
+                pa = Particles([a])
+                @test a == pa
+                @test a ≈ pa
+                @test pa ≈ a
+
                 v = randn(5)
                 @test Vector(PT(v)) == v
                 @test Array(PT(v)) == v
