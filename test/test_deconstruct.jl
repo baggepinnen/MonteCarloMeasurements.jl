@@ -2,8 +2,8 @@ using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓
 using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths
-using ControlSystems, Test
-ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts::Float64, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
+using ControlSystems, Test, GenericLinearAlgebra
+ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
 
 @testset "deconstruct" begin
@@ -40,10 +40,10 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
     @test nakedtypeof(P) == TransferFunction
     @test nakedtypeof(typeof(P)) == TransferFunction
-    @test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,N}}}
+    @test typeof(P) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{StaticParticles{Float64,N}}}
     P2 = build_container(P)
-    @test typeof(P2) == TransferFunction{ControlSystems.SisoRational{Float64}}
-    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.SisoRational{Particles{Float64,N}}}
+    @test typeof(P2) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{Float64}}
+    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{Particles{Float64,N}}}
     @test has_particles(P)
     @test has_particles(P.matrix)
     @test has_particles(P.matrix[1])
