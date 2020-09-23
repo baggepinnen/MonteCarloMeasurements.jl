@@ -495,6 +495,8 @@ Random.seed!(0)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
         @test p/complex(q,q) == 2/complex(3,3)
         @test 2/complex(q,q) == 2/complex(3,3)
+        @test !isinf(complex(p,p))
+        @test isfinite(complex(p,p))
 
         z = complex(1 ± 0.1, 1 ± 0.1)
         @unsafe @test abs(sqrt(z ^ 2) - z) < eps()
