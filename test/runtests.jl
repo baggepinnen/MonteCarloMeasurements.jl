@@ -493,6 +493,8 @@ Random.seed!(0)
         y = Particles(100)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
+        @test p/complex(q,q) == 2/complex(3,3)
+        @test 2/complex(q,q) == 2/complex(3,3)
 
         z = complex(1 ± 0.1, 1 ± 0.1)
         @unsafe @test abs(sqrt(z ^ 2) - z) < eps()
