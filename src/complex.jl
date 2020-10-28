@@ -75,7 +75,8 @@ for ff in (sqrt, exp, sin, cos)
     @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
 end
 
-
+Base.isinf(p::Complex{<: AbstractParticles}) = @show isinf(real(p)) || isinf(imag(p))
+Base.isfinite(p::Complex{<: AbstractParticles}) = @show isfinite(real(p)) && isfinite(imag(p))
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     are = real(a); aim = imag(a); bre = real(b); bim = imag(b)
@@ -95,5 +96,26 @@ function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
         end
         den = bre + r*bim
         Complex((are + aim*r)/den, (aim - are*r)/den)
+    end
+end
+
+function Base.:(/)(are::T, b::Complex{T}) where T<:AbstractParticles
+    aim = 0; bre = real(b); bim = imag(b)
+    if mean(abs(bre)) <= mean(abs(bim))
+        if isinf(bre) && isinf(bim)
+            r = sign(bre)/sign(bim)
+        else
+            r = bre / bim
+        end
+        den = bim + r*bre
+        Complex((are*r)/den, (-are)/den)
+    else
+        if isinf(bre) && isinf(bim)
+            r = sign(bim)/sign(bre)
+        else
+            r = bim / bre
+        end
+        den = bre + r*bim
+        Complex((are)/den, (-are*r)/den)
     end
 end
