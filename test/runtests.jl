@@ -39,6 +39,8 @@ Random.seed!(0)
         @test 0 ∓ 1 isa StaticParticles
         @test [0,0] ∓ 1. isa MonteCarloMeasurements.MvParticles
         @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
+        @test -50 ⊞ Normal(0,1) ≈ -50 ± 1
+        @test 10 ⊠ Normal(0,1) ≈ 10*Particles(Normal(0,1))
 
         @info "Done"
         PT = Particles

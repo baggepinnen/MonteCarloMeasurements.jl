@@ -34,6 +34,14 @@ julia> p = StaticParticles(100)
 StaticParticles{Float64,100}
  0 ± 0.999
 
+julia> 1 ⊞ Binomial(3) # Shorthand for 1 + Particles(Binomial(1)) (\boxplus)
+Particles{Int64, 2000}
+ 2.504 ± 0.864
+
+julia> 3 ⊠ Gamma(1) # Shorthand for 3 * Particles(Gamma(1)) (\boxtimes)
+Particles{Float64, 2000}
+ 2.99948 ± 3.0
+
 julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar to randn
 StaticParticles{Float64,25}
  2.0 ± 0.498

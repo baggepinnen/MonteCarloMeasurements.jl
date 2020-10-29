@@ -30,6 +30,23 @@ See also [`±`](@ref), [`⊗`](@ref)
 """
 (..)(a,b) = Particles(DEFAULT_NUM_PARTICLES, Uniform(a,b))
 
+
+"""
+    a ⊠ Distribution()
+
+Multiplies `a` by $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution`.
+Shorthand for `a * Particles(Distribution())`, e.g., `a ⊠ Gamma(1)`.
+"""
+⊠(a,d::Distribution) = a * Particles(d)
+
+"""
+    a ⊠ Distribution()
+
+Adds $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution` to `a`.
+Shorthand for `a + Particles(Distribution())`, e.g., `1 ⊞ Binomial(3)`.
+"""
+⊞(a,d::Distribution) = a + Particles(d)
+
 """
     ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
