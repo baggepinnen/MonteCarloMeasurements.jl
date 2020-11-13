@@ -34,7 +34,7 @@ end
     m = mean.(y)
     label --> "Mean with $q quantile"
     Q = quantiles(y, q)
-    if y isa Matrix
+    if y isa AbstractMatrix
         for c in 1:size(y,2)
             @series begin
                 yerror := (Q[1][:,c], Q[2][:,c])
@@ -63,7 +63,7 @@ end
     N = length(selected)
     label --> ""
     seriesalpha --> 1/log(N)
-    if y isa Matrix
+    if y isa AbstractMatrix
         for c in 1:size(y,2)
             m = Matrix(y[:,c])'
             @series to1series(x, m[:, selected])

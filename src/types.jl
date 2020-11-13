@@ -54,6 +54,9 @@ for PT in ParticleSymbols
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
 
         function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
+            if n isa AbstractParticles
+                return convert($PT{T,N}, n)
+            end
             v = fill(n,N)
             $PT{T,N}(v)
         end
