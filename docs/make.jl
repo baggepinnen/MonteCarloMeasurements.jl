@@ -14,6 +14,7 @@ makedocs(
             "Examples" => "examples.md",
             "Linear vs. Monte-Carlo uncertainty propagation" => "comparison.md",
             "Performance tips" => "performance.md",
+            "Advanced usage" => "advanced_usage.md",
             "API" => "api.md",
       ],
       format = Documenter.HTML(prettyurls = haskey(ENV, "CI")),
