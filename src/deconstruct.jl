@@ -50,7 +50,7 @@ Recursively visits all fields of `P` and replaces all instances of `StaticPartic
 """
 function build_mutable_container(P)
     has_mutable_particles(P) && (return P)
-    replace_particles(P, P->P isa AbstractParticles, P->Particles(Vector(P.particles)))
+    replace_particles(P, replacer=P->Particles(Vector(P.particles)))
 end
 
 """
@@ -59,7 +59,7 @@ end
 Replaces all fields of `P` that are particles with `Particles(1)`
 """
 function make_scalar(P)
-    replace_particles(P, P->P isa AbstractParticles, P->Particles([mean(P)]))
+    replace_particles(P, replacer=P->Particles([mean(P)]))
 end
 
 """
@@ -68,7 +68,7 @@ end
 Replaces all fields of `P` that are `Particles(1)` with `Particles(N)`
 """
 function restore_scalar(P, N)
-    replace_particles(P, P->P isa AbstractParticles, P->Particles(N))
+    replace_particles(P, replacer = P->Particles(N))
 end
 
 """
@@ -77,14 +77,14 @@ Replaces all mutable particles inside `P` with `StaticParticles`.
 """
 function make_static(P)
     !has_mutable_particles(P) && (return P)
-    replace_particles(P, P->P isa AbstractParticles, P->StaticParticles(P.particles))
+    replace_particles(P, replacer = P->StaticParticles(P.particles))
 end
 
 """
     build_container(P)
 Recursively visits all fields of `P` and replaces all instances of `AbstractParticles{T,N}` with `::T`
 """
-build_container(P) = replace_particles(P,P->P isa AbstractParticles,P->P[1])
+build_container(P) = replace_particles(P)
 
 """
     mean_object(x)
@@ -92,19 +92,19 @@ Returns an object similar to `x`, but where all internal instances of `Particles
 """
 mean_object(p::AbstractParticles) = mean(p)
 mean_object(p::AbstractArray{<:AbstractParticles}) = mean.(p)
-mean_object(P) = replace_particles(P,P->P isa AbstractParticles,P->mean(P))
+mean_object(P) = replace_particles(P; replacer = P->mean(P))
 
 """
-    replace_particles(x,condition=P->P isa AbstractParticles,replacer = P->P[1])
+    replace_particles(x; condition=P->P isa AbstractParticles,replacer = P->P[1])
 
 This function recursively scans through the structure `x`, every time a field that matches `condition` is found, `replacer` is called on that field and the result is used instead of `P`. See function `mean_object`, which uses this function to replace all instances of `Particles` with their mean.
 """
-function replace_particles(P,condition::F1=P->P isa AbstractParticles,replacer::F2 = P->P[1]) where {F1,F2}
+function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer::F2 = P->P[1]) where {F1,F2}
     # @show typeof(P)
     condition(P) && (return replacer(P))
     has_particles(P) || (return P) # No need to carry on
     if P isa AbstractArray # Special handling for arrays
-        return map(P->replace_particles(P,condition,replacer), P)
+        return map(P->replace_particles(P;condition,replacer), P)
     end
     P isa Complex && condition(real(P)) && (return complex(replacer(real(P)), replacer(imag(P))))
     P isa Number && (return P)
@@ -112,7 +112,7 @@ function replace_particles(P,condition::F1=P->P isa AbstractParticles,replacer::
         f = getfield(P,n)
         has_particles(f) || (return f)
         # @show typeof(f), n
-        replace_particles(f,condition,replacer)
+        replace_particles(f; condition,replacer)
     end
     T = nakedtypeof(P)
 
@@ -295,9 +295,7 @@ end
 """
     struct Workspace{T1, T2, T3, T4, T5, T6}
 
-DOCSTRING
-
-#Arguments:
+# Arguments:
 - `simple_input`: Input object `f` will be called with, does not contain any particles
 - `simple_result`: Simple output from `f` without particles
 - `result`: Complete output of `f` including particles

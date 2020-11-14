@@ -31,6 +31,7 @@ struct CuParticles{T,N} <: AbstractParticles{T,N}
     particles::CuArray{T,1,Nothing}
 end
 
+DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
 
 const ParticleSymbols = (:Particles, :StaticParticles, :CuParticles)
 
@@ -57,13 +58,16 @@ for PT in ParticleSymbols
         $PT(v::Vector) = $PT{eltype(v),length(v)}(v)
 
         function $PT{T,N}(n::Real) where {T,N} # This constructor is potentially dangerous, replace with convert?
+            if n isa AbstractParticles
+                return convert($PT{T,N}, n)
+            end
             v = fill(n,N)
             $PT{T,N}(v)
         end
 
         $PT{T,N}(p::$PT{T,N}) where {T,N} = p
 
-        function $PT(rng::AbstractRNG, N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
+        function $PT(rng::AbstractRNG, N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
                 v = systematic_sample(rng,N,d; permute=permute)
             else
@@ -71,7 +75,12 @@ for PT in ParticleSymbols
             end
             $PT{eltype(v),N}(v)
         end
-        function $PT(N::Integer=DEFAULT_NUM_PARTICLES, d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
+        function $PT(N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
+            return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
+        end
+
+        function $PT(::Type{T}, N::Integer=DNP($PT), d::Distribution=Normal(T(0),T(1)); kwargs...) where {T <: Real}
+            eltype(d) == T || throw(ArgumentError("Element type of the provided distribution $d does not match $T. The element type of a distribution is the element type of a value sampled from it. Some distributions, like `Gamma(0.1f0)` generated `Float64` random number even though it appears like it should generate `Float32` numbers."))
             return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
         end
 
@@ -99,6 +108,7 @@ StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
 
+Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
 Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))
 
 CuParticles(p::AbstractParticles{T,N}) where {T,N} = CuParticles{T,N}(cu(p.particles))

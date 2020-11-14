@@ -1,11 +1,11 @@
 ![logo](docs/src/assets/logo.svg)
 [![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
-[![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/M/MonteCarloMeasurements.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 [![Documentation, stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable)
 [![Documentation, latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://baggepinnen.github.io/MonteCarloMeasurements.jl/latest)
 [![arXiv article](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
 
+*Imagine you had a type that behaved like your standard `Float64` but it really represented a probability distribution like `Gamma(0.5)` or `MvNormal(m, S)`. Then you could call `y=f(x)` and have `y` be the probability distribution `y=p(f(x))`. This package gives you such a type.*
 
 This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. **Correlated quantities** are handled as well, see [multivariate particles](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/#Multivariate-particles-1) below.
 
@@ -22,20 +22,24 @@ In the figure above, we see the probability-density function of the input `p(x)`
 ## Quick start
 ```julia
 using MonteCarloMeasurements, Plots
-a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\pm)
-# Part500(3.142 ± 0.1)
-b = 2 ∓ 0.1 # ∓ (\mp) creates StaticParticles (with StaticArrays)
-# SPart100(2.0 ± 0.1)
+a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\\pm)
+# Particles{Float64,2000}
+#  3.14159 ± 0.1
+b = 2 ∓ 0.1 # ∓ (\\mp) creates StaticParticles (with StaticArrays)
+# StaticParticles{Float64,100}
+#  2.0 ± 0.0999
 std(a)      # Ask about statistical properties
-# 0.09997062445203879
+# 0.09999231528930486
 sin(a)      # Use them like any real number
-# Part500(1.255e-16 ± 0.0995)
+# Particles{Float64,2000}
+#  1.2168e-16 ± 0.0995
 plot(a)     # Plot them
 b = sin.(1:0.1:5) .± 0.1; # Create multivariate uncertain numbers
 plot(b)                   # Vectors of particles can be plotted
 using Distributions
 c = Particles(500, Poisson(3.)) # Create uncertain numbers distributed according to a given distribution
-# Part500(2.896 ± 1.71)
+# Particles{Int64,500}
+#  2.882 ± 1.7
 ```
 
 For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).

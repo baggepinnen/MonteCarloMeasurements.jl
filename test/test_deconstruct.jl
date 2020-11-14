@@ -2,8 +2,8 @@ using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓
 using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths
-using ControlSystems, Test
-ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts::Float64, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
+using ControlSystems, Test, GenericLinearAlgebra
+ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
 
 @testset "deconstruct" begin
@@ -40,16 +40,16 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
 
     @test nakedtypeof(P) == TransferFunction
     @test nakedtypeof(typeof(P)) == TransferFunction
-    @test typeof(P) == TransferFunction{ControlSystems.SisoRational{StaticParticles{Float64,N}}}
+    @test typeof(P) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{StaticParticles{Float64,N}}}
     P2 = build_container(P)
-    @test typeof(P2) == TransferFunction{ControlSystems.SisoRational{Float64}}
-    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.SisoRational{Particles{Float64,N}}}
+    @test typeof(P2) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{Float64}}
+    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystems.Continuous, ControlSystems.SisoRational{Particles{Float64,N}}}
     @test has_particles(P)
     @test has_particles(P.matrix)
     @test has_particles(P.matrix[1])
     @test has_particles(P.matrix[1].num)
-    @test has_particles(P.matrix[1].num.a)
-    @test has_particles(P.matrix[1].num.a[1])
+    @test has_particles(P.matrix[1].num.coeffs)
+    @test has_particles(P.matrix[1].num.coeffs[1])
 
     # P = tf(1 ± 0.1, [1, 1±0.1])
     # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:N) # 1.7 ms 1.2 Mb
@@ -76,12 +76,12 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
         resultsetter = MonteCarloMeasurements.get_result_setter(Pres)
         @test all(1:paths[1][3]) do i
             buffersetter(P,P2,i)
-            P.matrix[1].num.a[1][i] == P2.matrix[1].num.a[1] &&
-            P.matrix[1].den.a[2][i] == P2.matrix[1].den.a[2]
+            P.matrix[1].num.coeffs[1][i] == P2.matrix[1].num.coeffs[1] &&
+            P.matrix[1].den.coeffs[2][i] == P2.matrix[1].den.coeffs[2]
             P2res = f(P2)
             resultsetter(Pres, P2res, i)
-            Pres.matrix[1].num.a[1][i] == P2res.matrix[1].num.a[1] &&
-            Pres.matrix[1].den.a[2][i] == P2res.matrix[1].den.a[2]
+            Pres.matrix[1].num.coeffs[1][i] == P2res.matrix[1].num.coeffs[1] &&
+            Pres.matrix[1].den.coeffs[2][i] == P2res.matrix[1].den.coeffs[2]
         end
     end
 
@@ -89,8 +89,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     @test mean_object(complex(1. ± 0.1, 1.)) ≈ complex(1,1) atol=1e-3
 
     Ps = MonteCarloMeasurements.make_scalar(P)
-    @test MonteCarloMeasurements.particletypetuple(Ps.matrix[1].num.a[1]) == (Float64,1,Particles)
-    @test MonteCarloMeasurements.particletypetuple(MonteCarloMeasurements.restore_scalar(Ps,50).matrix[1].num.a[1]) == (Float64,50,Particles)
+    @test MonteCarloMeasurements.particletypetuple(Ps.matrix[1].num.coeffs[1]) == (Float64,1,Particles)
+    @test MonteCarloMeasurements.particletypetuple(MonteCarloMeasurements.restore_scalar(Ps,50).matrix[1].num.coeffs[1]) == (Float64,50,Particles)
 
     unsafe_comparisons(false)
 end

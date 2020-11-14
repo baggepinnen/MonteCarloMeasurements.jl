@@ -1,6 +1,14 @@
-using MonteCarloMeasurements, Measurements, Plots, BenchmarkTools, OrdinaryDiffEq, PrettyTables, SLEEFPirates, ChangePrecision, LinearAlgebra, Savefig
+using MonteCarloMeasurements, Measurements, Plots, BenchmarkTools, OrdinaryDiffEq, PrettyTables, ChangePrecision, LinearAlgebra
 # pgfplots()
 default(size=(600,400))
+color_palette = [
+    RGB(0.1399999, 0.1399999, 0.4),
+    RGB(1.0, 0.7075, 0.35),
+    RGB(0.414999, 1.0, 1.0),
+    RGB(0.6, 0.21, 0.534999),
+    RGB(0,0.6,0),
+]
+
 function sim((±)::F, tspan, plotfun=plot!, args...; kwargs...) where F
     @changeprecision Float32 begin
         g = 9.79 ± 0.02; # Gravitational constant
@@ -48,24 +56,24 @@ end
 ##
 tspan = (0.0f0, 0.5f0)
 plot()
-sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-2,tspan[2]), color=Savefig.color_palette[4])
-sim(MonteCarloMeasurements.:±, tspan, errorbarplot!, 0.8413, label = "MCM", xlims=(tspan[2]-0.5,tspan[2]), l=(:dot,), color=Savefig.color_palette[2], xlabel="Time [s]", ylabel="\$\\theta\$")
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-2,tspan[2]), color=color_palette[4])
+sim(MonteCarloMeasurements.:±, tspan, errorbarplot!, 0.8413, label = "MCM", xlims=(tspan[2]-0.5,tspan[2]), l=(:dot,), color=color_palette[2], xlabel="Time [s]", ylabel="\$\\theta\$")
 
 # savefig("/home/fredrikb/mcm_paper/figs/0-2.pdf")
 ##
 tspan = (0.0f0, 200)
 plot()
-sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), color=Savefig.color_palette[4])
-sim(MonteCarloMeasurements.:±, tspan, label = "Monte Carlo", xlims=(tspan[2]-5,tspan[2]), l=(:dot,), color=Savefig.color_palette[2], xlabel="Time [s]", ylabel="\$\\theta\$")
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), color=color_palette[4])
+sim(MonteCarloMeasurements.:±, tspan, label = "Monte Carlo", xlims=(tspan[2]-5,tspan[2]), l=(:dot,), color=color_palette[2], xlabel="Time [s]", ylabel="\$\\theta\$")
 
 ##
 # We now integrated over 200 seconds and look at the last 5 seconds. This result maybe looks a bit confusing, the linear uncertainty propagation is very sure about the amplitude at certain points but not at others, whereas the Monte-Carlo approach is completely unsure. Furthermore, the linear approach thinks that the amplitude at some points is actually much higher than the starting amplitude, implying that energy somehow has been added to the system! The picture might become a bit more clear by plotting the individual trajectories of the particles
 
 tspan = (0.0f0, 200)
 plot()
-sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,), color=Savefig.color_palette[4])
-sim(MonteCarloMeasurements.:∓, tspan, mcplot!, xlims=(tspan[2]-5,tspan[2]), l=(Savefig.color_palette[2],0.3), xlabel="Time [s]", ylabel="\$\\theta\$", label="MCM", primary=onlyone(true))
-sigmasim(tspan, mcplot!, xlims=(tspan[2]-5,tspan[2]), l=(Savefig.color_palette[3],0.9,2), xlabel="Time [s]", ylabel="\$\\theta\$", label="MCM \\Sigma", primary=onlyone(true))
+sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]), l=(5,), color=color_palette[4])
+sim(MonteCarloMeasurements.:∓, tspan, mcplot!, xlims=(tspan[2]-5,tspan[2]), l=(color_palette[2],0.3), xlabel="Time [s]", ylabel="\$\\theta\$", label="MCM")
+sigmasim(tspan, mcplot!, xlims=(tspan[2]-5,tspan[2]), l=(color_palette[3],0.9,2), xlabel="Time [s]", ylabel="\$\\theta\$", label="MCM \\Sigma")
 # savefig("/home/fredrikb/mcm_paper/figs/mcplot.pdf")
 
 # It now becomes clear that each trajectory has a constant amplitude (although individual trajectories amplitudes vary slightly due to the uncertainty in the initial angle), but the phase is all mixed up due to the slightly different frequencies!
@@ -103,4 +111,5 @@ for (i,t) in enumerate((t1,t2,t3,t4,t5))
 end
 
 
-pretty_table(table, ["" "Float32" "Linear" "MCM" "MCM \\Sigma" "Naive MC"], backend=:latex, formatter=ft_printf("%5.1f"))
+# pretty_table(table, ["" "Float32" "Linear" "MCM" "MCM \\Sigma" "Naive MC"], backend=:latex, formatters=ft_printf("%5.1f"))
+pretty_table(table, ["" "Float32" "Linear" "MCM" "MCM \\Sigma" "Naive MC"], backend=:text, tf=markdown, formatters=ft_printf("%5.1f"))

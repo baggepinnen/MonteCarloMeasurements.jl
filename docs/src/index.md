@@ -6,9 +6,11 @@
 
 # MonteCarloMeasurements
 
-This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. **Correlated quantities** are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
+> Imagine you had a type that behaved like your standard `Float64` but it really represented a probability distribution like `Gamma(0.5)` or `MvNormal(m, S)`. Then you could call `y=f(x)` and have `y` be the probability distribution `y=p(f(x))`. This package gives you such a type. 
 
-Although several interesting use cases for doing calculations with probability distributions have popped up (see [Examples](https://github.com/baggepinnen/MonteCarloMeasurements.jl#examples-1)), the original goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²`, `f(x) = sign(x)` at `x=0` and long-time integration, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support correlations between quantities.
+This package facilitates working with probability distributions as if they were regular real numbers, by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear and possibly non-Gaussian [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. **Correlated quantities** are handled as well, see [multivariate particles](https://github.com/baggepinnen/MonteCarloMeasurements.jl#multivariate-particles) below.
+
+Although several interesting use cases for doing calculations with probability distributions have popped up (see [Examples](https://github.com/baggepinnen/MonteCarloMeasurements.jl#examples-1)), the original goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²`, `f(x) = sign(x)` at `x=0` and long-time integration, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support arbitrary correlations (and arbitrary dependencies such as conservation laws etc.) between variables.
 
 A number of type `Particles` behaves just as any other `Number` while partaking in calculations. Particles also behave like a distribution, so after a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded. A `Measurements.Measurements` can be converted to particles by calling the `Particles` constructor.
 
@@ -25,22 +27,36 @@ For a comparison of uncertainty propagation and nonlinear filtering, see [notes]
 using MonteCarloMeasurements, Distributions
 
 julia> 1 ± 0.1
-Part10000(1.0 ± 0.1)
+Particles{Float64,2000}
+ 1.0 ± 0.1
 
 julia> p = StaticParticles(100)
-SPart100(0.0 ± 0.999)
+StaticParticles{Float64,100}
+ 0 ± 0.999
+
+julia> 1 ⊞ Binomial(3) # Shorthand for 1 + Particles(Binomial(1)) (\boxplus)
+Particles{Int64, 2000}
+ 2.504 ± 0.864
+
+julia> 3 ⊠ Gamma(1) # Shorthand for 3 * Particles(Gamma(1)) (\boxtimes)
+Particles{Float64, 2000}
+ 2.99948 ± 3.0
+
+julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar to randn
+StaticParticles{Float64,25}
+ 2.0 ± 0.498
 
 julia> std(p)
-0.9986403042113867
+0.9986403042113866
 
 julia> var(p)
-0.997282457195411
+0.9972824571954108
 
 julia> mean(p)
--4.6074255521943994e-17
+-6.661338147750939e-17
 
 julia> f = x -> 2x + 10
-#95 (generic function with 1 method)
+#27 (generic function with 1 method)
 
 julia> f(p) ≈ 10 # ≈ determines if f(p) is within 2σ of 10
 true
@@ -49,48 +65,50 @@ julia> f(p) ≲ 15 # ≲ (\lesssim) tests if f(p) is significantly less than 15
 true
 
 julia> Normal(f(p)) # Fits a normal distribution
-Normal{Float64}(μ=9.9872274542161, σ=2.1375718437608633)
+Normal{Float64}(μ=10.000000000000002, σ=1.9972806084227737)
 
 julia> fit(Normal, f(p)) # Same as above
-Normal{Float64}(μ=9.9872274542161, σ=2.1268571304548938)
+Normal{Float64}(μ=10.000000000000002, σ=1.9872691137573264)
 
 julia> Particles(100, Uniform(0,2)) # A distribution can be supplied
-Part100(1.0 ± 0.58)
+Particles{Float64,100}
+ 1.0 ± 0.58
 
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
 2-element Array{Particles{Float64,1000},1}:
- 0.0254 ± 1.4
- 0.0641 ± 2.0
+ -0.0546 ± 1.4
+ -0.128 ± 2.0
 ```
 
 # Why a package
 Convenience. Also, the benefit of using this number type instead of manually calling a function `f` with perturbed inputs is that, at least in theory, each intermediate operation on `Particles` can exploit SIMD, since it's performed over a vector. If the function `f` is called several times, however, the compiler might not be smart enough to SIMD the entire thing. Further, any dynamic dispatch is only paid for once, whereas it would be paid for `N` times if doing things manually. The same goes for calculations that are done on regular input arguments without uncertainty, these will only be done once for `Particles` whereas they will be done `N` times if you repeatedly call `f`. One could perhaps also make an argument for cache locality being favorable for the `Particles` type, but I'm not sure this holds for all examples. Below, we show a small benchmark example (additional [Benchmark](@ref)) where we calculate a QR factorization of a matrix using `Particles` and compare it to manually doing it many times
 ```julia
-using BenchmarkTools
-A = [Particles(1000) for i = 1:3, j = 1:3]
-B = similar(A, Float64)
-@btime qr($A)
-  119.243 μs (257 allocations: 456.58 KiB)
-@btime foreach(_->qr($B), 1:1000) # Manually do qr 1000 times
-  3.916 ms (4000 allocations: 500.00 KiB)
+using MonteCarloMeasurements, BenchmarkTools
+unsafe_comparisons(true)
+A = [randn() + Particles(1000) for i = 1:3, j = 1:3]
+B = mean.(A)
+@btime qr($A);
+  # 119.243 μs (257 allocations: 456.58 KiB)
+@btime foreach(_->qr($B), 1:1000); # Manually do qr 1000 times
+  # 3.916 ms (4000 allocations: 500.00 KiB)
 ```
 that's about a 30-fold reduction in time, and the repeated `qr` didn't even bother to sample new input points or store and handle the statistics of the result.
 The type `StaticParticles` contains a statically sized, stack-allocated vector from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl). This type is suitable if the number of particles is small, say < 500 ish (but expect long compilation times if > 100, especially on julia < v1.1).
 ```julia
-A = [StaticParticles(100) for i = 1:3, j = 1:3]
-B = similar(A, Float64)
-@btime qr($(copy(A)))
-  8.392 μs (16 allocations: 18.94 KiB)
+A = [randn() + StaticParticles(100) for i = 1:3, j = 1:3]
+B = mean.(A)
+@btime qr($(A));
+  # 8.392 μs (16 allocations: 18.94 KiB)
 @btime map(_->qr($B), 1:100);
-  690.590 μs (403 allocations: 50.92 KiB)
-# Wow that's over 80 times faster
+  # 690.590 μs (403 allocations: 50.92 KiB)
+# Over 80 times faster
 # Bigger matrix
-A = [StaticParticles(100) for i = 1:30, j = 1:30]
-B = similar(A, Float64)
-@btime qr($(copy(A)))
-  1.823 ms (99 allocations: 802.63 KiB)
+A = [randn() + StaticParticles(100) for i = 1:30, j = 1:30]
+B = mean.(A)
+@btime qr($(A));
+  # 1.823 ms (99 allocations: 802.63 KiB)
 @btime map(_->qr($B), 1:100);
-  75.068 ms (403 allocations: 2.11 MiB)
+  # 75.068 ms (403 allocations: 2.11 MiB)
 # 40 times faster
 ```
 [`StaticParticles`](@ref) allocate much less memory than regular [`Particles`](@ref), but are more stressful for the compiler to handle.
@@ -122,7 +140,7 @@ Independent multivariate systematic samples can be created using the function [`
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
 ```julia
 julia> p = [1 ± 1, 5 ± 2]
-2-element Array{Particles{Float64,10000},1}:
+2-element Array{Particles{Float64,2000},1}:
  1.0 ± 1.0
  5.0 ± 2.0
 
@@ -132,7 +150,7 @@ julia> A = randn(2,2)
   1.41308   0.196504
 
 julia> y = A*p
-2-element Array{Particles{Float64,10000},1}:
+2-element Array{Particles{Float64,2000},1}:
  -8.04 ± 3.1
   2.4 ± 1.5
 
@@ -148,8 +166,8 @@ julia> A*Diagonal([1^2, 2^2])*A'
 ```
 To create particles that exhibit a known covariance/correlation, use the appropriate constructor, e.g.,
 ```julia
-julia> p = Particles(10000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
-2-element Array{Particles{Float64,10000},1}:
+julia> p = Particles(2000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
+2-element Array{Particles{Float64,2000},1}:
  19.3 ± 48.0
  11.9 ± 43.0
 
@@ -292,19 +310,21 @@ To sum up, if two uncertain values are compared, and they have no mutual support
 If you would like to calculate the empirical probability that a value represented by `Particles` fulfils a condition, you may use the macro [`@prob`](@ref):
 ```julia
 julia> p = Particles()
-Part10000(0.0 ± 1.0)
+Particles{Float64,2000}
+ 0 ± 1.0
 
 julia> @prob p < 1
-0.8413
+0.8415
 
 julia> mean(p.particles .< 1)
-0.8413
+0.8415
 ```
 
 
 
 
 # When to use what?
+This table serves as a primitive guide to selecting an uncertainty propagation strategy. If you are unsure about the properties of your function, also have a look at [Comparison between linear uncertainty propagation and Monte-Carlo sampling](@ref)
 
 | Situation       | Action       |
 |-----------------|--------------|
@@ -363,10 +383,7 @@ The table below compares methods for uncertainty propagation with their parallel
 | `Particles(sigmapoints)` | Unscented Kalman Filter | Unscented transform    |
 | `Particles`              | [Particle Filter](https://github.com/baggepinnen/LowLevelParticleFilters.jl)         | Monte Carlo (sampling) |
 
-## Faster `exp,log`
-If the user manually loads the library [SLEEFPirates.jl](https://github.com/chriselrod/SLEEFPirates.jl), some functions are overloaded for Particles of `Float64,Float32` eltypes making these functions 2-16 times faster depending on the processor SIMD width.
-
 
 # Citing
-See [CITATION.bib](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/CITATION.bib)  
+See [CITATION.bib](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/CITATION.bib)
 ArXiv article [MonteCarloMeasurements.jl: Nonlinear Propagation of Arbitrary Multivariate Distributions by means of Method Overloading](https://arxiv.org/abs/2001.07625)

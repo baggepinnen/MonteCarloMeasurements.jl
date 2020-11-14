@@ -31,6 +31,23 @@ See also [`±`](@ref), [`⊗`](@ref)
 """
 (..)(a,b) = Particles(DEFAULT_NUM_PARTICLES, Uniform(a,b))
 
+
+"""
+    a ⊠ Distribution()
+
+Multiplies `a` by $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution`.
+Shorthand for `a * Particles(Distribution())`, e.g., `a ⊠ Gamma(1)`.
+"""
+⊠(a,d::Distribution) = a * Particles(d)
+
+"""
+    a ⊠ Distribution()
+
+Adds $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution` to `a`.
+Shorthand for `a + Particles(Distribution())`, e.g., `1 ⊞ Binomial(3)`.
+"""
+⊞(a,d::Distribution) = a + Particles(d)
+
 """
     ⊗(μ,σ) = outer_product(Normal.(μ,σ))
 
@@ -87,15 +104,22 @@ shortform(p::CuParticles) = "CuPart"
 
 function to_num_str(p::AbstractParticles{T}, d=3) where T
     s = std(p)
+    # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
         string(round(mean(p), sigdigits=d))
     else
-        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=d-1))
+        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
+
+
+function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
+    print(io, to_num_str(p, 3))
+end
+
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
-    sPT = shortform(p)
-    print(io, "$(sPT)$N(", to_num_str(p, 4),")")
+    sPT = MonteCarloMeasurements.shortform(p)
+    print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
 end
 
 function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
@@ -116,9 +140,6 @@ function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
     print(io, "im")
 end
 
-function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
-    print(io, to_num_str(p, 3))
-end
 # function Base.show(io::IO, p::MvParticles)
 #     sPT = shortform(p)
 #     print(io, "(", N, " $sPT with mean ", round.(mean(p), sigdigits=3), " and std ", round.(sqrt.(diag(cov(p))), sigdigits=3),")")
@@ -184,6 +205,8 @@ for PT in ParticleSymbols
 
         """
             ℝⁿ2ℝⁿ_function(f::Function, p::AbstractArray{T})
+
+        Helper function for performing uncertainty propagation through vector-valued functions with vector inputs.
         Applies  `f : ℝⁿ → ℝⁿ` to an array of particles. E.g., `Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(log,p)`
         """
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
@@ -214,6 +237,8 @@ for PT in ParticleSymbols
 
         """
             ℝⁿ2ℂⁿ_function(f::Function, p::AbstractArray{T})
+
+        Helper function for performing uncertainty propagation through complex-valued functions with vector inputs.
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
         function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
@@ -301,7 +326,7 @@ for PT in ParticleSymbols
         end
 
         """
-        union(p1::AbstractParticles, p2::AbstractParticles)
+            union(p1::AbstractParticles, p2::AbstractParticles)
 
         A `Particles` containing all particles from both `p1` and `p2`. Note, this will be twice as long as `p1` or `p2` and thus of a different type.
         `pu = Particles([p1.particles; p2.particles])`
@@ -311,7 +336,7 @@ for PT in ParticleSymbols
         end
 
         """
-        intersect(p1::AbstractParticles, p2::AbstractParticles)
+            intersect(p1::AbstractParticles, p2::AbstractParticles)
 
         A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
         """
@@ -327,6 +352,28 @@ for PT in ParticleSymbols
              $PT{eltype(res),N}(res)
         end
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
+
+    end
+
+    # for XT in (:T, :($PT{T,N})), YT in (:T, :($PT{T,N})), ZT in (:T, :($PT{T,N}))
+    #     XT == YT == ZT == :T && continue
+    #     @eval function Base.muladd(x::$XT,y::$YT,z::$ZT) where {T<:Number,N}
+    #          res = muladd.(maybe_particles(x),maybe_particles(y),maybe_particles(z))
+    #          $PT{eltype(res),N}(res)
+    #     end
+    # end
+
+    @eval function Base.muladd(x::$PT{T,N},y::$PT{T,N},z::$PT{T,N}) where {T<:Number,N}
+        res = muladd.(x.particles,y.particles,z.particles)
+        $PT{T,N}(res)
+    end
+    @eval function Base.muladd(x::T,y::$PT{T,N},z::$PT{T,N}) where {T<:Number,N}
+        res = muladd.(x,y.particles,z.particles)
+        $PT{T,N}(res)
+    end
+    @eval function Base.muladd(x::T,y::T,z::$PT{T,N}) where {T<:Number,N}
+        res = muladd.(x,y,z.particles)
+        $PT{T,N}(res)
     end
 
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
@@ -376,6 +423,7 @@ Base.Matrix(v::MvParticles) = Array(v)
 Statistics.mean(v::MvParticles) = mean.(v)
 Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
 Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
+Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
@@ -445,8 +493,18 @@ end
 Determine if two particles are not significantly different
 """
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
-Base.:≈(a::Real,p::AbstractParticles, lim=2) = abs(mean(p)-a)/std(p) < lim
-Base.:≈(p::AbstractParticles, a::Real, lim=2) = abs(mean(p)-a)/std(p) < lim
+function Base.:≈(a::Real,p::AbstractParticles, lim=2)
+    m = mean(p)
+    s = std(p, mean=m)
+    s == 0 && (return m == a)
+    abs(mean(p)-a)/std(p) < lim
+end
+function Base.:≈(p::AbstractParticles, a::Real, lim=2)
+    m = mean(p)
+    s = std(p, mean=m)
+    s == 0 && (return m == a)
+    abs(mean(p)-a)/std(p) < lim
+end
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::MvParticles, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
@@ -479,6 +537,8 @@ Base.eps(p::Type{<:AbstractParticles{T,N}}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{T,N}) where {T,N} = eps(T)
 Base.eps(p::AbstractParticles{<:Complex{T},N}) where {T,N} = eps(T)
 
+Base.rtoldefault(::Type{<:AbstractParticles{T,N}}) where {T,N} = sqrt(eps(T))
+
 LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
@@ -507,12 +567,13 @@ LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticl
 
 ## Particle BLAS
 
+# pgemv is up to twice as fast as the naive way already for A(2,2)-A(20,20)
 """
-    pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
+    _pgemv(A, p::Vector{StaticParticles{T, N}}) where {T, N}
 
-Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply
+Perform `A*p::Vector{StaticParticles{T,N}` using BLAS matrix-matrix multiply. This function is automatically used when applicable and there is no need to call it manually.
 """
-function pgemv(
+function _pgemv(
     A,
     p::Vector{StaticParticles{T,N}},
 ) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
@@ -520,4 +581,62 @@ function pgemv(
     M = reshape(pm, N, :)'
     AM = A * M
     reinterpret(StaticParticles{T,N}, vec(AM'))
+end
+
+Base.:*(A::Matrix{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pgemv(A,p)
+
+
+"""
+    _pdot(v::Vector{T}, p::Vector{StaticParticles{T, N}}) where {T, N}
+
+Perform `v'p::Vector{StaticParticles{T,N}` using BLAS matrix-vector multiply. This function is automatically used when applicable and there is no need to call it manually.
+"""
+function _pdot(
+    v::AbstractVector{T},
+    p::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    pm = reinterpret(T, p)
+    M = reshape(pm, N, :)
+    Mv = M*v
+    StaticParticles{T,N}(Mv)
+end
+
+LinearAlgebra.dot(v::AbstractVector{T}, p::Vector{StaticParticles{T,N}}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+LinearAlgebra.dot(p::Vector{StaticParticles{T,N}}, v::AbstractVector{T}) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _pdot(v,p)
+
+
+function _paxpy!(
+    a::T,
+    x::Vector{StaticParticles{T,N}},
+    y::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    X = reinterpret(T, x)
+    Y = reinterpret(T, y)
+    LinearAlgebra.axpy!(a,X,Y)
+    reinterpret(StaticParticles{T,N}, Y)
+end
+
+LinearAlgebra.axpy!(
+    a::T,
+    x::Vector{StaticParticles{T,N}},
+    y::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N} = _paxpy!(a,x,y)
+
+
+
+
+
+function LinearAlgebra.mul!(
+    y::Vector{StaticParticles{T,N}},
+    A::AbstractMatrix{T},
+    b::Vector{StaticParticles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+    Bv = reinterpret(T, b)
+    B = reshape(Bv, N, :)'
+    # Y0 = A*B
+    # reinterpret(StaticParticles{T,N}, vec(Y0'))
+    Yv = reinterpret(T, y)
+    Y = reshape(Yv, :, N)
+    mul!(Y,A,B)
+    reinterpret(StaticParticles{T,N}, vec(Y'))
 end

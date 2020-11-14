@@ -23,7 +23,7 @@ cost'(pars)
 function solvemany()
     algos = [NelderMead(), SimulatedAnnealing(), BFGS(), Newton()]
     map(algos) do algo
-        res = Optim.optimize(cost, p->cost'(p), pars, algo, inplace=false)
+        res = Optim.optimize(cost, cost', pars, algo, inplace=false)
         m = res.minimizer
         cost(m)
     end

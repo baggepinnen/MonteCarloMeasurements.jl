@@ -8,7 +8,7 @@ We also perform some limited benchmarks.
 We show how to initialize particles with LHS and how to make sure the sample gets the desired moments. We also visualize the statistics of the sample.
 
 ## [How MC uncertainty propagation works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)
-We produce the first figure in this readme and explain in visual detail how different forms of uncertainty propagation propagates a probability distribution through a nonlinear function.
+We produce the first figure in this readme and explain in visual detail how different forms of uncertainty propagation propagates a probability distribution through a nonlinear function. Also see [Comparison between linear uncertainty propagation and Monte-Carlo sampling](@ref) for more visual examples.
 
 ## [Robust probabilistic optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl)
 Here, we use MonteCarloMeasurements to perform [robust optimization](https://en.wikipedia.org/wiki/Robust_optimization). With robust and probabilistic, we mean that we place some kind of bound on a quantile of an uncertain value, or otherwise make use of the probability distribution of some value that depend on the optimized parameters.
@@ -20,10 +20,10 @@ The application we consider is optimization of a PID controller. Normally, we ar
 Another example using MonteCarloMeasurements to perform [robust optimization](https://en.wikipedia.org/wiki/Robust_optimization), this time with automatic differentiation. We use Optim.jl to solve a linear program with probabilistic constraints using 4 different methods, two gradient free, one first-order and one second-order method. We demonstrate calculation of gradients of uncertain functions with uncertain inputs using both Zygote.jl and ForwardDiff.jl.
 
 ## Unitful interaction
-Particles with units can be created using the package [Unitful.jl](https://github.com/PainterQubits/Unitful.jl). The interaction is only supported through the construct `Particles{Quantity}`, whereas the reverse construct `Quantity{Particles}` is likely to result in problems. Unitful particles are thus created like this
+Particles with units can be created using the package [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) for uncertainty propagation with automatic unit checks. The interaction is only supported through the construct `Particles{Quantity}`, whereas the reverse construct `Quantity{Particles}` is likely to result in problems. Unitful particles are thus created like this
 ```@repl
-using MonteCarloMeasurements, Unitful # hide
-(1±0.1)u"V"
+using MonteCarloMeasurements, Unitful
+(1 ± 0.1)u"V"
 (1..2)u"m"
 ```
 

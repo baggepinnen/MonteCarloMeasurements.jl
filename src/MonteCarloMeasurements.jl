@@ -1,12 +1,51 @@
+"""
+This package facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of probability distributions through functions. This is useful for, e.g.,  nonlinear [uncertainty propagation](https://en.wikipedia.org/wiki/Propagation_of_uncertainty). A variable or parameter might be associated with uncertainty if it is measured or otherwise estimated from data. We provide two core types to represent probability distributions: `Particles` and `StaticParticles`, both `<: Real`. (The name "Particles" comes from the [particle-filtering](https://en.wikipedia.org/wiki/Particle_filter) literature.) These types all form a Monte-Carlo approximation of the distribution of a floating point number, i.e., the distribution is represented by samples/particles. **Correlated quantities** are handled as well, see [multivariate particles](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/#Multivariate-particles-1) below.
+
+A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded.
+
+## Quick start
+```julia
+julia> using MonteCarloMeasurements, Plots
+
+julia> a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\\pm)
+Particles{Float64,2000}
+ 3.14159 ± 0.1
+
+julia> b = 2 ∓ 0.1 # ∓ (\\mp) creates StaticParticles (with StaticArrays)
+StaticParticles{Float64,100}
+ 2.0 ± 0.0999
+
+julia> std(a)      # Ask about statistical properties
+0.09999231528930486
+
+julia> sin(a)      # Use them like any real number
+Particles{Float64,2000}
+ 1.2168e-16 ± 0.0995
+
+julia> plot(a)     # Plot them
+
+julia> b = sin.(1:0.1:5) .± 0.1; # Create multivariate uncertain numbers
+
+julia> plot(b)                   # Vectors of particles can be plotted
+
+julia> using Distributions
+
+julia> c = Particles(500, Poisson(3.)) # Create uncertain numbers distributed according to a given distribution
+Particles{Int64,500}
+ 2.882 ± 1.7
+```
+
+For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
+"""
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools, CuArrays
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, GenericLinearAlgebra, MacroTools, CuArrays, SLEEFPirates
 using Distributed: pmap
 import Base: add_sum
 
 using Distributions, StatsBase, Requires
 
 
-const DEFAULT_NUM_PARTICLES = 10000
+const DEFAULT_NUM_PARTICLES = 2000
 const DEFAULT_STATIC_NUM_PARTICLES = 100
 
 """
@@ -73,7 +112,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., AbstractParticles,Particles,StaticParticles, CuParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
+export ±, ∓, .., ⊠, ⊞, AbstractParticles,Particles,StaticParticles, CuParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -99,14 +138,14 @@ include("deconstruct.jl")
 include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
+include("sleefpirates.jl")
 
 # This is defined here so that @bymap is loaded
-LinearAlgebra.norm2(p::AbstractVector{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
+LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
-    @require SLEEFPirates="476501e8-09a2-5ece-8869-fb82de89a1fa" include("sleefpirates.jl")
     @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
     @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
 end

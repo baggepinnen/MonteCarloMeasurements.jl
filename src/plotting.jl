@@ -34,7 +34,7 @@ end
     m = mean.(y)
     label --> "Mean with $q quantile"
     Q = quantiles(y, q)
-    if y isa Matrix
+    if y isa AbstractMatrix
         for c in 1:size(y,2)
             @series begin
                 yerror := (Q[1][:,c], Q[2][:,c])
@@ -62,8 +62,8 @@ end
     selected = q > 1 ? randperm(N)[1:q] : 1:N
     N = length(selected)
     label --> ""
-    alpha --> 1/log(N)
-    if y isa Matrix
+    seriesalpha --> 1/log(N)
+    if y isa AbstractMatrix
         for c in 1:size(y,2)
             m = Matrix(y[:,c])'
             @series to1series(x, m[:, selected])
@@ -84,7 +84,7 @@ end
 end
 
 """
-errorbarplot(x,y,[q=0.025])
+    errorbarplot(x,y,[q=0.025])
 
 Plots a vector of particles with error bars at quantile `q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
@@ -92,14 +92,14 @@ If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01,
 errorbarplot
 
 """
-mcplot(x,y,[N=0])
+    mcplot(x,y,[N=0])
 
 Plots all trajectories represented by a vector of particles. `N > 1` controls the number of trajectories to plot.
 """
 mcplot
 
 """
-ribbonplot(x,y,[q=0.025])
+    ribbonplot(x,y,[q=0.025])
 
 Plots a vector of particles with a ribbon covering quantiles `q, 1-q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
@@ -130,7 +130,7 @@ end
         @series begin
             seriestype --> :scatter
             primary := false
-            alpha --> 0.1
+            seriesalpha --> 0.1
             Matrix(x), Matrix(y)
         end
     else

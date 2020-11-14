@@ -1,6 +1,6 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
-using Test, LinearAlgebra, Statistics, Random
+using Test, LinearAlgebra, Statistics, Random, GenericLinearAlgebra
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
 import Plots
@@ -20,6 +20,7 @@ Random.seed!(0)
             @test -0.9 < std(systematic_sample(100)) < 1.1
             @test -0.9 < std(systematic_sample(10000)) < 1.1
         end
+        params = Distributions.params
         @test systematic_sample(10000, Normal(1,1)) |> Base.Fix1(fit, Normal) |> params |> x-> all(isapprox.(x,(1,1), atol=0.1))
         systematic_sample(10000, Gamma(1,1)) #|> Base.Fix1(fit, Gamma)
         systematic_sample(10000, TDist(1)) #|> Base.Fix1(fit, TDist)
@@ -38,6 +39,8 @@ Random.seed!(0)
         @test 0 ∓ 1 isa StaticParticles
         @test [0,0] ∓ 1. isa MonteCarloMeasurements.MvParticles
         @test [0,0] ∓ [1.,1.] isa MonteCarloMeasurements.MvParticles
+        @test -50 ⊞ Normal(0,1) ≈ -50 ± 1
+        @test 10 ⊠ Normal(0,1) ≈ 10*Particles(Normal(0,1))
 
         @info "Done"
         PT = Particles
@@ -84,6 +87,12 @@ Random.seed!(0)
                 @test !(p ≉ 1.9std(p))
                 @test (5 ± 0.1) ≳ (1 ± 0.1)
                 @test (1 ± 0.1) ≲ (5 ± 0.1)
+
+                a = rand()
+                pa = Particles([a])
+                @test a == pa
+                @test a ≈ pa
+                @test pa ≈ a
 
                 v = randn(5)
                 @test Vector(PT(v)) == v
@@ -209,6 +218,12 @@ Random.seed!(0)
                 rng = MersenneTwister(932)
                 pn2 = Particles(rng, 100, systematic=true, permute=true)
                 @test pn1 == pn2
+
+                @test PT(Float32) isa PT{Float32}
+                @test PT(Float64) isa PT{Float64}
+                @test PT(Float32, 250) isa PT{Float32, 250}
+                @test PT(Float32, 250, Normal(0.1f0)) isa PT{Float32, 250}
+                @test_throws ArgumentError PT(Float32, 250, Gamma(0.1))
 
                 @info "Tests for $PT done"
 
@@ -480,6 +495,10 @@ Random.seed!(0)
         y = Particles(100)
         @test exp(im*y) ≈ cos(y) + im*sin(y)
         @test complex(p,p)/complex(q,q) == complex(2,2)/complex(3,3)
+        @test p/complex(q,q) == 2/complex(3,3)
+        @test 2/complex(q,q) == 2/complex(3,3)
+        @test !isinf(complex(p,p))
+        @test isfinite(complex(p,p))
 
         z = complex(1 ± 0.1, 1 ± 0.1)
         @unsafe @test abs(sqrt(z ^ 2) - z) < eps()
@@ -601,15 +620,48 @@ Random.seed!(0)
         @info "Testing Particle BLAS"
         p = ones(10) .∓ 1
         A = randn(20,10)
-        @test mean(sum(abs, A*p - MonteCarloMeasurements.pgemv(A,p))) < 1e-12
+        @test mean(sum(abs, A*p - MonteCarloMeasurements._pgemv(A,p))) < 1e-12
+        @test mean(sum(abs, A*Particles.(p) - A*p)) < 1e-12
+
+        v = randn(10)
+        @test mean(sum(abs, v'p - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test mean(sum(abs, p'v - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
+
+
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
+        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
+
+
+        y = randn(20) .∓ 1
+        @test mean(sum(abs, mul!(y,A,p) - mul!(Particles.(y),A,Particles.(p)))) < 1e-12
+
+        for PT in (Particles, StaticParticles)
+            for x in (1.0, 1 + PT()), y in (1.0, 1 + PT()), z in (1.0, 1 + PT())
+                x == y == z == 1.0 && continue
+                @test (x*y+z).particles ≈ muladd(x,y,z).particles
+            end
+        end
+
+
         #
         # @btime $A*$p
-        # @btime pgemv($A,$p)
+        # @btime _pgemv($A,$p)
         #
         # @btime sum($A*$p)
-        # @btime sum(pgemv($A,$p))
+        # @btime sum(_pgemv($A,$p))
         #
+        # @btime $v'*$p
+        # @btime _pdot($v,$p)
+        #
+        # @btime sum($v'*$p)
+        # @btime sum(_pdot($v,$p))
 
+        # @btime mul!($y,$A,$p)
+        # @btime MonteCarloMeasurements.pmul!($y,$A,$p)
+        # 178.373 μs (6 allocations: 336 bytes)
+        # 22.320 μs (0 allocations: 0 bytes)
+        # 3.705 μs (0 allocations: 0 bytes)
     end
 
 
@@ -659,6 +711,16 @@ Random.seed!(0)
 
         g2(a,nt::NamedTuple) = a + nt.x^2 + nt.y^2
         @test g2(p_3, (x=p_1, y=p_2)) == p_3 + p_1^2 + p_2^2
+
+        @test_throws ErrorException bymap(x->ones(3,3,3,3), p)
+        @test_throws ErrorException bypmap(x->ones(3,3,3,3), p)
+        @test MonteCarloMeasurements.arggetter(1,1) == 1
+
+        @test MonteCarloMeasurements.particletype(p) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.particletype(Particles{Float64,DEFAULT_NUM_PARTICLES}) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.particletype([p,p]) == Particles{Float64,DEFAULT_NUM_PARTICLES}
+        @test MonteCarloMeasurements.nparticles(p) == DEFAULT_NUM_PARTICLES
+
 
 
 
