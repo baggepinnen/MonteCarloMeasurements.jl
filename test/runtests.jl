@@ -787,7 +787,10 @@ Random.seed!(0)
         pn = with_nominal(p, n)
         @test nominal(pn) == getindex.(pn, 1) == n
         @test nominal(p) != n
-        
+
+        P = complex(1 ± 0.1, 2 ± 0.1)
+        @test nominal(P) == complex(real(P)[1], imag(P)[1])
+
     end
 
     include("test_unitful.jl")

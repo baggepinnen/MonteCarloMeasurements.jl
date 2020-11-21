@@ -35,4 +35,4 @@ Return the nominal value of `p` (assumes that `p` has bee endowed with a nominal
 """
 nominal(p::AbstractParticles) = p[1]
 nominal(p::MvParticles) = nominal.(p)
-nominal(P) = replace_particles(P, replacer=P->nominal(P))
+nominal(P) = replace_particles(P, replacer=nominal)
