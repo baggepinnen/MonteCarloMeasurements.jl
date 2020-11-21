@@ -760,6 +760,36 @@ Random.seed!(0)
         @inferred bymap(sin, 1 ± 2)
     end
 
+    @testset "nominal values" begin
+        @info "Testing nominal values"
+
+        p = 1 ± 0.1
+        n = 0
+        pn = with_nominal(p, n)
+        @test nominal(pn) == pn[1] == n
+        @test nominal(p) != n
+
+        p = [p, p]
+        n = [0, 1]
+        pn = with_nominal(p, n)
+        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(p) != n
+
+
+        p = 1 ∓ 0.1
+        n = 0
+        pn = with_nominal(p, n)
+        @test nominal(pn) == pn[1] == n
+        @test nominal(p) != n
+
+        p = [p, p]
+        n = [0, 1]
+        pn = with_nominal(p, n)
+        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(p) != n
+        
+    end
+
     include("test_unitful.jl")
     include("test_forwarddiff.jl")
     include("test_deconstruct.jl")

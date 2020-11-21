@@ -112,7 +112,7 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., ⊠, ⊞, AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein
+export ±, ∓, .., ⊠, ⊞, AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein, with_nominal, nominal
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
@@ -139,6 +139,7 @@ include("diff.jl")
 include("plotting.jl")
 include("optimize.jl")
 include("sleefpirates.jl")
+include("nominal.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
