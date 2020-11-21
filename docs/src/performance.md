@@ -15,9 +15,6 @@ Particles(Normal(1f0, 0.1f0))
 Particles(randn(Float32, 500))
 ```
 
-## Faster `exp,log`
-If the user manually loads the library [SLEEFPirates.jl](https://github.com/chriselrod/SLEEFPirates.jl), some functions are overloaded for Particles of `Float64,Float32` eltypes making these functions 2-16 times faster depending on the processor SIMD width.
-
 ## Try GPU particles
 If you are propagating a very large number of samples, say 10⁵-10⁷, you may want to try utilizing a GPU. Unfortunately, supporting GPU particles on the main branch has proven difficult since the CuArrays package is a heavy dependency and very hard to test on available CI infrastructure. We thus maintain a separate branch with this functionality. To install it, do
 ```julia
