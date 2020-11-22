@@ -116,7 +116,12 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
     sPT = MonteCarloMeasurements.shortform(p)
-    print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
+    compact = get(io, :compact, false)
+    if compact
+        print(io, MonteCarloMeasurements.to_num_str(p, 6, 3))
+    else
+        print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
+    end
 end
 
 function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})

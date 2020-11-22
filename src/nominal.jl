@@ -31,7 +31,7 @@ end
 """
     nominal(p)
 
-Return the nominal value of `p` (assumes that `p` has bee endowed with a nominal value using `with_nominal`).
+Return the nominal value of `p` (assumes that `p` has been endowed with a nominal value using `with_nominal`).
 """
 nominal(p::AbstractParticles) = p[1]
 nominal(p::MvParticles) = nominal.(p)
