@@ -3,7 +3,7 @@ using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓
 using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths
 using ControlSystems, Test, GenericLinearAlgebra
-ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
+# ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
 
 @testset "deconstruct" begin

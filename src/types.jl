@@ -27,9 +27,13 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+struct AbstractFloatParticles{T,N} <: AbstractFloat
+    particles::Vector{T}
+end
+
 DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
 
-const ParticleSymbols = (:Particles, :StaticParticles)
+const ParticleSymbols = (:Particles, :StaticParticles, :AbstractFloatParticles)
 
 for PT in ParticleSymbols
     for D in (2,3,4,5)

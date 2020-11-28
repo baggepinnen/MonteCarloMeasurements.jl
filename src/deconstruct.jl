@@ -59,7 +59,7 @@ end
 Replaces all fields of `P` that are particles with `Particles(1)`
 """
 function make_scalar(P)
-    replace_particles(P, replacer=P->Particles([mean(P)]))
+    replace_particles(P, replacer=P->AbstractFloatParticles([mean(P)]))
 end
 
 """
@@ -68,7 +68,7 @@ end
 Replaces all fields of `P` that are `Particles(1)` with `Particles(N)`
 """
 function restore_scalar(P, N)
-    replace_particles(P, replacer = P->Particles(N))
+    replace_particles(P, condition=P->P isa AbstractFloatParticles, replacer = P->Particles(N))
 end
 
 """
@@ -123,15 +123,49 @@ function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer:
             return T(fields...)
         end
     catch e
-        if has_mutable_particles(P)
-            @error("Failed to create a `$T` by calling it with its fields in order. For this to work, `$T` must have a constructor that accepts all fields in the order they appear in the struct and accept that the fields that contained particles are replaced by 0. Try defining a meaningful constructor that accepts arguments with the type signature \n`$(T)$(typeof.(fields))`\nThe error thrown by `$T` was ")
-        else
-            mutable_fields = build_mutable_container.(fields)
-            @error("Failed to create a `$T` by calling it with its fields in order. For this to work, `$T` must have a constructor that accepts all fields in the order they appear in the struct and accept that the fields that contained particles are replaced by 0. Try defining a meaningful constructor that accepts arguments with the following two type signatures \n`$(T)$(typeof.(fields))`\n`$(T)$(typeof.(mutable_fields))`\nThe error thrown by `$T` was ")
+        try
+            simple = build_container(P)
+            @show typeof(simple)
+            newstruct(T, fields...) # For this to be really useful one has to have a replace_particles for types, but this appears to be nontrivial to implement.
+        catch e2
+            @show T, typeof(P)
+            if has_mutable_particles(P)
+                @error("Failed to create a `$T` by calling it with its fields in order. For this to work, `$T` must have a constructor that accepts all fields in the order they appear in the struct and accept that the fields that contained particles are replaced by 0. Try defining a meaningful constructor that accepts arguments with the type signature \n`$(T)$(typeof.(fields))`\nThe error thrown by `$T` was ")
+            else
+                mutable_fields = build_mutable_container.(fields)
+                @error("Failed to create a `$T` by calling it with its fields in order. For this to work, `$T` must have a constructor that accepts all fields in the order they appear in the struct and accept that the fields that contained particles are replaced by 0. Try defining a meaningful constructor that accepts arguments with the following two type signatures \n`$(T)$(typeof.(fields))`\n`$(T)$(typeof.(mutable_fields))`\nThe error thrown by `$T` was ")
+            end
+            rethrow(e)
         end
-        rethrow(e)
     end
 
+end
+
+initstruct(T) = ccall(:jl_new_struct_uninit, Any, (Any,), T)
+
+"""
+    newstruct(T, xs...)
+
+Forces construction of type `T`. 
+
+Original implementation https://github.com/JuliaIO/BSON.jl/blob/95dc736ec99dcd6bbf1abb59fdefece85a9bc3c7/src/extensions.jl#L104
+"""
+function newstruct(T, xs...)
+    if !T.mutable
+      flds = Any[convert(fieldtype(T, i), x) for (i,x) in enumerate(xs)]
+      return ccall(:jl_new_structv, Any, (Any,Ptr{Cvoid},UInt32), T, flds, length(flds))
+    else
+      # Manual inline of newstruct! to work around bug
+      # https://github.com/MikeInnes/BSON.jl/issues/2#issuecomment-452204339
+      x = initstruct(T)
+  
+      for (i, f) = enumerate(xs)
+        f = convert(fieldtype(typeof(x),i), f)
+        ccall(:jl_set_nth_field, Nothing, (Any, Csize_t, Any), x, i-1, f)
+      end
+      x
+  
+    end
 end
 
 """
@@ -326,7 +360,7 @@ function Workspace(f,input)
     N = paths[1][3]
     Base.invokelatest(buffersetter,input,simple_input,1)
     simple_result = f(simple_input) # We first to index 1 to peek at the result
-    result = @unsafe restore_scalar(build_mutable_container(f(make_scalar(input))), N) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
+    result = @unsafe restore_scalar(build_mutable_container(f(make_scalar(input))), N) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} could be replaced by a AbstractFloat type that contains the mean value, but can be tracked through the computation to allow restore_scalar
     resultsetter = get_result_setter(result)
     Workspace(simple_input,simple_result,result,buffersetter, resultsetter,f,N)
 end
