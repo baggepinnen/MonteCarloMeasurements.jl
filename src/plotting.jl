@@ -14,17 +14,17 @@ handle_args(p) = handle_args(p.args...)
 handle_args(args...) = throw(ArgumentError("The plot function should be called with the signature plotfun([x=1:length(y)], y::Vector{Particles}, [q=0.025])"))
 
 function quantiles(y,q::Number)
-    m = mean.(y)
+    m = vec(mean.(y))
     q > 0.5 && (q = 1-q)
-    lower = -(quantile.(y,q)-m)
-    upper = quantile.(y,1-q)-m
+    lower = reshape(-(quantile.(vec(y),q)-m), size(y))
+    upper = reshape(quantile.(vec(y),1-q)-m, size(y))
     lower,upper
 end
 
 function quantiles(y,q)
-    m = mean.(y)
-    lower = -(quantile.(y,q[1])-m)
-    upper = quantile.(y,q[2])-m
+    m = vec(mean.(y))
+    lower = reshape(-(quantile.(vec(y),q[1])-m), size(y))
+    upper = reshape(quantile.(vec(y),q[2])-m, size(y))
     lower,upper
 end
 
@@ -55,6 +55,8 @@ function to1series(x,y)
     x2,y2
 end
 
+to1series(y) = to1series(1:size(y,1),y)
+
 @userplot MCplot
 @recipe function plt(p::MCplot)
     x,y,q = handle_args(p)
@@ -75,12 +77,39 @@ end
 end
 
 @userplot Ribbonplot
-@recipe function plt(p::Ribbonplot)
+@recipe function plt(p::Ribbonplot; N=false)
     x,y,q = handle_args(p)
-    label --> "Mean with $q quantile"
-    m = mean.(y)
-    ribbon := quantiles(y, q)
-    x,m
+    if N > 0
+        for col = 1:size(y,2)
+            yc = y[:,col]
+            m = mean.(yc)
+            @series begin
+                label --> "Mean with $q quantile"
+                ribbon := quantiles(yc, q)
+                x,m
+            end
+            @series begin
+                ribbon := quantiles(yc, q)
+                m
+            end
+            @series begin
+                M = Matrix(yc)
+                np,ny = size(M)
+                primary := false
+                nc = N > 1 ? N : min(np, 50)
+                seriesalpha --> max(1/sqrt(nc), 0.1)
+                chosen = randperm(np)[1:nc]
+                to1series(M[chosen, :]')
+            end
+        end
+    else
+        @series begin
+            label --> "Mean with $q quantile"
+            m = mean.(y)
+            ribbon := quantiles(y, q)
+            x,m
+        end
+    end
 end
 
 """
@@ -99,23 +128,41 @@ Plots all trajectories represented by a vector of particles. `N > 1` controls th
 mcplot
 
 """
-    ribbonplot(x,y,[q=0.025])
+    ribbonplot(x,y,[q=0.025]; N=true)
 
 Plots a vector of particles with a ribbon covering quantiles `q, 1-q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
+
+If a positive number `N` is provided, `N` sample trajectories will be plotted on top of the ribbon.
 """
 ribbonplot
 
 
 
-@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025)
+@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true)
     label --> "Mean with ($q, $(1-q)) quantiles"
-    ribbon := quantiles(y, q)
-    mean.(y)
+    if N > 0
+        for col = 1:size(y,2)
+            yc = y[:,col]
+            @series begin
+                ribbon := quantiles(yc, q)
+                mean.(yc)
+            end
+            @series begin
+                M = Matrix(yc)
+                np,ny = size(M)
+                primary := false
+                nc = N > 1 ? N : min(np, 50)
+                seriesalpha --> max(1/sqrt(nc), 0.1)
+                chosen = randperm(np)[1:nc]
+                M[chosen, :]'
+            end
+        end
+    end
 end
 
 
-@recipe function plt(func::Function, x::MvParticles, q=0.025)
+@recipe function plt(func::Function, x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025)
     y = func.(x)
     label --> "Mean with ($q, $(1-q)) quantiles"
     xerror := quantiles(x, q)
@@ -123,7 +170,7 @@ end
     mean.(x), mean.(y)
 end
 
-@recipe function plt(x::MvParticles, y::MvParticles, q=0.025; points=false)
+@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; points=false)
     my = mean.(y)
     mx = mean.(x)
     if points
@@ -133,23 +180,50 @@ end
             seriesalpha --> 0.1
             Matrix(x), Matrix(y)
         end
+        @series begin
+            mx, my
+        end
     else
-        yerror := quantiles(y, q)
-        xerror := quantiles(x, q)
-        label --> "Mean with $q quantile"
+        @series begin
+            yerror := quantiles(y, q)
+            xerror := quantiles(x, q)
+            label --> "Mean with $q quantile"
+            mx, my
+        end
     end
-    mx, my
 end
 
-@recipe function plt(x::MvParticles, y::AbstractArray, q=0.025)
+@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::AbstractArray, q=0.025)
     mx = mean.(x)
     lower,upper = quantiles(x, q)
     xerror := (lower,upper)
     mx, y
 end
 
-@recipe function plt(x::AbstractArray, y::MvParticles, q=0.025)
-    ribbon := quantiles(y, q)
-    label --> "Mean with ($q, $(1-q)) quantiles"
-    x, mean.(y)
+@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true)
+    if N > 0
+        for col = 1:size(y,2)
+            yc = y[:,col]
+            @series begin
+                ribbon := quantiles(yc, q)
+                label --> "Mean with ($q, $(1-q)) quantiles"
+                x, mean.(yc)
+            end
+            @series begin
+                M = Matrix(yc)
+                np,ny = size(M)
+                primary := false
+                nc = N > 1 ? N : min(np, 50)
+                seriesalpha --> max(1/sqrt(nc), 0.1)
+                chosen = randperm(np)[1:nc]
+                to1series(x, M[chosen, :]')
+            end
+        end
+    else
+        @series begin
+            ribbon := quantiles(y, q)
+            label --> "Mean with ($q, $(1-q)) quantiles"
+            x, mean.(y)
+        end
+    end
 end
