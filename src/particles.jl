@@ -355,6 +355,19 @@ for PT in ParticleSymbols
         end
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
 
+        function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}; kwargs...) where {T,N} # Special case to propte types differently
+            individuals = map(1:length(p[1])) do i
+                eigvals(getindex.(p,i); kwargs...)
+            end
+            PRT = Complex{$PT{T,N}}
+            out = Vector{PRT}(undef, length(individuals[1]))
+            for i = eachindex(out)
+                c = getindex.(individuals,i)
+                out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
+            end
+            out
+        end
+
     end
 
     # for XT in (:T, :($PT{T,N})), YT in (:T, :($PT{T,N})), ZT in (:T, :($PT{T,N}))
@@ -548,23 +561,6 @@ Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(log,p) # Matri
 LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
-
-
-# OBS: defining this was a very bad idea, eigvals jump around and get confused with each other etc.
-# function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}) where {T,N} # Special case to propte types differently
-#     individuals = map(1:length(p[1])) do i
-#         eigvals(getindex.(p,i))
-#     end
-#
-#     PRT = Complex{$PT{T,N}}
-#     out = Vector{PRT}(undef, length(individuals[1]))
-#     for i = eachindex(out)
-#         c = getindex.(individuals,i)
-#         out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
-#     end
-#     out
-# end
-
 
 
 ## Particle BLAS
