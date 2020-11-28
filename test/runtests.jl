@@ -470,8 +470,8 @@ Random.seed!(0)
                                                 0.0 + (1.0 ± 0.0005)*im])) < 0.002
 
         e = eigvals([1 ± 0.001 0; 0 1.])
-        @test e isa Vector{Particles{Float64,DEFAULT_NUM_PARTICLES}}
-        @test e ≈ [1.0 ± 0.00058, 1.0 ± 0.00058]
+        @test e isa Vector{Complex{Particles{Float64, DEFAULT_NUM_PARTICLES}}}
+        @test all(isapprox.(e, [1.0 ± 0.00058, 1.0 ± 0.00058], atol=1e-2))
 
         @test (1 .. 2) isa Particles
         @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())

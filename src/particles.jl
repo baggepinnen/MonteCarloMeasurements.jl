@@ -124,7 +124,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
+function Base.show(io::IO, z::Complex{<:AbstractParticles})
     r, i = reim(z)
     compact = get(io, :compact, false)
     print(io, "(")
@@ -243,9 +243,9 @@ for PT in ParticleSymbols
         Helper function for performing uncertainty propagation through complex-valued functions with vector inputs.
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
-        function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
+        function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}; kwargs...) where {F,T,N}
             individuals = map(1:length(p[1])) do i
-                f(getindex.(p,i))
+                f(getindex.(p,i); kwargs...)
             end
             PRT = $PT{T,N}
             RT = eltype(eltype(individuals))
@@ -558,7 +558,7 @@ LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
 Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(log,p) # Matrix more specific than StridedMatrix used in Base.log
-LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)
+# LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}; kwargs...) = ℝⁿ2ℂⁿ_function(eigvals,p; kwargs...) # Replaced with implementation below
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
 

@@ -1,3 +1,6 @@
+function Base.show(io::IO, p::Complex{<:AbstractParticles})
+    print(io, to_num_str(p, 3))
+end
 
 for PT in (:Particles, :StaticParticles)
     @eval begin
@@ -75,8 +78,8 @@ for ff in (sqrt, exp, sin, cos)
     @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
 end
 
-Base.isinf(p::Complex{<: AbstractParticles}) = @show isinf(real(p)) || isinf(imag(p))
-Base.isfinite(p::Complex{<: AbstractParticles}) = @show isfinite(real(p)) && isfinite(imag(p))
+Base.isinf(p::Complex{<: AbstractParticles}) = isinf(real(p)) || isinf(imag(p))
+Base.isfinite(p::Complex{<: AbstractParticles}) = isfinite(real(p)) && isfinite(imag(p))
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     are = real(a); aim = imag(a); bre = real(b); bim = imag(b)
