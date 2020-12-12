@@ -1,7 +1,3 @@
-function Base.show(io::IO, p::Complex{<:AbstractParticles})
-    print(io, to_num_str(p, 3))
-end
-
 for PT in (:Particles, :StaticParticles)
     @eval begin
         Base.promote_rule(::Type{Complex{S}}, ::Type{$PT{T,N}}) where {S<:Real,T<:Real,N} = Complex{$PT{promote_type(S,T),N}}
