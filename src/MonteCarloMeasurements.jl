@@ -144,6 +144,7 @@ include("nominal.jl")
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
+Base.:\(x::Diagonal{<:AbstractParticles}, y::Vector{<:AbstractParticles}) = bymap(\, x, y) # required for ambiguity
 
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
