@@ -238,7 +238,7 @@ for PT in ParticleSymbols
                 f(getindex.(p,i))
             end
             _finish_individuals($PT, N, individuals, p)
-            end
+        end
 
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
             individuals = map(1:length(p[1])) do i
