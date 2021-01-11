@@ -66,12 +66,18 @@
 #     Σ
 # end
 
-"""
-    bootstrap([rng::AbstractRNG,] p::Particles)
+for PT in ParticleSymbols
+    # Constructors
+    @eval begin
 
-Return Particles resampled with replacement.
-"""
-function bootstrap(rng::AbstractRNG, p::T) where T <: AbstractParticles
-    T(p.particles[rand(rng, 1:length(p))])
+        """
+            bootstrap([rng::AbstractRNG,] p::Particles, n = nparticles(p))
+
+        Return Particles resampled with replacement. `n` specifies the number of samples to draw.
+        """
+        function bootstrap(rng::AbstractRNG, p::$PT, n = nparticles(p))
+            $PT(p.particles[[rand(rng, 1:nparticles(p)) for _ in 1:n]])
+        end
+        bootstrap(p::$PT, n = nparticles(p)) = bootstrap(Random.GLOBAL_RNG, p, n)
+    end
 end
-bootstrap(p::T) where T <: AbstractParticles = bootstrap(Random.GLOBAL_RNG, p)
