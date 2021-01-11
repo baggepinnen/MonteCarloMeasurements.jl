@@ -237,7 +237,7 @@ Random.seed!(0)
 
                 mp = MvParticles([randn(10) for _ in 1:3])
                 @test length(mp) == 10
-                @test MonteCarloMeasurements.nparticles(mp) == 3
+                @test nparticles(mp) == 3
 
                 v = [(1,2), (3,4)]
                 pv = MvParticles(v)
@@ -246,7 +246,7 @@ Random.seed!(0)
                 @test pv[1][2] == v[2][1]
                 @test pv[2][1] == v[1][2]
                 @test pv[2][2] == v[2][2]
-                @test MonteCarloMeasurements.nparticles(pv) == 2
+                @test nparticles(pv) == 2
 
                 v = [(a=1,b=randn(2)), (a=3,b=randn(2))]
                 pv = MvParticles(v)
@@ -254,7 +254,7 @@ Random.seed!(0)
                 @test pv.a[1] == v[1].a
                 @test pv.a[2] == v[2].a
                 @test pv.b == Particles([v[1].b v[2].b]')
-                @test MonteCarloMeasurements.nparticles(pv) == 2
+                @test nparticles(pv) == 2
 
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
@@ -518,6 +518,7 @@ Random.seed!(0)
         rng = MersenneTwister(453)
         p2 = bootstrap(rng,p)
         @test p1 == p2
+        @test nparticles(bootstrap(p, 10)) == 10
     end
 
     @time @testset "mutation" begin
@@ -726,7 +727,7 @@ Random.seed!(0)
         @test MonteCarloMeasurements.particletype(p) == Particles{Float64,DEFAULT_NUM_PARTICLES}
         @test MonteCarloMeasurements.particletype(Particles{Float64,DEFAULT_NUM_PARTICLES}) == Particles{Float64,DEFAULT_NUM_PARTICLES}
         @test MonteCarloMeasurements.particletype([p,p]) == Particles{Float64,DEFAULT_NUM_PARTICLES}
-        @test MonteCarloMeasurements.nparticles(p) == DEFAULT_NUM_PARTICLES
+        @test nparticles(p) == DEFAULT_NUM_PARTICLES
 
 
 
