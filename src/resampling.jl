@@ -67,17 +67,21 @@
 # end
 
 for PT in ParticleSymbols
-    # Constructors
     @eval begin
-
         """
             bootstrap([rng::AbstractRNG,] p::Particles, n = nparticles(p))
 
-        Return Particles resampled with replacement. `n` specifies the number of samples to draw.
+        Return Particles resampled with replacement. `n` specifies the number of samples to draw. Also works for arrays of Particles, in which case a single set of indices are drawn and used to extract samples from all elements in the array.
         """
         function bootstrap(rng::AbstractRNG, p::$PT, n = nparticles(p))
             $PT(p.particles[[rand(rng, 1:nparticles(p)) for _ in 1:n]])
         end
-        bootstrap(p::$PT, n = nparticles(p)) = bootstrap(Random.GLOBAL_RNG, p, n)
+
+        function bootstrap(rng::AbstractRNG, p::AbstractArray{<:$PT}, n = nparticles(p))
+            inds = [rand(rng, 1:nparticles(p)) for _ in 1:n]
+            newpart = [p.particles[inds] for p in p]
+            $PT.(newpart)
+        end
     end
 end
+bootstrap(p, n::Integer = nparticles(p)) = bootstrap(Random.GLOBAL_RNG, p, n)

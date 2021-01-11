@@ -519,6 +519,7 @@ Random.seed!(0)
         p2 = bootstrap(rng,p)
         @test p1 == p2
         @test nparticles(bootstrap(p, 10)) == 10
+        @test_nowarn bootstrap([p; p])
     end
 
     @time @testset "mutation" begin
