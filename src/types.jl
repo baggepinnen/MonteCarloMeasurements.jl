@@ -103,5 +103,8 @@ StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, 
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
+const ParticleArray = AbstractArray{<:AbstractParticles}
+const SomeKindOfParticles = Union{<:AbstractParticles, ParticleArray}
 
 Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
+
