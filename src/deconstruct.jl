@@ -104,7 +104,7 @@ function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer:
     condition(P) && (return replacer(P))
     has_particles(P) || (return P) # No need to carry on
     if P isa AbstractArray # Special handling for arrays
-        return map(P->replace_particles(P;condition=condition,replacer=replacer), P)
+        return map(P->replace_particles(P;condition,replacer), P)
     end
     P isa Complex && condition(real(P)) && (return complex(replacer(real(P)), replacer(imag(P))))
     P isa Number && (return P)
@@ -112,7 +112,7 @@ function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer:
         f = getfield(P,n)
         has_particles(f) || (return f)
         # @show typeof(f), n
-        replace_particles(f; condition=condition,replacer=replacer)
+        replace_particles(f; condition,replacer)
     end
     T = nakedtypeof(P)
 
