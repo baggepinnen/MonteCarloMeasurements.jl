@@ -1,6 +1,6 @@
 
 ![logo](assets/logo.svg)
-[![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
+[![Build Status](https://github.com/baggepinnen/MonteCarloMeasurements.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/MonteCarloMeasurements.jl/actions)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 [![](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
 
