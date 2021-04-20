@@ -7,4 +7,5 @@ MonteCarloMeasurements.replace_particles
 MonteCarloMeasurements.has_particles
 MonteCarloMeasurements.build_mutable_container
 MonteCarloMeasurements.build_container
+MonteCarloMeasurements.array_of_structs
 ```

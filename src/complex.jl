@@ -1,4 +1,3 @@
-
 for PT in (:Particles, :StaticParticles)
     @eval begin
         Base.promote_rule(::Type{Complex{S}}, ::Type{$PT{T,N}}) where {S<:Real,T<:Real,N} = Complex{$PT{promote_type(S,T),N}}
@@ -69,14 +68,14 @@ function ℂ2ℂ_function!(f::F, s, z::Complex{T}) where {F,T<:AbstractParticles
     complex(T(real.(s)), T(imag.(s)))
 end
 
-for ff in (sqrt, exp, sin, cos)
+for ff in (sqrt, exp, exp10, log, log10, sin, cos, tan)
     f = nameof(ff)
     @eval Base.$f(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function($f, z)
     @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
 end
 
-Base.isinf(p::Complex{<: AbstractParticles}) = @show isinf(real(p)) || isinf(imag(p))
-Base.isfinite(p::Complex{<: AbstractParticles}) = @show isfinite(real(p)) && isfinite(imag(p))
+Base.isinf(p::Complex{<: AbstractParticles}) = isinf(real(p)) || isinf(imag(p))
+Base.isfinite(p::Complex{<: AbstractParticles}) = isfinite(real(p)) && isfinite(imag(p))
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     are = real(a); aim = imag(a); bre = real(b); bim = imag(b)

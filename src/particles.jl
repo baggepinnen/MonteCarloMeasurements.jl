@@ -119,10 +119,15 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T,N}
     sPT = MonteCarloMeasurements.shortform(p)
-    print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
+    compact = get(io, :compact, false)
+    if compact
+        print(io, MonteCarloMeasurements.to_num_str(p, 6, 3))
+    else
+        print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
+    end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
+function Base.show(io::IO, z::Complex{<:AbstractParticles})
     r, i = reim(z)
     compact = get(io, :compact, false)
     print(io, "(")
@@ -241,9 +246,9 @@ for PT in ParticleSymbols
         Helper function for performing uncertainty propagation through complex-valued functions with vector inputs.
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
-        function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
+        function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}; kwargs...) where {F,T,N}
             individuals = map(1:length(p[1])) do i
-                f(getindex.(p,i))
+                f(getindex.(p,i); kwargs...)
             end
             PRT = $PT{T,N}
             RT = eltype(eltype(individuals))
@@ -352,6 +357,19 @@ for PT in ParticleSymbols
              $PT{eltype(res),N}(res)
         end
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
+
+        function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}; kwargs...) where {T,N} # Special case to propte types differently
+            individuals = map(1:length(p[1])) do i
+                eigvals(getindex.(p,i); kwargs...)
+            end
+            PRT = Complex{$PT{T,N}}
+            out = Vector{PRT}(undef, length(individuals[1]))
+            for i = eachindex(out)
+                c = getindex.(individuals,i)
+                out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
+            end
+            out
+        end
 
     end
 
@@ -543,26 +561,9 @@ LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 
 
 Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(log,p) # Matrix more specific than StridedMatrix used in Base.log
-LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)
+# LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}; kwargs...) = ℝⁿ2ℂⁿ_function(eigvals,p; kwargs...) # Replaced with implementation below
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
-
-
-# OBS: defining this was a very bad idea, eigvals jump around and get confused with each other etc.
-# function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}) where {T,N} # Special case to propte types differently
-#     individuals = map(1:length(p[1])) do i
-#         eigvals(getindex.(p,i))
-#     end
-#
-#     PRT = Complex{$PT{T,N}}
-#     out = Vector{PRT}(undef, length(individuals[1]))
-#     for i = eachindex(out)
-#         c = getindex.(individuals,i)
-#         out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
-#     end
-#     out
-# end
-
 
 
 ## Particle BLAS

@@ -237,7 +237,7 @@ Random.seed!(0)
 
                 mp = MvParticles([randn(10) for _ in 1:3])
                 @test length(mp) == 10
-                @test MonteCarloMeasurements.nparticles(mp) == 3
+                @test nparticles(mp) == 3
 
                 v = [(1,2), (3,4)]
                 pv = MvParticles(v)
@@ -246,7 +246,7 @@ Random.seed!(0)
                 @test pv[1][2] == v[2][1]
                 @test pv[2][1] == v[1][2]
                 @test pv[2][2] == v[2][2]
-                @test MonteCarloMeasurements.nparticles(pv) == 2
+                @test nparticles(pv) == 2
 
                 v = [(a=1,b=randn(2)), (a=3,b=randn(2))]
                 pv = MvParticles(v)
@@ -254,7 +254,7 @@ Random.seed!(0)
                 @test pv.a[1] == v[1].a
                 @test pv.a[2] == v[2].a
                 @test pv.b == Particles([v[1].b v[2].b]')
-                @test MonteCarloMeasurements.nparticles(pv) == 2
+                @test nparticles(pv) == 2
 
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
@@ -470,8 +470,8 @@ Random.seed!(0)
                                                 0.0 + (1.0 ± 0.0005)*im])) < 0.002
 
         e = eigvals([1 ± 0.001 0; 0 1.])
-        @test e isa Vector{Particles{Float64,DEFAULT_NUM_PARTICLES}}
-        @test e ≈ [1.0 ± 0.00058, 1.0 ± 0.00058]
+        @test e isa Vector{Complex{Particles{Float64, DEFAULT_NUM_PARTICLES}}}
+        @test all(isapprox.(e, [1.0 ± 0.00058, 1.0 ± 0.00058], atol=1e-2))
 
         @test (1 .. 2) isa Particles
         @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())
@@ -518,6 +518,8 @@ Random.seed!(0)
         rng = MersenneTwister(453)
         p2 = bootstrap(rng,p)
         @test p1 == p2
+        @test nparticles(bootstrap(p, 10)) == 10
+        @test_nowarn bootstrap([p; p])
     end
 
     @time @testset "mutation" begin
@@ -561,22 +563,28 @@ Random.seed!(0)
     @time @testset "plotting" begin
         @info "Testing plotting"
         p = Particles(100)
-        v = [p,p]
+        v = randn(3) .+ Particles.(10)
+        M = randn(3,2) .+ Particles.(10)
         @test_nowarn Plots.plot(p)
         @test_nowarn Plots.plot(v)
+        @test_nowarn Plots.plot(v, N=8)
+        @test_nowarn Plots.plot(M, N=10)
         @test_nowarn Plots.plot(x->x^2,v)
         @test_nowarn Plots.plot(v,v)
+        @test_nowarn Plots.plot(v,v, N=10)
         @test_nowarn Plots.plot(v,v; points=true)
-        @test_nowarn Plots.plot(v,ones(2))
-        @test_nowarn Plots.plot(1:2,v)
+        @test_nowarn Plots.plot(v,ones(3))
+        @test_nowarn Plots.plot(1:3,v)
+        @test_nowarn Plots.plot(1:3, v, N=10)
+        @test_nowarn Plots.plot(1:3, M, N=10)
 
-        @test_nowarn errorbarplot(1:2,v)
-        @test_nowarn errorbarplot(1:2,[v v])
-        @test_nowarn mcplot(1:2,v)
-        @test_nowarn mcplot(1:2,v, 10)
-        @test_nowarn mcplot(1:2,[v v])
-        @test_nowarn ribbonplot(1:2,v)
-        @test_nowarn ribbonplot(1:2,v,(0.1,0.9))
+        @test_nowarn errorbarplot(1:3,v)
+        @test_nowarn errorbarplot(1:3,[v v])
+        @test_nowarn mcplot(1:3,v)
+        @test_nowarn mcplot(1:3,v, 10)
+        @test_nowarn mcplot(1:3,[v v])
+        @test_nowarn ribbonplot(1:3,v)
+        @test_nowarn ribbonplot(1:3,v,(0.1,0.9))
 
         @test_nowarn errorbarplot(v)
         @test_nowarn errorbarplot([v v])
@@ -585,13 +593,14 @@ Random.seed!(0)
         @test_nowarn mcplot([v v])
         @test_nowarn ribbonplot(v)
         @test_nowarn ribbonplot(v,(0.1,0.9))
+        @test_nowarn ribbonplot(v, N = 2)
 
         @test_nowarn errorbarplot(v, 0.1)
         @test_nowarn errorbarplot([v v], 0.1)
         @test_nowarn mcplot(v, 0.1)
         @test_nowarn ribbonplot(v, 0.1)
 
-        @test_throws ArgumentError errorbarplot(1:2, (1:2) .± 0.1, 1,1)
+        @test_throws ArgumentError errorbarplot(1:3, (1:3) .± 0.1, 1,1)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
@@ -719,7 +728,7 @@ Random.seed!(0)
         @test MonteCarloMeasurements.particletype(p) == Particles{Float64,DEFAULT_NUM_PARTICLES}
         @test MonteCarloMeasurements.particletype(Particles{Float64,DEFAULT_NUM_PARTICLES}) == Particles{Float64,DEFAULT_NUM_PARTICLES}
         @test MonteCarloMeasurements.particletype([p,p]) == Particles{Float64,DEFAULT_NUM_PARTICLES}
-        @test MonteCarloMeasurements.nparticles(p) == DEFAULT_NUM_PARTICLES
+        @test nparticles(p) == DEFAULT_NUM_PARTICLES
 
 
 
@@ -758,6 +767,39 @@ Random.seed!(0)
         @inferred zero(Particles{Float64,1})
         @inferred zeros(Particles{Float64,1}, 5)
         @inferred bymap(sin, 1 ± 2)
+    end
+
+    @testset "nominal values" begin
+        @info "Testing nominal values"
+
+        p = 1 ± 0.1
+        n = 0
+        pn = with_nominal(p, n)
+        @test nominal(pn) == pn[1] == n
+        @test nominal(p) != n
+
+        p = [p, p]
+        n = [0, 1]
+        pn = with_nominal(p, n)
+        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(p) != n
+
+
+        p = 1 ∓ 0.1
+        n = 0
+        pn = with_nominal(p, n)
+        @test nominal(pn) == pn[1] == n
+        @test nominal(p) != n
+
+        p = [p, p]
+        n = [0, 1]
+        pn = with_nominal(p, n)
+        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(p) != n
+
+        P = complex(1 ± 0.1, 2 ± 0.1)
+        @test nominal(P) == complex(real(P)[1], imag(P)[1])
+
     end
 
     include("test_unitful.jl")
