@@ -102,7 +102,7 @@ shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 shortform(p::CuParticles) = "CuPart"
 
-function to_num_str(p::AbstractParticles{T}, d=3) where T
+function to_num_str(p::AbstractParticles{T}, d=3, ds=3) where T
     s = std(p)
     # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
@@ -111,7 +111,7 @@ function to_num_str(p::AbstractParticles{T}, d=3) where T
         string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
-
+to_num_str(p::AbstractParticles{T}, d=3) where T = to_num_str(p, d, d)
 
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     print(io, to_num_str(p, 3))

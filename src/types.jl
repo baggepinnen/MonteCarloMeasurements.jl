@@ -28,7 +28,7 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
 end
 
 struct CuParticles{T,N} <: AbstractParticles{T,N}
-    particles::CuArray{T,1,Nothing}
+    particles::CuArray{T,1}
 end
 
 DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
