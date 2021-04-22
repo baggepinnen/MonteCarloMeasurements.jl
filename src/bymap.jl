@@ -1,9 +1,5 @@
 import Base.Cartesian.@ntuple
 
-const ParticleArray = AbstractArray{<:AbstractParticles}
-const SomeKindOfParticles = Union{<:MonteCarloMeasurements.AbstractParticles, ParticleArray}
-
-
 nparticles(p) = length(p)
 nparticles(p::ParticleArray) = length(eltype(p))
 nparticles(p::AbstractParticles{T,N}) where {T,N} = N

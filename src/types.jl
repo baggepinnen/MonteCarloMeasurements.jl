@@ -28,7 +28,7 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
 end
 
 struct CuParticles{T,N} <: AbstractParticles{T,N}
-    particles::CuArray{T,1,Nothing}
+    particles::CuArray{T,1}
 end
 
 DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
@@ -107,6 +107,8 @@ StaticParticles(d::Distribution;kwargs...) = StaticParticles(Random.GLOBAL_RNG, 
 
 
 const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector since it causes some methods below to be less specific than desired
+const ParticleArray = AbstractArray{<:AbstractParticles}
+const SomeKindOfParticles = Union{<:AbstractParticles, ParticleArray}
 
 Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
 Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))

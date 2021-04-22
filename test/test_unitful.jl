@@ -43,6 +43,14 @@ register_primitive(unitful_testfunction) # must be outside testset
         @test 1u"m" + (1 ± 0.5)u"m" ≈ (2 ± 0.5)u"m"
 
         typeof(promote(1u"V", (1.0 ± 0.1)u"V")) <: Tuple{Particles{<:Quantity}, Particles{<:Quantity}}
+
+        ρ = (2.7 ± 0.2)u"g/cm^3"
+        mass = (250 ± 10)u"g"
+        width = (30.5 ± 0.2)u"cm"
+        l = (14.24 ± 0.2)u"m"
+        thickness = u"μm"(mass/(ρ*width*l))
+        @test thickness ≈ (21.3 ± 1.8)u"μm"
+        
     end
 
 end

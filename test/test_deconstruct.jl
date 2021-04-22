@@ -93,6 +93,16 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     @test MonteCarloMeasurements.particletypetuple(MonteCarloMeasurements.restore_scalar(Ps,50).matrix[1].num.coeffs[1]) == (Float64,50,Particles)
 
     unsafe_comparisons(false)
+
+
+    N = 50
+    P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])
+    f = x->c2d(x,0.1)
+    res = MonteCarloMeasurements.array_of_structs(f, P)
+    @test length(res) == N
+    @test res isa Vector{<:TransferFunction}
+
+
 end
 
 

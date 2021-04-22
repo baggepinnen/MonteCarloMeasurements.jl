@@ -1,6 +1,6 @@
 
 ![logo](assets/logo.svg)
-[![Build Status](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/MonteCarloMeasurements.jl)
+[![Build Status](https://github.com/baggepinnen/MonteCarloMeasurements.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/MonteCarloMeasurements.jl/actions)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
 [![](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
 
@@ -251,8 +251,10 @@ see also `examples/lhs.jl`.
 An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
 - `errorbarplot(x,y,[q=0.025])`: `q` determines the quantiles, set to `0` for max/min. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
 - `mcplot(x,y)`: Plots all trajectories
-- `ribbonplot(x,y,[q=0.025])`: Plots with shaded area from quantile `q` to `1-q`. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
+- `ribbonplot(x,y,[q=0.025]; N=true)`: Plots with shaded area from quantile `q` to `1-q`. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
 - Plot recipes from [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) that do not work with `Particles` or vectors of `Particles` can often be made to work by converting the particles to an array, e.g., `violin(Array([1±0.5, 4±1, 2±0.1]))`.
+
+All plots that produce an output with a ribbon also accept a keyword argument `N` that indicates a number of sample trajectories to be shown on top of the ribbon. The default `N=true` plots a maximum of 50 trajectories.
 
 
 Below is an example using [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl)

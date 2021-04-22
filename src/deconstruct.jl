@@ -144,7 +144,7 @@ particletypetuple(::Type{StaticParticles{T,N}}) where {T,N} = (T,N,StaticParticl
 particletypetuple(a::AbstractArray) = particletypetuple(eltype(a))
 
 """
-particle_paths(P)
+    particle_paths(P)
 
 Figure out all paths down through fields of `P` that lead to an instace of `<: AbstractParticles`. The returned structure is a list where each list element is a tuple. The tuple looks like this: (path, particletypetuple, particlenumber)
 `path in turn looks like this (:fieldname, fieldtype, size)
@@ -180,7 +180,7 @@ end
 
 Extract particle `j` into vector `v`
 
-#Arguments:
+# Arguments:
 - `v`: vector
 - `pv`: vector of `Particles`
 - `j`: index
@@ -196,7 +196,7 @@ end
 
 Extract particle `j` from vector `v` into particles
 
-#Arguments:
+# Arguments:
 - `v`: vector
 - `pv`: vector of `Particles`
 - `j`: index
@@ -368,6 +368,20 @@ function (w::Workspace)(input, invlatest::Bool)
         Base.invokelatest(resultsetter, result,simple_result, partind)
     end
     has_mutable_particles(input) ? result : make_static(result)
+end
+
+
+"""
+    array_of_structs(f, arg)
+
+Exectues `f` on each instance of `arg` represented by internal particles of `arg`. This is useful as a last resort if all other methods to propagate particles through `f` fails. The function returns an array (length = num. particles) of structs rather than particles, each struct is the result of `f(replace_particles(arg, p->p[i]))`.
+"""
+function array_of_structs(f, arg)
+    N = particle_paths(arg)[end][end-1]
+    map(1:N) do i
+        arg_i = replace_particles(arg, replacer=p->p[i])
+        f(arg_i)
+    end
 end
 
 # macro withbuffer(f,P,simple_input,setters,setters2,N)

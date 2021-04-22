@@ -20,6 +20,10 @@ for PT in ParticleSymbols
         function Base.convert(::Type{$PT{Quantity{S,D,U},N}}, y::Quantity) where {S, D, U, T, N}
             $PT{Quantity{S,D,U},N}(fill(y, N))
         end
+
+        function Unitful.uconvert(a::Unitful.FreeUnits, y::$PT)
+            $PT(Unitful.uconvert.(a, y.particles))
+        end
     end
 
     for op in (*, /)
