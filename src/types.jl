@@ -27,9 +27,13 @@ struct StaticParticles{T,N} <: AbstractParticles{T,N}
     particles::SArray{Tuple{N}, T, 1, N}
 end
 
+struct CuParticles{T,N} <: AbstractParticles{T,N}
+    particles::CuArray{T,1}
+end
+
 DNP(PT) = PT === Particles ? DEFAULT_NUM_PARTICLES : DEFAULT_STATIC_NUM_PARTICLES
 
-const ParticleSymbols = (:Particles, :StaticParticles)
+const ParticleSymbols = (:Particles, :StaticParticles, :CuParticles)
 
 for PT in ParticleSymbols
     for D in (2,3,4,5)
@@ -107,4 +111,6 @@ const ParticleArray = AbstractArray{<:AbstractParticles}
 const SomeKindOfParticles = Union{<:AbstractParticles, ParticleArray}
 
 Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
+Particles(p::CuParticles{T,N}) where {T,N} = Particles{T,N}(Vector(p.particles))
 
+CuParticles(p::AbstractParticles{T,N}) where {T,N} = CuParticles{T,N}(cu(p.particles))

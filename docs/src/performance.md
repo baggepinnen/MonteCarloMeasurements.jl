@@ -16,7 +16,7 @@ Particles(randn(Float32, 500))
 ```
 
 ## Try GPU particles
-If you are propagating a very large number of samples, say 10⁵-10⁷, you may want to try utilizing a GPU. Unfortunately, supporting GPU particles on the main branch has proven difficult since the CuArrays package is a heavy dependency and very hard to test on available CI infrastructure. We thus maintain a separate branch with this functionality. To install it, do
+If you are propagating a very large number of samples, say 10⁵-10⁷, you may want to try utilizing a GPU. Unfortunately, supporting GPU particles on the main branch has proven difficult since the CUDA package is a heavy dependency and very hard to test on available CI infrastructure. We thus maintain a separate branch with this functionality. To install it, do
 ```julia
 using Pkg
 pkg"add MonteCarloMeasurements#gpu"

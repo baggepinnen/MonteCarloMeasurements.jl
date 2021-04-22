@@ -19,6 +19,7 @@ See also [`±`](@ref), [`⊗`](@ref)
 
 ±(μ::Real,σ) = Particles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_NUM_PARTICLES}(systematic_sample(DEFAULT_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ±(μ::AbstractVector,σ) = Particles(DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
+±(μ::CuVector,σ) = CuParticles(100DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
 ∓(μ::Real,σ) = StaticParticles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_STATIC_NUM_PARTICLES}(systematic_sample(DEFAULT_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
 
@@ -99,7 +100,9 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
-function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
+shortform(p::CuParticles) = "CuPart"
+
+function to_num_str(p::AbstractParticles{T}, d=3, ds=3) where T
     s = std(p)
     # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
@@ -108,7 +111,7 @@ function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
         string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
-
+to_num_str(p::AbstractParticles{T}, d=3) where T = to_num_str(p, d, d)
 
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
     print(io, to_num_str(p, 3))
