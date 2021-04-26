@@ -68,7 +68,7 @@ function ℂ2ℂ_function!(f::F, s, z::Complex{T}) where {F,T<:AbstractParticles
     complex(T(real.(s)), T(imag.(s)))
 end
 
-for ff in (sqrt, exp, sin, cos)
+for ff in (sqrt, exp, sin, cos, log)
     f = nameof(ff)
     @eval Base.$f(z::Complex{<: AbstractParticles}) = ℂ2ℂ_function($f, z)
     @eval $(Symbol(f,:!))(s, z::Complex{<: AbstractParticles}) = ℂ2ℂ_function!($f, s, z)
