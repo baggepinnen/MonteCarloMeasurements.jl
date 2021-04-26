@@ -85,3 +85,6 @@ savefig("sin_wide.html"); nothing # hide
 ```@raw html
 <object type="text/html" data="../sin_wide.html" style="width:100%;height:450px;"></object>
 ```
+
+## Pendulum simulation
+The example [Differential Equations](@ref) shows how linear/Monte-Carlo uncertainty propagation through a nonlinear ODE works.

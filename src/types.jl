@@ -106,5 +106,8 @@ const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector
 const ParticleArray = AbstractArray{<:AbstractParticles}
 const SomeKindOfParticles = Union{<:AbstractParticles, ParticleArray}
 
+
+const AbstractMvParticles = AbstractVector{<:AbstractParticles}
+
 Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
 

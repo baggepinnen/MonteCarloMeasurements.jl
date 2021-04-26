@@ -200,6 +200,28 @@ function MvParticles(s::Vector{NamedTuple{vs, T}}) where {vs, T}
     nt
 end
 
+function _finish_individuals(::Type{PT}, N, individuals::AbstractArray{<:Tuple}, p) where PT
+    ntuple(length(individuals[1])) do ti
+        RT = eltype(first(individuals)[ti])
+        PRT = PT{RT,N}
+        no = length(individuals[1][ti])
+        out = Vector{PRT}(undef, no)
+        for i = 1:no
+            out[i] = PRT(getindex.(getindex.(individuals,ti), i))
+        end
+        reshape(out, size(individuals[1][ti]))
+    end
+end
+
+function _finish_individuals(::Type{PT}, ::Val{N}, individuals, p) where {PT, N}
+    RT = eltype(eltype(individuals))
+    PRT = PT{RT,N}
+    out = similar(p, PRT)
+    for i = 1:length(p)
+        out[i] = PRT(getindex.(individuals,i))
+    end
+    reshape(out, size(p))
+end
 
 for PT in ParticleSymbols
     # Constructors
@@ -215,26 +237,14 @@ for PT in ParticleSymbols
             individuals = map(1:length(p[1])) do i
                 f(getindex.(p,i))
             end
-            RT = eltype(eltype(individuals))
-            PRT = $PT{RT,N}
-            out = similar(p, PRT)
-            for i = 1:length(p)
-                out[i] = PRT(getindex.(individuals,i))
-            end
-            reshape(out, size(p))
+            _finish_individuals($PT, Val{N}(), individuals, p)
         end
 
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
             individuals = map(1:length(p[1])) do i
                 f(getindex.(p,i), getindex.(p2,i))
             end
-            RT = eltype(eltype(individuals))
-            PRT = $PT{RT,N}
-            out = similar(p, PRT)
-            for i = 1:length(p)
-                out[i] = PRT(getindex.(individuals,i))
-            end
-            reshape(out, size(p))
+            _finish_individuals($PT, Val{N}(), individuals, p)
         end
 
         """
