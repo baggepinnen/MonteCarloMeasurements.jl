@@ -84,5 +84,5 @@ for PT in ParticleSymbols
         end
     end
 end
-bootstrap(p::T, n::Integer = nparticles(p)) where T <: AbstractParticles = bootstrap(Random.GLOBAL_RNG, p, n
+bootstrap(p::T, n::Integer = nparticles(p)) where T <: AbstractParticles = bootstrap(Random.GLOBAL_RNG, p, n)
 bootstrap(p::MvParticles, n::Integer = nparticles(p)) = bootstrap(Random.GLOBAL_RNG, p, n)
