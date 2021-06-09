@@ -63,6 +63,12 @@ Random.seed!(0)
                 @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
                 @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
                 @test minmax(1+p,p) == (p, 1+p)
+                b = PT(100)
+                uvec = unique([p, p, b, p, b, b]) # tests hash
+                @test length(uvec) == 2
+                @test p ∈ uvec
+                @test b ∈ uvec
+
 
                 @test !(p ≲ p)
                 @test !(p ≳ p)
