@@ -52,8 +52,21 @@ for PT in (Particles, StaticParticles)
         function Base.:(-)(d::Dual{T}, p::$PT) where {T}
             Dual{T}($PT(value(d) .- p.particles), ntuple(i->$PT(0p.particles .+ partials(d)[i]) ,length(partials(d))))
         end
+
+        function Base.promote_rule(::Type{ForwardDiff.Dual{T,V,NP}}, ::Type{$PT{S, N}}) where {T, V, NP, S, N}
+            VS = promote_type(V,S)
+            Dual{T, $PT{VS, N}, NP}
+            # Dual{T}($PT(fill(value(d), N)), ntuple(i->$PT(fill(partials(d)[i], N)) ,length(partials(d))))
+        end
+
+        # function Base.promote_rule(::Type{ForwardDiff.Dual{T, V, N}}, ::Type{$PT{T, N}}) where {T, V, N, T, N}
+        #     Dual$PT{}
+        # end
     end
 end
+
+
+
 
 # Base.hidigit(x::AbstractParticles, base) = Base.hidigit(mean(x), base) # To avoid stackoverflow in some printing situations
 # Base.hidigit(x::Dual, base) = Base.hidigit(x.value, base) # To avoid stackoverflow in some printing situations

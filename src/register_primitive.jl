@@ -1,5 +1,5 @@
-@inline maybe_particles(x) = x
-@inline maybe_particles(p::AbstractParticles) = p.particles
+maybe_particles(x) = x
+maybe_particles(p::AbstractParticles) = p.particles
 
 """
     register_primitive(f, eval=eval)

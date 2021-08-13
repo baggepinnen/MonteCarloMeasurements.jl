@@ -296,23 +296,31 @@ end
 
 for ff in (var, std)
     f = nameof(ff)
-    @eval function (Statistics.$f)(p::AbstractParticles{T,N},args...;kwargs...) where {T,N}
+    @eval function (Statistics.$f)(p::ParticleDistribution, args...; kwargs...)
+        N == 1 && (return zero(T))
+        $f(p.p.particles, args...;kwargs...)
+    end
+    pname = Symbol("p"*string(f))
+    @eval function ($pname)(p::AbstractParticles, args...; kwargs...)
         N == 1 && (return zero(T))
         $f(p.particles, args...;kwargs...)
     end
 end
 # Instead of @forward
+# TODO: convert all these to operate on ParticleDistribution
 for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle, Base.iterate, Base.extrema, Base.minimum, Base.maximum]
     f = nameof(ff)
     m = Base.parentmodule(ff)
-    @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
+    @eval ($m.$f)(p::ParticleDistribution, args...; kwargs...) = ($m.$f)(p.p.particles, args...; kwargs...)
+    pname = Symbol("p"*string(f))
+    @eval ($pname)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
 end
 
 for PT in ParticleSymbols
 
     @eval begin
-        Base.length(::Type{$PT{T,N}}) where {T,N} = N
-        Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
+        # Base.length(::Type{$PT{T,N}}) where {T,N} = N
+        Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N} # TODO: maybe remove
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
@@ -333,7 +341,7 @@ for PT in ParticleSymbols
         Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
             N == 1 && (return p[1])
-            std(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
+            pstd(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
             return p[1]
         end
 
@@ -353,8 +361,8 @@ for PT in ParticleSymbols
         A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
         """
         function Base.intersect(p1::$PT,p2::$PT)
-            mi = max(minimum(p1),minimum(p2))
-            ma = min(maximum(p1),maximum(p2))
+            mi = max(pminimum(p1),pminimum(p2))
+            ma = min(pmaximum(p1),pmaximum(p2))
             f = x-> mi <= x <= ma
             $PT([filter(f, p1.particles); filter(f, p2.particles)])
         end
@@ -370,7 +378,7 @@ for PT in ParticleSymbols
                 eigvals(getindex.(p,i); kwargs...)
             end
             PRT = Complex{$PT{T,N}}
-            out = Vector{PRT}(undef, length(individuals[1]))
+            out = Vector{PRT}(undef, nparticles(individuals[1]))
             for i = eachindex(out)
                 c = getindex.(individuals,i)
                 out[i] = complex($PT{T,N}(real(c)),$PT{T,N}(imag(c)))
@@ -417,7 +425,7 @@ for PT in ParticleSymbols
     @eval Base.promote_rule(::Type{<:AbstractParticles}, ::Type{$PT{T,N}}) where {T,N} = Union{}
 end
 
-Base.length(p::AbstractParticles{T,N}) where {T,N} = N
+# Base.length(p::AbstractParticles{T,N}) where {T,N} = N
 Base.ndims(p::AbstractParticles{T,N}) where {T,N} = ndims(T)
 Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(p::AbstractParticles, H) = p.particles\H
@@ -425,8 +433,8 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
 Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
-Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
-Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
+# Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
+# Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
 Base.Array(p::AbstractParticles) = p.particles
@@ -445,33 +453,42 @@ Base.Matrix(v::MvParticles) = Array(v)
 #     eltype(v)(s2)
 # end
 
-Statistics.mean(v::MvParticles) = mean.(v)
-Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
-Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
-Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
+pmean(v::MvParticles) = pmean.(v)
+pcov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
+pcor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
+pvar(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(nparticles(v) - corrected)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
-Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
-Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
+Distributions.Normal(p::AbstractParticles) = Normal(pmean(p), pstd(p))
+Distributions.MvNormal(p::MvParticles) = MvNormal(pmean(p), pcov(p))
 
-meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
-meanvar(p::AbstractParticles) = var(p)/length(p)
+meanstd(p::AbstractParticles) = pstd(p)/sqrt(nparticles(p))
+meanvar(p::AbstractParticles) = pvar(p)/nparticles(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
 Base.hash(p::AbstractParticles) = hash(p.particles) + hash(typeof(p))
 
 
-function zip_longest(a,b)
+function zip_longest(a_,b_)
+    a,b = maybe_particles(a_), maybe_particles(b_)
     l = max(length(a), length(b))
     Iterators.take(zip(Iterators.cycle(a), Iterators.cycle(b)), l)
 end
 
-function safe_comparison(a,b,op::F) where F
-    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return true
-    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return false
-    _comparison_error()
+function safe_comparison(a_, b_, op::F) where F
+    a,b = maybe_particles(a_), maybe_particles(b_)
+    @show typeof.((a, b))
+    @show length.((a, b))
+    @show op, b
+    # error()
+    @show extrema(a),extrema(b)
+    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && (return true)
+    @show "first"
+    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && (return false)
+    @show "second"
+    # _comparison_error()
 end
 
 function do_comparison(a,b,op::F) where F
@@ -520,16 +537,16 @@ Determine if two particles are not significantly different
 """
 Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
 function Base.:≈(a::Real,p::AbstractParticles, lim=2)
-    m = mean(p)
-    s = std(p, mean=m)
+    m = pmean(p)
+    s = pstd(p, mean=m)
     s == 0 && (return m == a)
-    abs(mean(p)-a)/std(p) < lim
+    abs(pmean(p)-a)/pstd(p) < lim
 end
 function Base.:≈(p::AbstractParticles, a::Real, lim=2)
-    m = mean(p)
-    s = std(p, mean=m)
+    m = pmean(p)
+    s = pstd(p, mean=m)
     s == 0 && (return m == a)
-    abs(mean(p)-a)/std(p) < lim
+    abs(pmean(p)-a)/pstd(p) < lim
 end
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
@@ -642,10 +659,31 @@ function LinearAlgebra.mul!(
 ) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
     Bv = reinterpret(T, b)
     B = reshape(Bv, N, :)'
-    # Y0 = A*B
-    # reinterpret(StaticParticles{T,N}, vec(Y0'))
     Yv = reinterpret(T, y)
     Y = reshape(Yv, :, N)
     mul!(Y,A,B)
     reinterpret(StaticParticles{T,N}, vec(Y'))
 end
+
+function LinearAlgebra.mul!(
+    y::Vector{Particles{T,N}},
+    A::AbstractMatrix{T},
+    b::Vector{Particles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+
+    B = Matrix(b)
+    # Y = A*B
+    Y = B*A' # This order makes slicing below more efficient
+    @inbounds if isdefined(y, 1)
+        for i in eachindex(y)
+            @views y[i].particles .= Y[:,i]
+        end
+    else
+        for i in eachindex(y)
+            y[i] = Particles(Y[:,i])
+        end
+    end
+    y
+end
+
+
