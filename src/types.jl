@@ -110,8 +110,8 @@ struct ParticleDistribution{T <: SomeKindOfParticles, U} <: Distribution{U, Cont
     p::T
 end
 
-pdist(p::AbstractParticles) = ParticleDistribution{eltype(p), Univariate}(p)
-pdist(p::AbstractMvParticles) = ParticleDistribution{eltype(p), Multivariate}(p)
+pdist(p::AbstractParticles) = ParticleDistribution{particleeltype(p), Univariate}(p)
+pdist(p::AbstractMvParticles) = ParticleDistribution{particleeltype(p), Multivariate}(p)
 
 Particles(p::StaticParticles{T,N}) where {T,N} = Particles{T,N}(p.particles)
 

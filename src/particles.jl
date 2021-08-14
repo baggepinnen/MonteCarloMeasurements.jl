@@ -321,7 +321,7 @@ for PT in ParticleSymbols
 
     @eval begin
         # Base.length(::Type{$PT{T,N}}) where {T,N} = N
-        Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N} # TODO: remove
+        # Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N} # TODO: remove
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))

@@ -422,6 +422,7 @@ Random.seed!(0)
         @test length(Particles(100, MvNormal(2,1))) == 2
         @test nparticles(p) == DEFAULT_NUM_PARTICLES
         @test ndims(p) == 0
+        @test particleeltype(p) == Float64
         @test eltype(typeof(p)) == typeof(p)
         @test eltype(p) == typeof(p)
         @test convert(Int, 0p) == 0
