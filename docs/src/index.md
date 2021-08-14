@@ -128,7 +128,7 @@ Construction of `Particles` as [sigma points](https://en.wikipedia.org/wiki/Unsc
 
 
 # Multivariate particles
-The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by, e.g., asking for `mean(v2)` and `cov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
+The constructors can be called with multivariate distributions, returning `v::Vector{Particle}` where particles are sampled from the desired multivariate distribution. Once `v` is propagated through a function `v2 = f(v)`, the results can be analyzed by, e.g., asking for `pmean(v2)` and `pcov(v2)`, or by fitting a multivariate distribution, e.g., `MvNormal(v2)`.
 
 A `v::Vector{Particle}` can be converted into a `Matrix` by calling `Matrix(v)` and this will have a size of `N × dim`. ~~You can also index into `v` like it was already a matrix.~~([This was a bad idea](https://discourse.julialang.org/t/show-for-vector-type-that-defines-matrix-getindex/23732/2?u=baggepinnen))
 
@@ -304,7 +304,7 @@ Ideally, half of the particles should turn out negative and half positive when a
 Some functions perform checks like `if error < tol`. If `error isa Particles`, this will use a very conservative check by default by checking that all particles ∈ `error` fulfill the check. There are a few different options available for how to compare two uncertain quantities, chosen by specifying a comparison mode. The modes are chosen by `unsafe_comparisons(mode)` and the options are
 - `:safe`: the default described above, throws an error if uncertain values share support.
 - `:montecarlo`: slightly less conservative than `:safe`, checks if either all pairwise particles fulfill the comparison, *or* all pairwise particles fail the comparison. If some pairs pass and some fail, an error is thrown.
-- `:reduction`: Reduce uncertain values to a single number, e.g. by calling `mean` (default) before performing the comparison, never throws an error.
+- `:reduction`: Reduce uncertain values to a single number, e.g. by calling `pmean` (default) before performing the comparison, never throws an error.
 
 To sum up, if two uncertain values are compared, and they have no mutual support, then all comparison modes are equal. If they share support, `:safe` will error and `:montecarlo` will work if the all pairwise particles either pass or fail the comparison. `:reduction` will always work, but is maximally unsafe in the sense that it might not perform a meaningful check for your application.
 

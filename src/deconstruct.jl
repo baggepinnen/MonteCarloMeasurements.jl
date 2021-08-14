@@ -95,7 +95,7 @@ mean_object(p::AbstractArray{<:AbstractParticles}) = pmean.(p)
 mean_object(P) = replace_particles(P; replacer = P->pmean(P))
 
 """
-    replace_particles(x; condition=P->P isa AbstractParticles,replacer = P->P[1])
+    replace_particles(x; condition=P->P isa AbstractParticles,replacer = P->vecindex(P, 1))
 
 This function recursively scans through the structure `x`, every time a field that matches `condition` is found, `replacer` is called on that field and the result is used instead of `P`. See function `mean_object`, which uses this function to replace all instances of `Particles` with their mean.
 """
