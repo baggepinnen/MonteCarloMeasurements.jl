@@ -106,10 +106,14 @@ const MvParticles = Vector{<:AbstractParticles} # This can not be AbstractVector
 const ParticleArray = AbstractArray{<:AbstractParticles}
 const SomeKindOfParticles = Union{<:AbstractParticles, ParticleArray}
 
+"""
+This is an experimental wrapper around `Particles` that changes the semantics from `Particles <: Real` to `ParticleDistribution <: Distribution`. Note that this type is to be considered experimental and subject to change at any time.
+"""
 struct ParticleDistribution{T <: SomeKindOfParticles, U} <: Distribution{U, Continuous}
     p::T
 end
 
+"Experimental"
 pdist(p::AbstractParticles) = ParticleDistribution{particleeltype(p), Univariate}(p)
 pdist(p::AbstractMvParticles) = ParticleDistribution{particleeltype(p), Multivariate}(p)
 
