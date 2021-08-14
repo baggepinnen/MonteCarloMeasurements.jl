@@ -341,32 +341,32 @@ Random.seed!(0)
         @test Diagonal(cov(particles)) ≈ Diagonal(Σ) atol=2
     end
 
-    # @time @testset "gradient" begin
-    #     @info "Testing gradient"
-    #     e = 0.001
-    #     p = 3 ± e
-    #     f = x -> x^2
-    #     fp = f(p)
-    #     @test gradient(f,p)[1] ≈ 6 atol=1e-4
-    #     @test gradient(f,p)[2] ≈ 2e atol=1e-4
-    #     # @test gradient(f,3) > 6 # Convex function
-    #     @test gradient(f,3) ≈ 6
+    @time @testset "gradient" begin
+        @info "Testing gradient"
+        e = 0.001
+        p = 3 ± e
+        f = x -> x^2
+        fp = f(p)
+        @test gradient(f,p)[1] ≈ 6 atol=1e-4
+        @test gradient(f,p)[2] ≈ 2e atol=1e-4
+        # @test gradient(f,3) > 6 # Convex function
+        @test gradient(f,3) ≈ 6
 
-    #     A = randn(3,3)
-    #     H = A'A
-    #     h = randn(3)
-    #     c = randn()
-    #     @assert isposdef(H)
-    #     f = x -> (x'H*x + h'x) + c
-    #     j = x -> H*x + h
+        A = randn(3,3)
+        H = A'A
+        h = randn(3)
+        c = randn()
+        @assert isposdef(H)
+        f = x -> (x'H*x + h'x) + c
+        j = x -> H*x + h
 
-    #     e = 0.001
-    #     x = randn(3)
-    #     xp = x ± e
-    #     g = 2H*x + h
-    #     @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
-    #     @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
-    # end
+        e = 0.001
+        x = randn(3)
+        xp = x ± e
+        g = 2H*x + h
+        @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
+        @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
+    end
 
     @time @testset "leastsquares" begin
         @info "Testing leastsquares"
