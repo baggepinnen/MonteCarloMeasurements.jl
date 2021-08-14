@@ -32,8 +32,8 @@ Random.seed!(0)
             v = vec([x';x'])
             @test 3000 < MonteCarloMeasurements.ess(Particles(v)) < 5300
         end
-
     end
+    
     @time @testset "Basic operations" begin
         @info "Creating the first StaticParticles"
         @test 0 ∓ 1 isa StaticParticles
@@ -57,11 +57,11 @@ Random.seed!(0)
                 @test 0 ± 1 ≈ p
                 @test 0 ∓ 1 ≈ p
                 @test sum(p) ≈ 0
-                @test cov(p) ≈ 1 atol=0.2
-                @test std(p) ≈ 1 atol=0.2
-                @test var(p) ≈ 1 atol=0.2
-                @test meanvar(p) ≈ 1/(length(p)) atol=5e-3
-                @test meanstd(p) ≈ 1/sqrt(length(p)) atol=5e-3
+                @test pcov(p) ≈ 1 atol=0.2
+                @test pstd(p) ≈ 1 atol=0.2
+                @test pvar(p) ≈ 1 atol=0.2
+                @test meanvar(p) ≈ 1/(nparticles(p)) atol=5e-3
+                @test meanstd(p) ≈ 1/sqrt(nparticles(p)) atol=5e-3
                 @test minmax(1+p,p) == (p, 1+p)
                 b = PT(100)
                 uvec = unique([p, p, b, p, b, b]) # tests hash
@@ -85,12 +85,12 @@ Random.seed!(0)
                 @test 0 ≈ p
                 @test p != 0
                 @test p != 2p
-                @test p ≈ 1.9std(p)
-                @test !(p ≈ 2.1std(p))
+                @test p ≈ 1.9pstd(p)
+                @test !(p ≈ 2.1pstd(p))
                 @test !(p ≉ p)
-                @test !(mean(p) ≉ p)
-                @test p ≉ 2.1std(p)
-                @test !(p ≉ 1.9std(p))
+                @test !(pmean(p) ≉ p)
+                @test p ≉ 2.1pstd(p)
+                @test !(p ≉ 1.9pstd(p))
                 @test (5 ± 0.1) ≳ (1 ± 0.1)
                 @test (1 ± 0.1) ≲ (5 ± 0.1)
 
@@ -145,7 +145,7 @@ Random.seed!(0)
                     @test p<=p
                     @test !(p<p)
                     @test !(p>p)
-                    @test_throws ErrorException p < Particles(p.particles[randperm(length(p))])
+                    @test_throws ErrorException p < Particles(p.particles[randperm(nparticles(p))])
                     unsafe_comparisons(false)
 
                     @unsafe tv = 2
@@ -154,18 +154,18 @@ Random.seed!(0)
                     @test (tv1,tv2) == (1,2)
                     @unsafe tv3,tv4 = range(1, stop=3, length=5), range(1, stop=3, length=5)
                     @test (tv3,tv4) == (range(1, stop=3, length=5),range(1, stop=3, length=5))
-                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == mean
-                    set_comparison_function(median)
-                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == median
+                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == pmean
+                    set_comparison_function(pmedian)
+                    @test MonteCarloMeasurements.COMPARISON_FUNCTION[] == pmedian
                     cp = PT(10)
                     cmp = @unsafe p < cp
-                    @test cmp == (median(p) < median(cp))
-                    set_comparison_function(mean)
+                    @test cmp == (pmedian(p) < pmedian(cp))
+                    set_comparison_function(pmean)
                 end
 
 
                 f = x -> 2x + 10
-                @test 9.6 < mean(f(p)) < 10.4
+                @test 9.6 < pmean(f(p)) < 10.4
                 # @test 9.6 < f(p) < 10.4
                 @test f(p) ≈ 10
                 @test !(f(p) ≲ 11)
@@ -173,14 +173,14 @@ Random.seed!(0)
                 @test 5 ≲ f(p)
                 @test 1 ≲ 2
 
-                @test Normal(f(p)).μ ≈ mean(f(p))
-                @test fit(Normal, f(p)).μ ≈ mean(f(p))
+                @test Normal(f(p)).μ ≈ pmean(f(p))
+                @test fit(Normal, f(p)).μ ≈ pmean(f(p))
 
 
                 f = x -> x^2
                 p = PT(100)
-                @test 0.9 < mean(f(p)) < 1.1
-                @test 0.9 < mean(f(p)) < 1.1
+                @test 0.9 < pmean(f(p)) < 1.1
+                @test 0.9 < pmean(f(p)) < 1.1
                 @test f(p) ≈ 1
                 @test !(f(p) ≲ 1)
                 @test f(p) ≲ 5
@@ -248,19 +248,19 @@ Random.seed!(0)
                 v = [(1,2), (3,4)]
                 pv = MvParticles(v)
                 @test length(pv) == 2
-                @test pv[1][1] == v[1][1]
-                @test pv[1][2] == v[2][1]
-                @test pv[2][1] == v[1][2]
-                @test pv[2][2] == v[2][2]
-                @test nparticles(pv) == 2
+                @test pv[1].particles[1] == v[1][1]
+                @test pv[1].particles[2] == v[2][1]
+                @test pv[2].particles[1] == v[1][2]
+                @test pv[2].particles[2] == v[2][2]
+                @test length(pv) == 2
 
                 v = [(a=1,b=randn(2)), (a=3,b=randn(2))]
                 pv = MvParticles(v)
                 @test length(pv) == 2
-                @test pv.a[1] == v[1].a
-                @test pv.a[2] == v[2].a
+                @test pv.a.particles[1] == v[1].a
+                @test pv.a.particles[2] == v[2].a
                 @test pv.b == Particles([v[1].b v[2].b]')
-                @test nparticles(pv) == 2
+                @test length(pv) == 2
 
                 @testset "discrete distributions" begin
                     p = PT(Poisson(50))
@@ -291,22 +291,22 @@ Random.seed!(0)
                 @info "Running tests for multivariate $PT"
                 p = PT(100, MvNormal(2,1))
                 @test_nowarn sum(p)
-                @test cov(p) ≈ I atol=0.6
-                @test cor(p) ≈ I atol=0.6
-                @test mean(p) ≈ [0,0] atol=0.2
+                @test pcov(p) ≈ I atol=0.6
+                @test pcor(p) ≈ I atol=0.6
+                @test pmean(p) ≈ [0,0] atol=0.2
                 m = Matrix(p)
                 @test size(m) == (100,2)
                 # @test m[1,2] == p[1,2]
 
                 p = PT(100, MvNormal(2,2))
-                @test cov(p) ≈ 4I atol=2
-                @test [0,0] ≈ mean(p) atol=1
+                @test pcov(p) ≈ 4I atol=2
+                @test [0,0] ≈ pmean(p) atol=1
                 @test size(Matrix(p)) == (100,2)
 
                 p = PT(100, MvNormal(2,2))
-                @test fit(MvNormal, p).μ ≈ mean(p)
-                @test MvNormal(p).μ ≈ mean(p)
-                @test cov(MvNormal(p)) ≈ cov(p)
+                @test fit(MvNormal, p).μ ≈ pmean(p)
+                @test MvNormal(p).μ ≈ pmean(p)
+                @test cov(MvNormal(p)) ≈ pcov(p)
                 @info "Tests for multivariate $PT done"
             end
         end
@@ -341,32 +341,33 @@ Random.seed!(0)
         @test Diagonal(cov(particles)) ≈ Diagonal(Σ) atol=2
     end
 
-    @time @testset "gradient" begin
-        @info "Testing gradient"
-        e = 0.001
-        p = 3 ± e
-        f = x -> x^2
-        fp = f(p)
-        @test gradient(f,p)[1] ≈ 6 atol=1e-4
-        @test gradient(f,p)[2] ≈ 2e atol=1e-4
-        # @test gradient(f,3) > 6 # Convex function
-        @test gradient(f,3) ≈ 6
+    # @time @testset "gradient" begin
+    #     @info "Testing gradient"
+    #     e = 0.001
+    #     p = 3 ± e
+    #     f = x -> x^2
+    #     fp = f(p)
+    #     @test gradient(f,p)[1] ≈ 6 atol=1e-4
+    #     @test gradient(f,p)[2] ≈ 2e atol=1e-4
+    #     # @test gradient(f,3) > 6 # Convex function
+    #     @test gradient(f,3) ≈ 6
 
-        A = randn(3,3)
-        H = A'A
-        h = randn(3)
-        c = randn()
-        @assert isposdef(H)
-        f = x -> (x'H*x + h'x) + c
-        j = x -> H*x + h
+    #     A = randn(3,3)
+    #     H = A'A
+    #     h = randn(3)
+    #     c = randn()
+    #     @assert isposdef(H)
+    #     f = x -> (x'H*x + h'x) + c
+    #     j = x -> H*x + h
 
-        e = 0.001
-        x = randn(3)
-        xp = x ± e
-        g = 2H*x + h
-        @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
-        @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
-    end
+    #     e = 0.001
+    #     x = randn(3)
+    #     xp = x ± e
+    #     g = 2H*x + h
+    #     @test MonteCarloMeasurements.gradient(f,xp) ≈ g atol = 0.1
+    #     @test MonteCarloMeasurements.jacobian(j,xp) ≈ H
+    # end
+
     @time @testset "leastsquares" begin
         @info "Testing leastsquares"
         n, m = 10000, 3
@@ -381,18 +382,17 @@ Random.seed!(0)
         yp = yn .+ σ.*Particles.(2000)
         xhp = (A'A)\(A'yp)
         @test xhp ≈ A\yp
-        @test sum(abs, tr((cov(xhp) .- C1) ./ abs.(C1))) < 0.2
+        @test sum(abs, tr((pcov(xhp) .- C1) ./ abs.(C1))) < 0.2
 
-        @test norm(cov(xhp) .- C1) < 1e-7
+        @test norm(pcov(xhp) .- C1) < 1e-7
         @test xhp ≈ x
-        @test mean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
+        @test pmean(xhp) ≈ x atol=3sum(sqrt.(diag(C1)))
         yp = nothing; GC.gc(true) # make sure this big matrix is deallocated
     end
 
     @time @testset "misc" begin
         @info "Testing misc"
         p = 0 ± 1
-        @test p[1] == p.particles[1]
         @test MonteCarloMeasurements.particletypetuple(p) == (Float64, DEFAULT_NUM_PARTICLES, Particles)
         @test MonteCarloMeasurements.particletypetuple(typeof(p)) == (Float64, DEFAULT_NUM_PARTICLES, Particles)
         @test_nowarn display(p)
@@ -420,7 +420,7 @@ Random.seed!(0)
         @test Particles{Float64,DEFAULT_NUM_PARTICLES}(p) == p
         @test Particles{Float64,5}(0) == 0*Particles(5)
         @test length(Particles(100, MvNormal(2,1))) == 2
-        @test length(p) == DEFAULT_NUM_PARTICLES
+        @test nparticles(p) == DEFAULT_NUM_PARTICLES
         @test ndims(p) == 0
         @test eltype(typeof(p)) == typeof(p)
         @test eltype(p) == typeof(p)
@@ -461,18 +461,18 @@ Random.seed!(0)
         @test round(Int,p) isa Int
         @test sincos(p) == (sin(p), cos(p))
         @test norm(p) == abs(p)
-        @test mean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
-        @test mean(LinearAlgebra.norm2([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
+        @test pmean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
+        @test pmean(LinearAlgebra.norm2([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
         @test MvNormal(Particles(500, MvNormal(2,1))) isa MvNormal
         @test eps(typeof(p)) == eps(Float64)
         @test eps(p) == eps(Float64)
         A = randn(2,2)
         B = A .± 0
-        @test sum(mean, exp(A) .- exp(B)) < 1e-9
-        @test sum(mean, abs.(log(A)) .- abs.(log(B))) < 1e-9
-        @test sum(mean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
+        @test sum(pmean, exp(A) .- exp(B)) < 1e-9
+        @test sum(pmean, abs.(log(A)) .- abs.(log(B))) < 1e-9
+        @test sum(pmean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
-        @test @unsafe mean(sum(abs, sort(eigvals([0 1 ± 0.001; -1. 0]), by=imag) - [ 0.0 - (1.0 ± 0.0005)*im
+        @test @unsafe pmean(sum(abs, sort(eigvals([0 1 ± 0.001; -1. 0]), by=imag) - [ 0.0 - (1.0 ± 0.0005)*im
                                                 0.0 + (1.0 ± 0.0005)*im])) < 0.002
 
         e = eigvals([1 ± 0.001 0; 0 1.])
@@ -481,16 +481,16 @@ Random.seed!(0)
 
         @test (1 .. 2) isa Particles
         @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())
-        @test maximum((1 .. 2)) <= 2
-        @test minimum((1 .. 2)) >= 1
+        @test pmaximum((1 .. 2)) <= 2
+        @test pminimum((1 .. 2)) >= 1
 
 
         pp = [1. 0; 0 1] .± 0.0
         @test lyap(pp,pp) == lyap([1. 0; 0 1],[1. 0; 0 1])
 
         @test intersect(p,p) == union(p,p)
-        @test length(intersect(p, 1+p)) < 2length(p)
-        @test length(union(p, 1+p)) == 2length(p)
+        @test nparticles(intersect(p, 1+p)) < 2nparticles(p)
+        @test nparticles(union(p, 1+p)) == 2nparticles(p)
 
         p = 2 ± 0
         q = 3 ± 0
@@ -548,16 +548,16 @@ Random.seed!(0)
         σ = ones(d)
         p = μ ⊗ σ
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
-        @test cov(p) ≈ I atol=1e-1
+        @test nparticles(p[1]) <= 100_000
+        @test pcov(p) ≈ I atol=1e-1
         p = μ ⊗ 1
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
-        @test cov(p) ≈ I atol=1e-1
+        @test nparticles(p[1]) <= 100_000
+        @test pcov(p) ≈ I atol=1e-1
         p = 0 ⊗ σ
         @test length(p) == 2
-        @test length(p[1]) <= 100_000
-        @test cov(p) ≈ I atol=1e-1
+        @test nparticles(p[1]) <= 100_000
+        @test pcov(p) ≈ I atol=1e-1
 
         rng = MersenneTwister(38)
         p1 = outer_product(rng, Normal.(μ,σ))
@@ -635,21 +635,21 @@ Random.seed!(0)
         @info "Testing Particle BLAS"
         p = ones(10) .∓ 1
         A = randn(20,10)
-        @test mean(sum(abs, A*p - MonteCarloMeasurements._pgemv(A,p))) < 1e-12
-        @test mean(sum(abs, A*Particles.(p) - A*p)) < 1e-12
+        @test pmean(sum(abs, A*p - MonteCarloMeasurements._pgemv(A,p))) < 1e-12
+        @test pmean(sum(abs, A*Particles.(p) - A*p)) < 1e-12
 
         v = randn(10)
-        @test mean(sum(abs, v'p - MonteCarloMeasurements._pdot(v,p))) < 1e-12
-        @test mean(sum(abs, p'v - MonteCarloMeasurements._pdot(v,p))) < 1e-12
-        @test mean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
+        @test pmean(sum(abs, v'p - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test pmean(sum(abs, p'v - MonteCarloMeasurements._pdot(v,p))) < 1e-12
+        @test pmean(sum(abs, v'*Particles.(p) - v'p)) < 1e-12
 
 
-        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
-        @test mean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
+        @test pmean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
+        @test pmean(sum(abs, axpy!(2.0,Matrix(p),copy(Matrix(p))) - Matrix(copy(axpy!(2.0,p,copy(p)))))) < 1e-12
 
 
         y = randn(20) .∓ 1
-        @test mean(sum(abs, mul!(y,A,p) - mul!(Particles.(y),A,Particles.(p)))) < 1e-12
+        @test pmean(sum(abs, mul!(y,A,p) - mul!(Particles.(y),A,Particles.(p)))) < 1e-12
 
         for PT in (Particles, StaticParticles)
             for x in (1.0, 1 + PT()), y in (1.0, 1 + PT()), z in (1.0, 1 + PT())
@@ -781,36 +781,36 @@ Random.seed!(0)
         p = 1 ± 0.1
         n = 0
         pn = with_nominal(p, n)
-        @test nominal(pn) == pn[1] == n
+        @test nominal(pn) == pn.particles[1] == n
         @test nominal(p) != n
 
         p = [p, p]
         n = [0, 1]
         pn = with_nominal(p, n)
-        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(pn) == MonteCarloMeasurements.vecindex.(pn, 1) == n
         @test nominal(p) != n
 
 
         p = 1 ∓ 0.1
         n = 0
         pn = with_nominal(p, n)
-        @test nominal(pn) == pn[1] == n
+        @test nominal(pn) == pn.particles[1] == n
         @test nominal(p) != n
 
         p = [p, p]
         n = [0, 1]
         pn = with_nominal(p, n)
-        @test nominal(pn) == getindex.(pn, 1) == n
+        @test nominal(pn) == MonteCarloMeasurements.vecindex.(pn, 1) == n
         @test nominal(p) != n
 
         P = complex(1 ± 0.1, 2 ± 0.1)
-        @test nominal(P) == complex(real(P)[1], imag(P)[1])
+        @test nominal(P) == complex(real(P).particles[1], imag(P).particles[1])
 
     end
 
     include("test_unitful.jl")
     include("test_forwarddiff.jl")
-    include("test_deconstruct.jl")
+    # include("test_deconstruct.jl")
     include("test_sleefpirates.jl")
     include("test_measurements.jl")
 

@@ -13,7 +13,7 @@ const d = 1 ∓ 0.1 # These are the uncertain parameters
 Base.findmax(p::AbstractParticles;dims=:) = findmax(p.particles,dims=:)
 function cost(pars)
     x,y = pars
-    -(3x+2y) + 10000sum(pars .< 0) + 10000*(maximum(c*x+d*y) > 10)
+    -(3x+2y) + 10000sum(pars .< 0) + 10000*(pmaximum(c*x+d*y) > 10)
 end
 
 pars = [1., 1] # Initial guess

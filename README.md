@@ -11,7 +11,7 @@ This package facilitates working with probability distributions by means of Mont
 
 Although several interesting use cases for doing calculations with probability distributions have popped up (see [Examples](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/examples)), the original goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²`, `f(x) = sign(x)` at `x=0` and long-time integration, are examples that are not handled well using linear uncertainty propagation ala [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support correlations between quantities.
 
-A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded.
+A number of type `Particles` behaves just as any other `Number` while partaking in calculations. After a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions `pmean` and `pstd`. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded.
 
 Below, we show an example where an input uncertainty is propagated through `σ(x)`
 
@@ -28,7 +28,7 @@ a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\\pm)
 b = 2 ∓ 0.1 # ∓ (\\mp) creates StaticParticles (with StaticArrays)
 # StaticParticles{Float64,100}
 #  2.0 ± 0.0999
-std(a)      # Ask about statistical properties
+pstd(a)     # Ask about statistical properties
 # 0.09999231528930486
 sin(a)      # Use them like any real number
 # Particles{Float64,2000}

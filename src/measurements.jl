@@ -24,9 +24,9 @@ end
 """
     Measurements.value(p::AbstractParticles) = mean(p)
 """
-Measurements.value(p::AbstractParticles) = mean(p)
+Measurements.value(p::AbstractParticles) = pmean(p)
 
 """
     Measurements.uncertainty(p::AbstractParticles) = std(p)
 """
-Measurements.uncertainty(p::AbstractParticles) = std(p)
+Measurements.uncertainty(p::AbstractParticles) = pstd(p)
