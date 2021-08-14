@@ -14,24 +14,24 @@ handle_args(p) = handle_args(p.args...)
 handle_args(args...) = throw(ArgumentError("The plot function should be called with the signature plotfun([x=1:length(y)], y::Vector{Particles}, [q=0.025])"))
 
 function quantiles(y,q::Number)
-    m = vec(mean.(y))
+    m = vec(pmean.(y))
     q > 0.5 && (q = 1-q)
-    lower = reshape(-(quantile.(vec(y),q)-m), size(y))
-    upper = reshape(quantile.(vec(y),1-q)-m, size(y))
+    lower = reshape(-(pquantile.(vec(y),q)-m), size(y))
+    upper = reshape(pquantile.(vec(y),1-q)-m, size(y))
     lower,upper
 end
 
 function quantiles(y,q)
-    m = vec(mean.(y))
-    lower = reshape(-(quantile.(vec(y),q[1])-m), size(y))
-    upper = reshape(quantile.(vec(y),q[2])-m, size(y))
+    m = vec(pmean.(y))
+    lower = reshape(-(pquantile.(vec(y),q[1])-m), size(y))
+    upper = reshape(pquantile.(vec(y),q[2])-m, size(y))
     lower,upper
 end
 
 @userplot Errorbarplot
 @recipe function plt(p::Errorbarplot)
     x,y,q = handle_args(p)
-    m = mean.(y)
+    m = pmean.(y)
     label --> "Mean with $q quantile"
     Q = quantiles(y, q)
     if y isa AbstractMatrix
@@ -82,7 +82,7 @@ end
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
-            m = mean.(yc)
+            m = pmean.(yc)
             @series begin
                 label --> "Mean with $q quantile"
                 ribbon := quantiles(yc, q)
@@ -105,7 +105,7 @@ end
     else
         @series begin
             label --> "Mean with $q quantile"
-            m = mean.(y)
+            m = pmean.(y)
             ribbon := quantiles(y, q)
             x,m
         end
@@ -146,7 +146,7 @@ ribbonplot
             yc = y[:,col]
             @series begin
                 ribbon := quantiles(yc, q)
-                mean.(yc)
+                pmean.(yc)
             end
             @series begin
                 M = Matrix(yc)
@@ -167,12 +167,12 @@ end
     label --> "Mean with ($q, $(1-q)) quantiles"
     xerror := quantiles(x, q)
     yerror := quantiles(y, q)
-    mean.(x), mean.(y)
+    pmean.(x), pmean.(y)
 end
 
 @recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; points=false)
-    my = mean.(y)
-    mx = mean.(x)
+    my = pmean.(y)
+    mx = pmean.(x)
     if points
         @series begin
             seriestype --> :scatter
@@ -194,7 +194,7 @@ end
 end
 
 @recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::AbstractArray, q=0.025)
-    mx = mean.(x)
+    mx = pmean.(x)
     lower,upper = quantiles(x, q)
     xerror := (lower,upper)
     mx, y
@@ -207,7 +207,7 @@ end
             @series begin
                 ribbon := quantiles(yc, q)
                 label --> "Mean with ($q, $(1-q)) quantiles"
-                x, mean.(yc)
+                x, pmean.(yc)
             end
             @series begin
                 M = Matrix(yc)
@@ -223,7 +223,7 @@ end
         @series begin
             ribbon := quantiles(y, q)
             label --> "Mean with ($q, $(1-q)) quantiles"
-            x, mean.(y)
+            x, pmean.(y)
         end
     end
 end

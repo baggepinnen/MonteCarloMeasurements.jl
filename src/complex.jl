@@ -29,7 +29,7 @@ applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 function ℂ2ℂ_function(f::F, z::Complex{T}) where {F<:Union{Function,DataType},T<:AbstractParticles}
     rz,iz = z.re,z.im
     s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz[i], iz[i]))
+        @inbounds f(complex(rz.particles[i], iz.particles[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -37,7 +37,7 @@ end
 function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::R) where {F<:Union{Function,DataType},T<:AbstractParticles,R<:Real}
     rz,iz = z.re,z.im
     s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz[i], iz[i]),  a)
+        @inbounds f(complex(rz.particles[i], iz.particles[i]),  a)
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -45,7 +45,7 @@ end
 function ℂ2ℂ_function(f::F, z::R, a::Union{Complex{S},S}) where {F<:Union{Function,DataType},S<:AbstractParticles,R<:Real}
     rz,iz = a.re,a.im
     s = map(1:length(rz.particles)) do i
-        @inbounds f(z, complex(rz[i], iz[i]))
+        @inbounds f(z, complex(rz.particles[i], iz.particles[i]))
     end
     complex(S(real.(s)), S(imag.(s)))
 end
@@ -55,7 +55,7 @@ function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::Union{Complex{S},S}) 
     ra,ia = a.re,a.im
 
     s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz[i], iz[i]),  complex(ra[i], ia[i]))
+        @inbounds f(complex(rz.particles[i], iz.particles[i]),  complex(ra.particles[i], ia.particles[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -63,7 +63,7 @@ end
 function ℂ2ℂ_function!(f::F, s, z::Complex{T}) where {F,T<:AbstractParticles}
     rz,iz = z.re,z.im
     map!(s, 1:length(rz.particles)) do i
-        @inbounds f(complex(rz[i], iz[i]))
+        @inbounds f(complex(rz.particles[i], iz.particles[i]))
     end
     complex(T(real.(s)), T(imag.(s)))
 end

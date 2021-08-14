@@ -8,7 +8,7 @@ const FD = ForwardDiff
     # In the cost function below, we ensure that $cx+dy > 10 \; ∀ \; c,d ∈ P$ by looking at the worst case
     function cost(params)
         x,y = params
-        -(3x+2y) + 10000sum(params .< 0) + 10000*(maximum(c*x+d*y) > 10)
+        -(3x+2y) + 10000sum(params .< 0) + 10000*(pmaximum(c*x+d*y) > 10)
     end
 
     params = [1., 2] # Initial guess
@@ -25,8 +25,8 @@ const FD = ForwardDiff
     @test FD.gradient(x -> paramsp'x, params) == paramsp
     @test FD.gradient(x -> params'x, paramsp) == params
     r = FD.gradient(x -> paramsp'x, paramsp)
-    @test mean(mean(r[1])) ≈ params[1] atol=1e-2
-    @test mean(mean(r[2])) ≈ params[2] atol=1e-2
+    @test pmean(pmean(r[1])) ≈ params[1] atol=1e-2
+    @test pmean(pmean(r[2])) ≈ params[2] atol=1e-2
 
     @test FD.jacobian(x -> params+x, params) == I
     @test FD.jacobian(x -> paramsp+x, params) == I
@@ -44,15 +44,15 @@ const FD = ForwardDiff
         (x.^2)'*(y.^2)
     end
     ref = FD.gradient(x->strange(x,params), params)
-    FD.gradient(x->strange(x,params), paramsp) != ref
-    FD.gradient(x->strange(x,params), paramsp) ≈ ref
-    FD.gradient(x->strange(x,paramsp), params) != ref
-    FD.gradient(x->strange(x,paramsp), params) ≈ ref
+    @test FD.gradient(x->strange(x,params), paramsp) != ref
+    @test FD.gradient(x->strange(x,params), paramsp) ≈ ref
+    @test FD.gradient(x->strange(x,paramsp), params) != ref
+    @test FD.gradient(x->strange(x,paramsp), params) ≈ ref
     r = FD.gradient(x->strange(x,paramsp), paramsp) # maybe this is a bit overkill
-    @test mean(mean(r[1])) ≈ ref[1] atol=1e-2
-    @test mean(mean(r[2])) ≈ ref[2] atol=1e-2
-    @test mean(mean(r[1])) != ref[1]
-    @test mean(mean(r[2])) != ref[2]
+    @test pmean(pmean(r[1])) ≈ ref[1] atol=1e-2
+    @test pmean(pmean(r[2])) ≈ ref[2] atol=1e-2
+    @test pmean(pmean(r[1])) != ref[1]
+    @test pmean(pmean(r[2])) != ref[2]
 
     unsafe_comparisons(false)
 end

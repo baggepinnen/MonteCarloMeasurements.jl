@@ -100,12 +100,12 @@ Return a short string describing the type
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
 function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
-    s = std(p)
+    s = pstd(p)
     # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
-        string(round(mean(p), sigdigits=d))
+        string(round(pmean(p), sigdigits=d))
     else
-        string(round(mean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
+        string(round(pmean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
 
@@ -130,7 +130,7 @@ function Base.show(io::IO, z::Complex{<:AbstractParticles})
     print(io, "(")
     show(io, r)
     print(io, ")")
-    if maximum(i) < 0
+    if pmaximum(i) < 0
         i = -i
         print(io, compact ? "-" : " - ")
     else
@@ -158,7 +158,7 @@ for mime in (MIME"text/x-tex", MIME"text/x-latex")
         print(io, "(")
         show(io, r)
         print(io, ")")
-        if maximum(i) < 0
+        if pmaximum(i) < 0
             i = -i
             print(io, compact ? "-" : " - ")
         else
@@ -234,15 +234,15 @@ for PT in ParticleSymbols
         Applies  `f : ℝⁿ → ℝⁿ` to an array of particles. E.g., `Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(log,p)`
         """
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
-                f(getindex.(p,i))
+            individuals = map(1:nparticles(p[1])) do i
+                f(vecindex.(p,i))
             end
             _finish_individuals($PT, Val{N}(), individuals, p)
         end
 
         function ℝⁿ2ℝⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
-                f(getindex.(p,i), getindex.(p2,i))
+            individuals = map(1:nparticles(p[1])) do i
+                f(vecindex.(p,i), vecindex.(p2,i))
             end
             _finish_individuals($PT, Val{N}(), individuals, p)
         end
@@ -254,8 +254,8 @@ for PT in ParticleSymbols
         Applies  `f : ℝⁿ → Cⁿ` to an array of particles. E.g., `LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(eigvals,p)`
         """
         function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}; kwargs...) where {F,T,N}
-            individuals = map(1:length(p[1])) do i
-                f(getindex.(p,i); kwargs...)
+            individuals = map(1:nparticles(p[1])) do i
+                f(vecindex.(p,i); kwargs...)
             end
             PRT = $PT{T,N}
             RT = eltype(eltype(individuals))
@@ -277,7 +277,7 @@ for PT in ParticleSymbols
         end
         #
         # function ℝⁿ2ℂⁿ_function(f::F, p::AbstractArray{$PT{T,N}}, p2::AbstractArray{$PT{T,N}}) where {F,T,N}
-        #     individuals = map(1:length(p[1])) do i
+        #     individuals = map(1:nparticles(p[1])) do i
         #         f(getindex.(p,i), getindex.(p2,i))
         #     end
         #     RT = eltype(eltype(individuals))
@@ -296,45 +296,54 @@ end
 
 for ff in (var, std)
     f = nameof(ff)
-    @eval function (Statistics.$f)(p::AbstractParticles{T,N},args...;kwargs...) where {T,N}
+    @eval function (Statistics.$f)(p::ParticleDistribution{<:AbstractParticles{T,N}}, args...; kwargs...) where {N,T}
+        N == 1 && (return zero(T))
+        $f(p.p.particles, args...;kwargs...)
+    end
+    pname = Symbol("p"*string(f))
+    @eval function ($pname)(p::AbstractParticles{T,N}, args...; kwargs...) where {N,T}
         N == 1 && (return zero(T))
         $f(p.particles, args...;kwargs...)
     end
 end
 # Instead of @forward
+# TODO: convert all these to operate on ParticleDistribution
 for ff in [Statistics.mean, Statistics.cov, Statistics.median, Statistics.quantile, Statistics.middle, Base.iterate, Base.extrema, Base.minimum, Base.maximum]
     f = nameof(ff)
     m = Base.parentmodule(ff)
-    @eval ($m.$f)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
+    @eval ($m.$f)(p::ParticleDistribution, args...; kwargs...) = ($m.$f)(p.p.particles, args...; kwargs...)
+    pname = Symbol("p"*string(f))
+    @eval ($pname)(p::AbstractParticles, args...; kwargs...) = ($m.$f)(p.particles, args...; kwargs...)
+    @eval ($pname)(p::Number, args...; kwargs...) = ($m.$f)(p, args...; kwargs...)
 end
 
 for PT in ParticleSymbols
 
     @eval begin
-        Base.length(::Type{$PT{T,N}}) where {T,N} = N
-        Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}
+        # Base.length(::Type{$PT{T,N}}) where {T,N} = N
+        # Base.eltype(::Type{$PT{T,N}}) where {T,N} = $PT{T,N} # TODO: remove
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
         Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(convert.(promote_type(T,S),f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
-            N == 1 && (return S(p[1]))
-            std(p) < eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
-            return S(p[1])
+            N == 1 && (return S(p.particles[1]))
+            pstd(p) < eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
+            return S(p.particles[1])
         end
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteInt,T,N}
             isinteger(p) || throw(ArgumentError("Cannot convert a particle distribution to an int if not all particles are the same."))
-            return S(p[1])
+            return S(p.particles[1])
         end
         Base.zeros(::Type{$PT{T,N}}, dim::Integer) where {T,N} = [$PT{T,N}(zeros(eltype(T),N)) for d = 1:dim]
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}(zeros(eltype(T),N))
-        Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(mean(p))
-        Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(mean(p), r, args...; kwargs...)
-        Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, mean(p), args...; kwargs...)
+        Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(pmean(p))
+        Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = round(pmean(p), r, args...; kwargs...)
+        Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = round(S, pmean(p), args...; kwargs...)
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
-            N == 1 && (return p[1])
-            std(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
-            return p[1]
+            N == 1 && (return p.particles[1])
+            pstd(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
+            return p.particles[1]
         end
 
         """
@@ -353,21 +362,21 @@ for PT in ParticleSymbols
         A `Particles` containing all particles from the common support of `p1` and `p2`. Note, this will be of undetermined length and thus undetermined type.
         """
         function Base.intersect(p1::$PT,p2::$PT)
-            mi = max(minimum(p1),minimum(p2))
-            ma = min(maximum(p1),maximum(p2))
+            mi = max(pminimum(p1),pminimum(p2))
+            ma = min(pmaximum(p1),pmaximum(p2))
             f = x-> mi <= x <= ma
             $PT([filter(f, p1.particles); filter(f, p2.particles)])
         end
 
         function Base.:^(p::$PT{T,N}, i::Integer) where {T,N} # Resolves ambiguity
             res = p.particles.^i
-             $PT{eltype(res),N}(res)
+            $PT{eltype(res),N}(res)
         end
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
 
         function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}; kwargs...) where {T,N} # Special case to propte types differently
-            individuals = map(1:length(p[1])) do i
-                eigvals(getindex.(p,i); kwargs...)
+            individuals = map(1:N) do i
+                eigvals(vecindex.(p,i); kwargs...)
             end
             PRT = Complex{$PT{T,N}}
             out = Vector{PRT}(undef, length(individuals[1]))
@@ -417,7 +426,7 @@ for PT in ParticleSymbols
     @eval Base.promote_rule(::Type{<:AbstractParticles}, ::Type{$PT{T,N}}) where {T,N} = Union{}
 end
 
-Base.length(p::AbstractParticles{T,N}) where {T,N} = N
+# Base.length(p::AbstractParticles{T,N}) where {T,N} = N
 Base.ndims(p::AbstractParticles{T,N}) where {T,N} = ndims(T)
 Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(p::AbstractParticles, H) = p.particles\H
@@ -425,8 +434,8 @@ Base.:\(H::MvParticles,p::AbstractParticles) = Matrix(H)\p.particles
 # Base.:\(H,p::MvParticles) = H\Matrix(p)
 
 Base.Broadcast.broadcastable(p::AbstractParticles) = Ref(p)
-Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
-Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
+# Base.setindex!(p::AbstractParticles, val, i::Integer) = setindex!(p.particles, val, i)
+# Base.getindex(p::AbstractParticles, i::Integer) = getindex(p.particles, i)
 # Base.getindex(v::MvParticles, i::Int, j::Int) = v[j][i] # Defining this methods screws with show(::MvParticles)
 
 Base.Array(p::AbstractParticles) = p.particles
@@ -445,31 +454,34 @@ Base.Matrix(v::MvParticles) = Array(v)
 #     eltype(v)(s2)
 # end
 
-Statistics.mean(v::MvParticles) = mean.(v)
-Statistics.cov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
-Statistics.cor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
-Statistics.var(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(length(v) - corrected)
+pmean(v::MvParticles) = pmean.(v)
+pcov(v::MvParticles,args...;kwargs...) = cov(Matrix(v), args...; kwargs...)
+pcor(v::MvParticles,args...;kwargs...) = cor(Matrix(v), args...; kwargs...)
+pvar(v::MvParticles,args...; corrected = true, kwargs...) = sum(abs2, v)/(nparticles(v) - corrected)
 Distributions.fit(d::Type{<:MultivariateDistribution}, p::MvParticles) = fit(d,Matrix(p)')
 Distributions.fit(d::Type{<:Distribution}, p::AbstractParticles) = fit(d,p.particles)
 
-Distributions.Normal(p::AbstractParticles) = Normal(mean(p), std(p))
-Distributions.MvNormal(p::MvParticles) = MvNormal(mean(p), cov(p))
+Distributions.Normal(p::AbstractParticles) = Normal(pmean(p), pstd(p))
+Distributions.MvNormal(p::MvParticles) = MvNormal(pmean(p), pcov(p))
 
-meanstd(p::AbstractParticles) = std(p)/sqrt(length(p))
-meanvar(p::AbstractParticles) = var(p)/length(p)
+meanstd(p::AbstractParticles) = pstd(p)/sqrt(nparticles(p))
+meanvar(p::AbstractParticles) = pvar(p)/nparticles(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
+Base.hash(p::AbstractParticles) = hash(p.particles) + hash(typeof(p))
 
 
-function zip_longest(a,b)
+function zip_longest(a_,b_)
+    a,b = maybe_particles(a_), maybe_particles(b_)
     l = max(length(a), length(b))
     Iterators.take(zip(Iterators.cycle(a), Iterators.cycle(b)), l)
 end
 
-function safe_comparison(a,b,op::F) where F
-    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return true
-    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && return false
+function safe_comparison(a_, b_, op::F) where F
+    a,b = maybe_particles(a_), maybe_particles(b_)
+    all(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && (return true)
+    !any(((a,b),)->op(a,b), Iterators.product(extrema(a),extrema(b))) && (return false)
     _comparison_error()
 end
 
@@ -517,18 +529,18 @@ end
 
 Determine if two particles are not significantly different
 """
-Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(mean(p)-mean(a))/(2sqrt(std(p)^2 + std(a)^2)) < lim
+Base.:≈(p::AbstractParticles, a::AbstractParticles, lim=2) = abs(pmean(p)-pmean(a))/(2sqrt(pstd(p)^2 + pstd(a)^2)) < lim
 function Base.:≈(a::Real,p::AbstractParticles, lim=2)
-    m = mean(p)
-    s = std(p, mean=m)
+    m = pmean(p)
+    s = pstd(p, mean=m)
     s == 0 && (return m == a)
-    abs(mean(p)-a)/std(p) < lim
+    abs(pmean(p)-a)/pstd(p) < lim
 end
 function Base.:≈(p::AbstractParticles, a::Real, lim=2)
-    m = mean(p)
-    s = std(p, mean=m)
+    m = pmean(p)
+    s = pstd(p, mean=m)
     s == 0 && (return m == a)
-    abs(mean(p)-a)/std(p) < lim
+    abs(pmean(p)-a)/pstd(p) < lim
 end
 Base.:≈(p::MvParticles, a::AbstractVector) = all(a ≈ b for (a,b) in zip(a,p))
 Base.:≈(a::AbstractVector, p::MvParticles) = all(a ≈ b for (a,b) in zip(a,p))
@@ -552,9 +564,9 @@ Base.iszero(p::AbstractParticles) = all(iszero, p.particles)
 Base.iszero(p::AbstractParticles, tol) = abs(mean(p.particles)) < tol
 
 ≲(a,b,args...) = a < b
-≲(a::Real,p::AbstractParticles,lim=2) = (mean(p)-a)/std(p) > lim
-≲(p::AbstractParticles,a::Real,lim=2) = (a-mean(p))/std(p) > lim
-≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (mean(a)-mean(p))/(2sqrt(std(p)^2 + std(a)^2)) > lim
+≲(a::Real,p::AbstractParticles,lim=2) = (pmean(p)-a)/pstd(p) > lim
+≲(p::AbstractParticles,a::Real,lim=2) = (a-pmean(p))/pstd(p) > lim
+≲(p::AbstractParticles,a::AbstractParticles,lim=2) = (pmean(a)-pmean(p))/(2sqrt(pstd(p)^2 + pstd(a)^2)) > lim
 ≳(a::Real,p::AbstractParticles,lim=2) = ≲(p,a,lim)
 ≳(p::AbstractParticles,a::Real,lim=2) = ≲(a,p,lim)
 ≳(p::AbstractParticles,a::AbstractParticles,lim=2) = ≲(a,p,lim)
@@ -647,4 +659,25 @@ function LinearAlgebra.mul!(
     Y = reshape(Yv, :, N)
     mul!(Y,A,B)
     reinterpret(StaticParticles{T,N}, vec(Y'))
+end
+
+function LinearAlgebra.mul!(
+    y::Vector{Particles{T,N}},
+    A::AbstractMatrix{T},
+    b::Vector{Particles{T,N}},
+) where {T<:Union{Float32,Float64,ComplexF32,ComplexF64},N}
+
+    B = Matrix(b)
+    # Y = A*B
+    Y = B*A' # This order makes slicing below more efficient
+    @inbounds if isdefined(y, 1)
+        for i in eachindex(y)
+            @views y[i].particles .= Y[:,i]
+        end
+    else
+        for i in eachindex(y)
+            y[i] = Particles(Y[:,i])
+        end
+    end
+    y
 end

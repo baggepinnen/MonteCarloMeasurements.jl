@@ -48,10 +48,12 @@ using Distributions, StatsBase, Requires
 const DEFAULT_NUM_PARTICLES = 2000
 const DEFAULT_STATIC_NUM_PARTICLES = 100
 
+function pmean end
+
 """
 The function used to reduce particles to a number for comparison. Defaults to `mean`. Change using `unsafe_comparisons`.
 """
-const COMPARISON_FUNCTION = Ref{Function}(mean)
+const COMPARISON_FUNCTION = Ref{Function}(pmean)
 const COMPARISON_MODE = Ref(:safe)
 
 """
@@ -82,6 +84,9 @@ Change the Function used to reduce particles to a number for comparison operator
 Toggle the use of a comparison Function without warning using the Function `unsafe_comparisons`.
 """
 function set_comparison_function(f)
+    if f in (mean, median, maximum, minimum)
+        @warn "This comparison function ($(f)) is probably not the right choice, consider if you want the particle version (p$(f)) instead."
+    end
     COMPARISON_FUNCTION[] = f
 end
 
@@ -112,12 +117,13 @@ macro unsafe(ex)
     end
 end
 
-export ±, ∓, .., ⊠, ⊞, AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein, with_nominal, nominal, nparticles
+export ±, ∓, .., ⊠, ⊞, AbstractParticles,Particles,StaticParticles, MvParticles, sigmapoints, transform_moments, ≲,≳, systematic_sample, ess, outer_product, meanstd, meanvar, register_primitive, register_primitive_multi, register_primitive_single, ℝⁿ2ℝⁿ_function, ℝⁿ2ℂⁿ_function, ℂ2ℂ_function, ℂ2ℂ_function!, resample!, bootstrap, sqrt!, exp!, sin!, cos!, wasserstein, with_nominal, nominal, nparticles, particleeltype
 # Plot exports
 export errorbarplot, mcplot, ribbonplot
 
 # Statistics reexport
 export mean, std, cov, var, quantile, median
+export pmean, pstd, pcov, pcor, pvar, pquantile, pmedian, pmiddle, piterate, pextrema, pminimum, pmaximum
 # Distributions reexport
 export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit, logpdf
 

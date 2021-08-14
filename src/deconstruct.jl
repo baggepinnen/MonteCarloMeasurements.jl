@@ -59,7 +59,7 @@ end
 Replaces all fields of `P` that are particles with `Particles(1)`
 """
 function make_scalar(P)
-    replace_particles(P, replacer=P->Particles([mean(P)]))
+    replace_particles(P, replacer=P->Particles([pmean(P)]))
 end
 
 """
@@ -90,16 +90,16 @@ build_container(P) = replace_particles(P)
     mean_object(x)
 Returns an object similar to `x`, but where all internal instances of `Particles` are replaced with their mean. The generalization of this function is `replace_particles`.
 """
-mean_object(p::AbstractParticles) = mean(p)
-mean_object(p::AbstractArray{<:AbstractParticles}) = mean.(p)
-mean_object(P) = replace_particles(P; replacer = P->mean(P))
+mean_object(p::AbstractParticles) = pmean(p)
+mean_object(p::AbstractArray{<:AbstractParticles}) = pmean.(p)
+mean_object(P) = replace_particles(P; replacer = P->pmean(P))
 
 """
     replace_particles(x; condition=P->P isa AbstractParticles,replacer = P->P[1])
 
 This function recursively scans through the structure `x`, every time a field that matches `condition` is found, `replacer` is called on that field and the result is used instead of `P`. See function `mean_object`, which uses this function to replace all instances of `Particles` with their mean.
 """
-function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer::F2 = P->P[1]) where {F1,F2}
+function replace_particles(P; condition::F1=P->P isa AbstractParticles,replacer::F2 = P->vecindex(P, 1)) where {F1,F2}
     # @show typeof(P)
     condition(P) && (return replacer(P))
     has_particles(P) || (return P) # No need to carry on
@@ -187,7 +187,7 @@ Extract particle `j` into vector `v`
 """
 function vecpartind2vec!(v, pv, j)
     for i in eachindex(v)
-        v[i] = pv[i][j]
+        v[i] = vecindex(pv[i], j)
     end
 end
 
@@ -203,7 +203,7 @@ Extract particle `j` from vector `v` into particles
 """
 function vec2vecpartind!(pv, v, j)
     for i in eachindex(v)
-        pv[i][j] = v[i]
+        pv[i].particles[j] = v[i]
     end
 end
 
@@ -379,7 +379,7 @@ Exectues `f` on each instance of `arg` represented by internal particles of `arg
 function array_of_structs(f, arg)
     N = particle_paths(arg)[end][end-1]
     map(1:N) do i
-        arg_i = replace_particles(arg, replacer=p->p[i])
+        arg_i = replace_particles(arg, replacer=p->vecindex(p, i))
         f(arg_i)
     end
 end

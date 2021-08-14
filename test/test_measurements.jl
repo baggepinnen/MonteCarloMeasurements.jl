@@ -17,8 +17,8 @@
     @test StaticParticles.([m, m]) isa Vector{StaticParticles{Float64, MonteCarloMeasurements.DEFAULT_STATIC_NUM_PARTICLES}}
 
     @test Particles(m) ≈ 1 ± 2
-    @test std(Particles(m)) ≈ 2 atol=1e-3
-    @test mean(Particles(m)) ≈ 1 atol=1e-3
+    @test pstd(Particles(m)) ≈ 2 atol=1e-3
+    @test pmean(Particles(m)) ≈ 1 atol=1e-3
 
     @test Measurements.uncertainty(Particles(m)) ≈ 2 atol=1e-3
     @test Measurements.value(Particles(m)) ≈ 1 atol=1e-3

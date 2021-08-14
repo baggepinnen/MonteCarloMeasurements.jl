@@ -12,7 +12,14 @@ This package facilitates working with probability distributions as if they were 
 
 Although several interesting use cases for doing calculations with probability distributions have popped up (see [Examples](https://github.com/baggepinnen/MonteCarloMeasurements.jl#examples-1)), the original goal of the package is similar to that of [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl), to propagate the uncertainty from input of a function to the output. The difference compared to a `Measurement` is that `Particles` represent the distribution using a vector of unweighted particles, and can thus represent arbitrary distributions and handle nonlinear uncertainty propagation well. Functions like `f(x) = x²`, `f(x) = sign(x)` at `x=0` and long-time integration, are examples that are not handled well using linear uncertainty propagation à la [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl). MonteCarloMeasurements also support arbitrary correlations (and arbitrary dependencies such as conservation laws etc.) between variables.
 
-A number of type `Particles` behaves just as any other `Number` while partaking in calculations. Particles also behave like a distribution, so after a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be iterated, asked for `maximum/minimum`, `quantile` etc. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` if StatsPlots.jl is loaded. A `Measurements.Measurements` can be converted to particles by calling the `Particles` constructor.
+A number of type `Particles` behaves just as any other `Number` while partaking in calculations. Particles also behave like a distribution,
+so after a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles.
+`mean`, `std` etc. can be extracted from the particles using the corresponding functions `pmean` and `pstd`. `Particles` also interact with
+[Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from
+distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be asked for `maximum/minimum`, `quantile` etc. using functions
+with a prefix `p`, i.e., `pmaximum`. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density
+estimate can be obtained by `density(p)` if StatsPlots.jl is loaded. A `Measurements.Measurements` can be converted to particles by calling the
+`Particles` constructor.
 
 Below, we show an example where an input uncertainty is propagated through `σ(x)`
 
@@ -46,13 +53,13 @@ julia> 2 + 0.5StaticParticles(Float32, 25) # Constructor signatures are similar 
 StaticParticles{Float64,25}
  2.0 ± 0.498
 
-julia> std(p)
+julia> pstd(p)
 0.9986403042113866
 
-julia> var(p)
+julia> pvar(p)
 0.9972824571954108
 
-julia> mean(p)
+julia> pmean(p)
 -6.661338147750939e-17
 
 julia> f = x -> 2x + 10
@@ -86,7 +93,7 @@ Convenience. Also, the benefit of using this number type instead of manually cal
 using MonteCarloMeasurements, BenchmarkTools
 unsafe_comparisons(true)
 A = [randn() + Particles(1000) for i = 1:3, j = 1:3]
-B = mean.(A)
+B = pmean.(A)
 @btime qr($A);
   # 119.243 μs (257 allocations: 456.58 KiB)
 @btime foreach(_->qr($B), 1:1000); # Manually do qr 1000 times
@@ -96,7 +103,7 @@ that's about a 30-fold reduction in time, and the repeated `qr` didn't even both
 The type `StaticParticles` contains a statically sized, stack-allocated vector from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl). This type is suitable if the number of particles is small, say < 500 ish (but expect long compilation times if > 100, especially on julia < v1.1).
 ```julia
 A = [randn() + StaticParticles(100) for i = 1:3, j = 1:3]
-B = mean.(A)
+B = pmean.(A)
 @btime qr($(A));
   # 8.392 μs (16 allocations: 18.94 KiB)
 @btime map(_->qr($B), 1:100);
@@ -104,7 +111,7 @@ B = mean.(A)
 # Over 80 times faster
 # Bigger matrix
 A = [randn() + StaticParticles(100) for i = 1:30, j = 1:30]
-B = mean.(A)
+B = pmean.(A)
 @btime qr($(A));
   # 1.823 ms (99 allocations: 802.63 KiB)
 @btime map(_->qr($B), 1:100);
@@ -154,7 +161,7 @@ julia> y = A*p
  -8.04 ± 3.1
   2.4 ± 1.5
 
-julia> cov(y)
+julia> pcov(y)
 2×2 Array{Float64,2}:
   9.61166  -3.59812
  -3.59812   2.16701
@@ -171,12 +178,12 @@ julia> p = Particles(2000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
  19.3 ± 48.0
  11.9 ± 43.0
 
-julia> cov(log.(p))
+julia> pcov(log.(p))
 2×2 Array{Float64,2}:
  1.96672  1.0016
  1.0016   2.98605
 
-julia> mean(log.(p))
+julia> pmean(log.(p))
 2-element Array{Float64,1}:
  1.985378409751101
  1.000702538699887
@@ -194,10 +201,10 @@ julia> p = StaticParticles(sigmapoints(m,Σ))
  1.0 ± 1.7 # 2n+1 = 5 particles
  2.0 ± 2.0
 
-julia> cov(p) ≈ Σ
+julia> pcov(p) ≈ Σ
 true
 
-julia> mean(p) ≈ m
+julia> pmean(p) ≈ m
 true
 ```
 [`sigmapoints`](@ref) also accepts a `Normal/MvNormal` object as input.
@@ -226,12 +233,12 @@ particle_matrix = transform_moments(X,m,Σ)
 p      = Particles(particle_matrix) # These are our LHS particles with correct moments
 plot(scatter(eachcol(particles)..., title="Sample"), plot(fit, title="Fitness vs. iteration"))
 
-julia> mean(p)
+julia> pmean(p)
 2-element Array{Float64,1}:
  1.0
  2.0
 
-julia> cov(p)
+julia> pcov(p)
 2×2 Array{Float64,2}:
  2.0  1.0
  1.0  4.0

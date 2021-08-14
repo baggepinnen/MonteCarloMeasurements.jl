@@ -1,16 +1,21 @@
 import Base.Cartesian.@ntuple
 
 nparticles(p) = length(p)
-nparticles(p::ParticleArray) = length(eltype(p))
+nparticles(p::Type{<:AbstractParticles{T,N}}) where {T,N} = N
 nparticles(p::AbstractParticles{T,N}) where {T,N} = N
-nparticles(p::Type{<:ParticleArray}) = length(eltype(p))
+nparticles(p::ParticleArray) = nparticles(eltype(p))
+nparticles(p::Type{<:ParticleArray}) = nparticles(eltype(p))
 
 particletype(p::AbstractParticles) = typeof(p)
 particletype(::Type{P}) where P <: AbstractParticles = P
 particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
 
+particleeltype(::AbstractParticles{T,N}) where {T,N} = T
+particleeltype(::AbstractArray{<:AbstractParticles{T,N}}) where {T,N} = T
+
 vecindex(p,i) = getindex(p,i)
-vecindex(p::ParticleArray,i) = getindex.(p,i)
+vecindex(p::AbstractParticles,i) = getindex(p.particles,i)
+vecindex(p::ParticleArray,i) = vecindex.(p,i)
 vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), fieldcount(typeof(p))))...)
 
 function indexof_particles(args)

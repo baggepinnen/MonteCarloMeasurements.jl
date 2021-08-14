@@ -27,7 +27,7 @@ register_primitive(unitful_testfunction) # must be outside testset
         @test typeof(p1) == typeof(p2)
 
         p3 = unitful_testfunction(p1)
-        @test extrema(p3) == (0.0u"V", 1.0u"V")
+        @test pextrema(p3) == (0.0u"V", 1.0u"V")
 
         @test (1 ± 0.5)u"m" * (1 ± 0)u"kg" ≈ (1 ± 0.5)u"kg*m"
         @test (1 ± 0.5)u"m" * 1u"kg" ≈ (1 ± 0.5)u"kg*m"

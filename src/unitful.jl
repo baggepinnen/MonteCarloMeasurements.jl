@@ -1,11 +1,11 @@
 import .Unitful: Quantity, FreeUnits
 
 function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
-    s = std(p)
+    s = pstd(p)
     if s.val < eps(p)
-        string(mean(p))
+        string(pmean(p))
     else
-        string(mean(p), " ± ", s)
+        string(pmean(p), " ± ", s)
     end
 end
 

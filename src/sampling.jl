@@ -24,7 +24,7 @@ Calculates the effective sample size. This is useful if particles come from MCMC
 Initial source: https://github.com/tpapp/MCMCDiagnostics.jl
 """
 function ess(p::AbstractParticles)
-    ac    = autocor(p.particles,1:min(250, length(p)÷2))
+    ac    = autocor(p.particles,1:min(250, nparticles(p)÷2))
     N     = length(ac)
     τ_inv = 1 + 2ac[1]
     K     = 2
@@ -34,5 +34,5 @@ function ess(p::AbstractParticles)
         τ_inv += 2Δ
         K += 2
     end
-    min(1 / τ_inv, one(τ_inv))*length(p)
+    min(1 / τ_inv, one(τ_inv))*nparticles(p)
 end
