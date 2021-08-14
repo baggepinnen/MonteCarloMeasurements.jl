@@ -811,7 +811,7 @@ Random.seed!(0)
 
     include("test_unitful.jl")
     include("test_forwarddiff.jl")
-    # include("test_deconstruct.jl")
+    include("test_deconstruct.jl")
     include("test_sleefpirates.jl")
     include("test_measurements.jl")
 

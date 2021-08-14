@@ -32,8 +32,8 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     end
     @test tt(P) == Pd == with_workspace(f,P)
     p = 1 ± 0.1
-    @test mean_object(p) == mean(p)
-    @test mean_object([p,p]) == mean.([p,p])
+    @test mean_object(p) == pmean(p)
+    @test mean_object([p,p]) == pmean.([p,p])
     @test mean_object(P) ≈ tf(tf(1,[1,1])) atol=1e-2
 
 
@@ -57,7 +57,7 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
     bP  = bode(P, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
     bPd = bode(Pd, exp10.(LinRange(-3, log10(10π), 50)))[1] |> vec
 
-    @test mean(abs2, mean.(bP) - mean.(bPd)) < 1e-4
+    @test mean(abs2, pmean.(bP) - pmean.(bPd)) < 1e-4
 
     A = randn(2,2)
     Ap = A .± 0.1
@@ -76,12 +76,12 @@ ControlSystems.TransferFunction(matrix::Array{<:ControlSystems.SisoRational,2}, 
         resultsetter = MonteCarloMeasurements.get_result_setter(Pres)
         @test all(1:paths[1][3]) do i
             buffersetter(P,P2,i)
-            P.matrix[1].num.coeffs[1][i] == P2.matrix[1].num.coeffs[1] &&
-            P.matrix[1].den.coeffs[2][i] == P2.matrix[1].den.coeffs[2]
+            P.matrix[1].num.coeffs[1].particles[i] == P2.matrix[1].num.coeffs[1] &&
+            P.matrix[1].den.coeffs[2].particles[i] == P2.matrix[1].den.coeffs[2]
             P2res = f(P2)
             resultsetter(Pres, P2res, i)
-            Pres.matrix[1].num.coeffs[1][i] == P2res.matrix[1].num.coeffs[1] &&
-            Pres.matrix[1].den.coeffs[2][i] == P2res.matrix[1].den.coeffs[2]
+            Pres.matrix[1].num.coeffs[1].particles[i] == P2res.matrix[1].num.coeffs[1] &&
+            Pres.matrix[1].den.coeffs[2].particles[i] == P2res.matrix[1].den.coeffs[2]
         end
     end
 
