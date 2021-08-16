@@ -7,7 +7,7 @@ function systematic_sample(rng::AbstractRNG, N, d=Normal(0,1); permute=true)
     T = eltype(d)
     e = T(0.5/N) # rand()/N
     y = e:1/N:1
-    o = quantile.(d,y)
+    o = quantile.((d, ),y)
     permute && permute!(o, randperm(rng, N))
     return eltype(o) == T ? o : T.(o)
 end

@@ -33,12 +33,13 @@ const ParticleSymbols = (:Particles, :StaticParticles)
 
 for PT in ParticleSymbols
     for D in (2,3,4,5)
-        @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N}
+        D1 = D-1
+        @eval function $PT{T,N}(m::AbstractArray{T,$D}) where {T,N} # ::Array{$PT{T,N},$D1}
             size(m, 1) == N || throw(ArgumentError("The first dimension of the array must be the same as the number N of particles."))
             inds = CartesianIndices(axes(m)[2:end])
             map(inds) do ind
-                $PT{T,N}(@view(m[:,ind]))
-            end
+                $PT{T,N}(@view(m[:,ind]))::$PT{T,N}
+            end#::Array{$PT{T,N},$(D1)}
         end
 
         @eval function $PT(m::AbstractArray{T,$D}) where T
@@ -65,11 +66,19 @@ for PT in ParticleSymbols
 
         function $PT(rng::AbstractRNG, N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where VS
             if systematic
-                v = systematic_sample(rng,N,d; permute=permute)
+                v = systematic_sample(rng, N, d; permute)
             else
                 v = rand(rng, d, N)
             end
             $PT{eltype(v),N}(v)
+        end
+        function $PT{T,N}(rng::AbstractRNG, d::Distribution{<:Any,VS}=Normal(0,1); permute=true, systematic=VS==Continuous) where {T,N,VS}
+            if systematic
+                v = systematic_sample(rng, N, d; permute)
+            else
+                v = rand(rng, d, N)
+            end
+            $PT{T,N}(v)
         end
         function $PT(N::Integer=DNP($PT), d::Distribution{<:Any,VS}=Normal(0,1); kwargs...) where VS
             return $PT(Random.GLOBAL_RNG, N, d; kwargs...)
@@ -81,8 +90,12 @@ for PT in ParticleSymbols
         end
 
         function $PT(rng::AbstractRNG, N::Integer, d::MultivariateDistribution)
-            v = rand(rng,d,N)' |> copy # For cache locality
-            $PT(v)
+            v = rand(rng,d,N)'
+            $PT{eltype(v), N}(v)
+        end
+        function $PT{T,N}(rng::AbstractRNG, d::MultivariateDistribution) where {T,N}
+            v = rand(rng,d,N)'
+            $PT{T, N}(v)
         end
         $PT(N::Integer, d::MultivariateDistribution) = $PT(Random.GLOBAL_RNG, N, d)
 
@@ -91,8 +104,8 @@ for PT in ParticleSymbols
     end
 end
 
-function Particles(rng::AbstractRNG, d::Distribution;kwargs...)
-    Particles(rng, DEFAULT_NUM_PARTICLES, d; kwargs...)
+function Particles(rng::AbstractRNG, d::Distribution; kwargs...)
+    Particles{eltype(d), DEFAULT_NUM_PARTICLES}(rng, d; kwargs...)
 end
 Particles(d::Distribution; kwargs...) = Particles(Random.GLOBAL_RNG, d; kwargs...)
 

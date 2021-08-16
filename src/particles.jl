@@ -28,7 +28,7 @@ See also [`±`](@ref), [`⊗`](@ref)
 Creates $DEFAULT_NUM_PARTICLES `Particles` with a `Uniform` distribution between `a` and `b`.
 See also [`±`](@ref), [`⊗`](@ref)
 """
-(..)(a,b) = Particles(DEFAULT_NUM_PARTICLES, Uniform(a,b))
+(..)(a,b) = Particles{float(promote_type(eltype(a), eltype(b))), DEFAULT_NUM_PARTICLES}(Random.GLOBAL_RNG, Uniform(a,b))
 
 
 """
@@ -37,7 +37,7 @@ See also [`±`](@ref), [`⊗`](@ref)
 Multiplies `a` by $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution`.
 Shorthand for `a * Particles(Distribution())`, e.g., `a ⊠ Gamma(1)`.
 """
-⊠(a,d::Distribution) = a * Particles(d)
+⊠(a,d::Distribution) = a * Particles{eltype(d), DEFAULT_NUM_PARTICLES}(Random.GLOBAL_RNG, d)
 
 """
     a ⊞ Distribution()
@@ -45,7 +45,7 @@ Shorthand for `a * Particles(Distribution())`, e.g., `a ⊠ Gamma(1)`.
 Adds $DEFAULT_NUM_PARTICLES `Particles` sampled from a specified `::Distribution` to `a`.
 Shorthand for `a + Particles(Distribution())`, e.g., `1 ⊞ Binomial(3)`.
 """
-⊞(a,d::Distribution) = a + Particles(d)
+⊞(a,d::Distribution) = a + Particles{eltype(d), DEFAULT_NUM_PARTICLES}(Random.GLOBAL_RNG, d)
 
 """
     ⊗(μ,σ) = outer_product(Normal.(μ,σ))
