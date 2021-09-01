@@ -79,7 +79,7 @@ Base.isfinite(p::Complex{<: AbstractParticles}) = isfinite(real(p)) && isfinite(
 
 function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
     are = real(a); aim = imag(a); bre = real(b); bim = imag(b)
-    if mean(abs(bre)) <= mean(abs(bim))
+    if pmean(abs(bre)) <= pmean(abs(bim))
         if isinf(bre) && isinf(bim)
             r = sign(bre)/sign(bim)
         else
@@ -100,7 +100,7 @@ end
 
 function Base.:(/)(are::T, b::Complex{T}) where T<:AbstractParticles
     aim = 0; bre = real(b); bim = imag(b)
-    if mean(abs(bre)) <= mean(abs(bim))
+    if pmean(abs(bre)) <= pmean(abs(bim))
         if isinf(bre) && isinf(bim)
             r = sign(bre)/sign(bim)
         else
