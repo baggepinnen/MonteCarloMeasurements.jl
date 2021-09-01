@@ -3,11 +3,11 @@
 
 julia&gt; (1 ± 0.1)u&quot;V&quot;
 Particles{Quantity{Float64, 𝐋^2 𝐌 𝐈^-1 𝐓^-3, Unitful.FreeUnits{(V,), 𝐋^2 𝐌 𝐈^-1 𝐓^-3, nothing}}, 2000}
- 1.0000000000000002 V ± 0.09999231528930486 V
+ 1.0000000000000002 V ± 0.09999231528930488 V
 
 julia&gt; (1..2)u&quot;m&quot;
 Particles{Quantity{Float64, 𝐋, Unitful.FreeUnits{(m,), 𝐋, nothing}}, 2000}
- 1.5000000000000002 m ± 0.2887472943596182 m</code></pre><h2 id="Monte-Carlo-sampling-properties-1"><a class="docs-heading-anchor" href="#Monte-Carlo-sampling-properties-1">Monte-Carlo sampling properties</a><a class="docs-heading-anchor-permalink" href="#Monte-Carlo-sampling-properties-1" title="Permalink"></a></h2><p>The variance introduced by Monte-Carlo sampling has some fortunate and some unfortunate properties. It decreases as 1/N, where N is the number of particles/samples. This unfortunately means that to get half the standard deviation in your estimate, you need to quadruple the number of particles. On the other hand, this variance does not depend on the dimension of the space, which is very fortunate.</p><p>In this package, we perform <a href="https://arxiv.org/pdf/cs/0507025.pdf"><em>systematic sampling</em></a> whenever possible. This approach exhibits lower variance than standard random sampling. Below, we investigate the variance of the mean estimator of a random sample from the normal distribution. The variance of the estimate of the mean is known to decrease as 1/N</p><pre><code class="language-julia">default(l=(3,))
+ 1.4999999999999998 m ± 0.28874729435961816 m</code></pre><h2 id="Monte-Carlo-sampling-properties-1"><a class="docs-heading-anchor" href="#Monte-Carlo-sampling-properties-1">Monte-Carlo sampling properties</a><a class="docs-heading-anchor-permalink" href="#Monte-Carlo-sampling-properties-1" title="Permalink"></a></h2><p>The variance introduced by Monte-Carlo sampling has some fortunate and some unfortunate properties. It decreases as 1/N, where N is the number of particles/samples. This unfortunately means that to get half the standard deviation in your estimate, you need to quadruple the number of particles. On the other hand, this variance does not depend on the dimension of the space, which is very fortunate.</p><p>In this package, we perform <a href="https://arxiv.org/pdf/cs/0507025.pdf"><em>systematic sampling</em></a> whenever possible. This approach exhibits lower variance than standard random sampling. Below, we investigate the variance of the mean estimator of a random sample from the normal distribution. The variance of the estimate of the mean is known to decrease as 1/N</p><pre><code class="language-julia">default(l=(3,))
 N = 1000
 svec = round.(Int, exp10.(LinRange(1, 3, 50)))
 vars = map(svec) do i
