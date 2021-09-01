@@ -510,6 +510,7 @@ Random.seed!(0)
         z = complex(1 ± 0.1, 1 ± 0.1)
         @unsafe @test abs(sqrt(z ^ 2) - z) < eps()
         @unsafe @test abs(sqrt(z ^ 2.0) - z) < eps()
+        @test z/z ≈ 1
 
         z = complex(1 ± 0.1, 0 ± 0.1)
         @test real(2 ^ z) ≈ 2 ^ real(z)
