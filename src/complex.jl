@@ -85,3 +85,7 @@ Base.isfinite(p::Complex{<: AbstractParticles}) = isfinite(real(p)) && isfinite(
 function Base.:(/)(a::Union{T, Complex{T}}, b::Complex{T}) where T<:AbstractParticles
     ℂ2ℂ_function(/, a, b)
 end
+
+function Base.FastMath.div_fast(a::Union{T, Complex{T}}, b::Complex{T}) where T<:AbstractParticles
+    ℂ2ℂ_function(Base.FastMath.div_fast, a, b)
+end
