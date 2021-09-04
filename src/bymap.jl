@@ -13,6 +13,7 @@ particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
 particleeltype(::AbstractParticles{T,N}) where {T,N} = T
 particleeltype(::AbstractArray{<:AbstractParticles{T,N}}) where {T,N} = T
 
+vecindex(p::Number,i) = p
 vecindex(p,i) = getindex(p,i)
 vecindex(p::AbstractParticles,i) = getindex(p.particles,i)
 vecindex(p::ParticleArray,i) = vecindex.(p,i)

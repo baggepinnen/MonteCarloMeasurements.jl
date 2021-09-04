@@ -19,6 +19,7 @@ end
 
 @inline maybe_complex_particles(x,i) = x
 @inline maybe_complex_particles(p::AbstractParticles,i) = complex(real(p.particles[i]), imag(p.particles[i]))
+@inline maybe_complex_particles(p::Complex{<:AbstractParticles},i) = complex(p.re.particles[i], p.im.particles[i])
 
 """
     ℂ2ℂ_function(f::Function, z::Complex{<:AbstractParticles})
@@ -27,43 +28,47 @@ Helper function for uncertainty propagation through complex-valued functions of 
 applies `f : ℂ → ℂ ` to `z::Complex{<:AbstractParticles}`.
 """
 function ℂ2ℂ_function(f::F, z::Complex{T}) where {F<:Union{Function,DataType},T<:AbstractParticles}
-    rz,iz = z.re,z.im
-    s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz.particles[i], iz.particles[i]))
+    s = map(1:length(z.re.particles)) do i
+        @inbounds f(maybe_complex_particles(z, i))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
 
 function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::R) where {F<:Union{Function,DataType},T<:AbstractParticles,R<:Real}
-    rz,iz = z.re,z.im
-    s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz.particles[i], iz.particles[i]),  a)
+    s = map(1:length(z.re.particles)) do i
+        @inbounds f(maybe_complex_particles(z, i),  vecindex(a, i))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
 
-function ℂ2ℂ_function(f::F, z::R, a::Union{Complex{S},S}) where {F<:Union{Function,DataType},S<:AbstractParticles,R<:Real}
-    rz,iz = a.re,a.im
-    s = map(1:length(rz.particles)) do i
-        @inbounds f(z, complex(rz.particles[i], iz.particles[i]))
+function ℂ2ℂ_function(f::F, z::R, a::Complex{S}) where {F<:Union{Function,DataType},S<:AbstractParticles,R<:Real}
+    s = map(1:length(a.re.particles)) do i
+        @inbounds f(vecindex(z, i), maybe_complex_particles(a, i))
     end
     complex(S(real.(s)), S(imag.(s)))
 end
 
-function ℂ2ℂ_function(f::F, z::Union{Complex{T},T}, a::Union{Complex{S},S}) where {F<:Union{Function,DataType},T<:AbstractParticles,S<:AbstractParticles}
-    rz,iz = z.re,z.im
-    ra,ia = a.re,a.im
-
-    s = map(1:length(rz.particles)) do i
-        @inbounds f(complex(rz.particles[i], iz.particles[i]),  complex(ra.particles[i], ia.particles[i]))
+function ℂ2ℂ_function(f::F, z::Complex{T}, a::Complex{S}) where {F<:Union{Function,DataType},T<:AbstractParticles,S<:AbstractParticles}
+    s = map(1:length(z.re.particles)) do i
+        @inbounds f(maybe_complex_particles(z, i),  maybe_complex_particles(a, i))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
 
+# function ℂ2ℂ_function(f::F, z::Complex{T}, a::Complex{S}) where {F<:Union{Function,DataType},T<:AbstractParticles,S<:AbstractParticles}
+#     out = deepcopy(z)
+#     rp, ip = out.re.particles, out.im.particles
+#     @inbounds for i = 1:length(z.re.particles)
+#         res = f(maybe_complex_particles(z, i),  maybe_complex_particles(a, i))
+#         rp[i] = res.re
+#         ip[i] = res.im
+#     end
+#     out
+# end
+
 function ℂ2ℂ_function!(f::F, s, z::Complex{T}) where {F,T<:AbstractParticles}
-    rz,iz = z.re,z.im
-    map!(s, 1:length(rz.particles)) do i
-        @inbounds f(complex(rz.particles[i], iz.particles[i]))
+    map!(s, 1:length(z.re.particles)) do i
+        @inbounds f(maybe_complex_particles(z, i))
     end
     complex(T(real.(s)), T(imag.(s)))
 end
@@ -77,44 +82,6 @@ end
 Base.isinf(p::Complex{<: AbstractParticles}) = isinf(real(p)) || isinf(imag(p))
 Base.isfinite(p::Complex{<: AbstractParticles}) = isfinite(real(p)) && isfinite(imag(p))
 
-function Base.:(/)(a::Complex{T}, b::Complex{T}) where T<:AbstractParticles
-    are = real(a); aim = imag(a); bre = real(b); bim = imag(b)
-    if pmean(abs(bre)) <= pmean(abs(bim))
-        if isinf(bre) && isinf(bim)
-            r = sign(bre)/sign(bim)
-        else
-            r = bre / bim
-        end
-        den = bim + r*bre
-        Complex((are*r + aim)/den, (aim*r - are)/den)
-    else
-        if isinf(bre) && isinf(bim)
-            r = sign(bim)/sign(bre)
-        else
-            r = bim / bre
-        end
-        den = bre + r*bim
-        Complex((are + aim*r)/den, (aim - are*r)/den)
-    end
-end
-
-function Base.:(/)(are::T, b::Complex{T}) where T<:AbstractParticles
-    aim = 0; bre = real(b); bim = imag(b)
-    if pmean(abs(bre)) <= pmean(abs(bim))
-        if isinf(bre) && isinf(bim)
-            r = sign(bre)/sign(bim)
-        else
-            r = bre / bim
-        end
-        den = bim + r*bre
-        Complex((are*r)/den, (-are)/den)
-    else
-        if isinf(bre) && isinf(bim)
-            r = sign(bim)/sign(bre)
-        else
-            r = bim / bre
-        end
-        den = bre + r*bim
-        Complex((are)/den, (-are*r)/den)
-    end
+function Base.:(/)(a::Union{T, Complex{T}}, b::Complex{T}) where T<:AbstractParticles
+    ℂ2ℂ_function(/, a, b)
 end
