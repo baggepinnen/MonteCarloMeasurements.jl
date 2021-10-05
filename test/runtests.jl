@@ -55,7 +55,9 @@ Random.seed!(0)
                 @test (1+p+1).particles ≈ 2 .+ p.particles # Test 3arg operator
                 @test (p+1+p).particles ≈ 1 .+ 2p.particles # Test 3arg operator
                 @test 0 ± 1 ≈ p
+                @test ± 1 ≈ p
                 @test 0 ∓ 1 ≈ p
+                @test ∓ 1 ≈ p
                 @test sum(p) ≈ 0
                 @test pcov(p) ≈ 1 atol=0.2
                 @test pstd(p) ≈ 1 atol=0.2
