@@ -1,7 +1,7 @@
 """
     μ ± σ
 
-Creates $DEFAULT_NUM_PARTICLES `Particles` with mean `μ` and std `σ`.
+Creates $DEFAULT_NUM_PARTICLES `Particles` with mean `μ` and std `σ`. It can also be used as a unary operator, a mean of 0 is then used with std `σ`.
 If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treated as std if it's a scalar, and variances if it's a matrix or vector.
 See also [`∓`](@ref), [`..`](@ref)
 """
@@ -10,7 +10,7 @@ See also [`∓`](@ref), [`..`](@ref)
 """
     μ ∓ σ
 
-Creates $DEFAULT_STATIC_NUM_PARTICLES `StaticParticles` with mean `μ` and std `σ`.
+Creates $DEFAULT_STATIC_NUM_PARTICLES `StaticParticles` with mean `μ` and std `σ`. It can also be used as a unary operator, a mean of 0 is then used with std `σ`.
 If `μ` is a vector, the constructor `MvNormal` is used, and `σ` is thus treated as std if it's a scalar, and variances if it's a matrix or vector.
 See also [`±`](@ref), [`⊗`](@ref)
 """
@@ -19,8 +19,10 @@ See also [`±`](@ref), [`⊗`](@ref)
 
 ±(μ::Real,σ) = Particles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_NUM_PARTICLES}(systematic_sample(DEFAULT_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ±(μ::AbstractVector,σ) = Particles(DEFAULT_NUM_PARTICLES, MvNormal(μ, σ))
+±(σ) = zero(σ) ± σ
 ∓(μ::Real,σ) = StaticParticles{promote_type(float(typeof(μ)),float(typeof(σ))),DEFAULT_STATIC_NUM_PARTICLES}(systematic_sample(DEFAULT_STATIC_NUM_PARTICLES,Normal(μ,σ); permute=true))
 ∓(μ::AbstractVector,σ) = StaticParticles(DEFAULT_STATIC_NUM_PARTICLES, MvNormal(μ, σ))
+∓(σ) = zero(σ) ∓ σ
 
 """
     a .. b
