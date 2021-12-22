@@ -126,7 +126,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     end
 end
 
-function Base.show(io::IO, z::Complex{<:AbstractParticles})
+function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
     r, i = reim(z)
     compact = get(io, :compact, false)
     print(io, "(")
@@ -682,4 +682,72 @@ function LinearAlgebra.mul!(
         end
     end
     y
+end
+
+
+function LinearAlgebra.eigvals(R::Matrix{<:Complex{<:AbstractParticles{T, N}}}; kwargs...) where {T, N}
+    E = Vector{Complex{Particles{T,N}}}(undef, size(R,1))
+    for i in eachindex(E)
+        E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = eigvals!(r; kwargs...)
+        for i in eachindex(e)
+            E[i].re.particles[n] = e[i].re
+            E[i].im.particles[n] = e[i].im
+        end
+    end
+    E
+end
+
+function Base.exp(R::Matrix{<:Complex{<:AbstractParticles{T, N}}}) where {T, N}
+    E = similar(R)
+    for i in eachindex(E)
+        E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = exp(r)
+        for i in eachindex(e)
+            E[i].re.particles[n] = e[i].re
+            E[i].im.particles[n] = e[i].im
+        end
+    end
+    E
+end
+
+function LinearAlgebra.svdvals(R::Matrix{<:Complex{<:AbstractParticles{T, N}}}; kwargs...) where {T, N}
+    E = Vector{Particles{T,N}}(undef, size(R,1))
+    for i in eachindex(E)
+        E[i] = Particles(zeros(N))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = svdvals!(r; kwargs...)
+        for i in eachindex(e)
+            E[i].particles[n] = e[i]
+        end
+    end
+    E
+end
+
+function LinearAlgebra.det(D::AbstractMatrix{Complex{T}}) where T <: AbstractParticles
+    D0 = similar(D, ComplexF64)
+    parts = map(1:nparticles(D[1].re)) do i
+        for j in eachindex(D0)
+            D0[j] = Complex(D[j].re.particles[i], D[j].im.particles[i])
+        end
+        det(D0)
+    end
+    Complex(T(getfield.(parts, :re)), T(getfield.(parts, :im)))
 end

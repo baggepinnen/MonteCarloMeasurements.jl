@@ -89,3 +89,17 @@ end
 function Base.FastMath.div_fast(a::Union{T, Complex{T}}, b::Complex{T}) where T<:AbstractParticles
     ℂ2ℂ_function(Base.FastMath.div_fast, a, b)
 end
+
+for f in (:pmean, :pmaximum, :pminimum, :psum, :pstd, :pcov)
+    @eval $f(p::Complex{<: AbstractParticles}) = Complex($f(p.re), $f(p.im))
+end
+
+function switch_representation(d::Complex{<:V}) where {V<:AbstractParticles}
+    MonteCarloMeasurements.nakedtypeof(V)(complex.(d.re.particles, d.im.particles))
+end
+
+cp2v(x) = []
+function complex_array(R::Array{Complex{<:V}}) where {V<:AbstractParticles}
+    R = switch_representation.(R)
+    permutedims(reinterpret(reshape, Float64, vec(R)), dims=())
+end
