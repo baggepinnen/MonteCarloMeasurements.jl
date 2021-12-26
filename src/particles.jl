@@ -126,7 +126,9 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", z::Complex{<:AbstractParticles})
+Base.show(io::IO, z::Complex{PT}) where PT <: AbstractParticles =
+    show(io, MIME"text/plain"(), z)
+function Base.show(io::IO, ::MIME"text/plain", z::Complex{PT}) where PT <: AbstractParticles
     r, i = reim(z)
     compact = get(io, :compact, false)
     print(io, "(")
