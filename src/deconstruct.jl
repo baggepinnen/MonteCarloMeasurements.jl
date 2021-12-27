@@ -384,6 +384,7 @@ function array_of_structs(f, arg)
     end
 end
 
+
 # macro withbuffer(f,P,simple_input,setters,setters2,N)
 #     quote
 #         $(esc(:(partind = 1))) # Because we need the actual name partind

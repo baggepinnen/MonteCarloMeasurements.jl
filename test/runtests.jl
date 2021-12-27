@@ -482,6 +482,17 @@ Random.seed!(0)
         @test e isa Vector{Complex{Particles{Float64, DEFAULT_NUM_PARTICLES}}}
         @test all(isapprox.(e, [1.0 ± 0.00058, 1.0 ± 0.00058], atol=1e-2))
 
+        ## Complex matrix ops
+        A = randn(ComplexF64, 2, 2)
+        B = complex.(Particles.(fill.(real.(A), 10)), Particles.(fill.(imag.(A), 10)))
+        show(B)
+        @test sum(pmean, abs.(exp(A) .- exp(B))) < 1e-9
+        @test sum(pmean, abs.(log(A) .- log(B))) < 1e-9
+        @test abs(det(A) - det(B)) < 1e-9
+
+        @test sum(pmean, svdvals(A) .- svdvals(B)) < 1e-9
+        @test sum(pmean, abs.(eigvals(A) .- eigvals(B))) < 1e-9
+
         @test (1 .. 2) isa Particles
         @test std(diff(sort((1 .. 2).particles))) < sqrt(eps())
         @test pmaximum((1 .. 2)) <= 2
