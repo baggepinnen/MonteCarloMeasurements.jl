@@ -485,6 +485,7 @@ Random.seed!(0)
         ## Complex matrix ops
         A = randn(ComplexF64, 2, 2)
         B = complex.(Particles.(fill.(real.(A), 10)), Particles.(fill.(imag.(A), 10)))
+        show(B)
         @test sum(pmean, abs.(exp(A) .- exp(B))) < 1e-9
         @test sum(pmean, abs.(log(A) .- log(B))) < 1e-9
         @test abs(det(A) - det(B)) < 1e-9
