@@ -384,24 +384,6 @@ function array_of_structs(f, arg)
     end
 end
 
-"""
-    struct_of_arrays(X)
-
-The inverse of [`array_of_structs`](@ref) in simple cases when the result is an array.
-"""
-function struct_of_arrays(X)
-    N = length(X)
-    s = size(X[1])
-    T = eltype(eltype(X))
-    Y = Array{Particles{T,N}}(undef, s...)
-    for i in eachindex(Y)
-        Y[i] = Particles{T,N}(zeros(T, N))
-        for k in 1:N
-            Y[i].particles[k] = X[k][i]
-        end
-    end
-    Y
-end
 
 # macro withbuffer(f,P,simple_input,setters,setters2,N)
 #     quote

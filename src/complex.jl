@@ -98,8 +98,81 @@ function switch_representation(d::Complex{<:V}) where {V<:AbstractParticles}
     MonteCarloMeasurements.nakedtypeof(V)(complex.(d.re.particles, d.im.particles))
 end
 
-cp2v(x) = []
-function complex_array(R::Array{Complex{<:V}}) where {V<:AbstractParticles}
+function complex_array(R::AbstractArray{Complex{V}}) where {V<:AbstractParticles}
     R = switch_representation.(R)
     permutedims(reinterpret(reshape, Float64, vec(R)), dims=())
+end
+
+
+function ℂⁿ2ℂⁿ_function(f::F, R::Matrix{<:Complex{<:AbstractParticles{T, N}}}) where {F, T, N}
+    E = similar(R)
+    for i in eachindex(E)
+        E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = f(r)
+        for i in eachindex(e)
+            E[i].re.particles[n] = e[i].re
+            E[i].im.particles[n] = e[i].im
+        end
+    end
+    E
+end
+
+Base.exp(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂⁿ_function(exp, R)
+Base.log(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂⁿ_function(log, R)
+
+function ℂⁿ2ℂ_function(f::F, D::Matrix{Complex{PT}}) where {F, PT <: AbstractParticles}
+    D0 = similar(D, ComplexF64)
+    parts = map(1:nparticles(D[1].re)) do i
+        for j in eachindex(D0)
+            D0[j] = Complex(D[j].re.particles[i], D[j].im.particles[i])
+        end
+        f(D0)
+    end
+    # PT = nakedtypeof(P)
+    Complex(PT(getfield.(parts, :re)), PT(getfield.(parts, :im)))
+end
+
+LinearAlgebra.det(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂ_function(det, R)
+
+function LinearAlgebra.eigvals(R::Matrix{<:Complex{<:AbstractParticles{T, N}}}; kwargs...) where {T, N}
+    E = Vector{Complex{Particles{T,N}}}(undef, size(R,1))
+    for i in eachindex(E)
+        E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = eigvals!(r; kwargs...)
+        for i in eachindex(e)
+            E[i].re.particles[n] = e[i].re
+            E[i].im.particles[n] = e[i].im
+        end
+    end
+    E
+end
+
+function LinearAlgebra.svdvals(R::Matrix{<:Complex{<:AbstractParticles{T, N}}}; kwargs...) where {T, N}
+    E = Vector{Particles{T,N}}(undef, size(R,1))
+    for i in eachindex(E)
+        E[i] = Particles(zeros(N))
+    end
+    r = zeros(Complex{T}, size(R)...)
+    for n in 1:N
+        for j in eachindex(R)
+            r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
+        end
+        e = svdvals!(r; kwargs...)
+        for i in eachindex(e)
+            E[i].particles[n] = e[i]
+        end
+    end
+    E
 end
