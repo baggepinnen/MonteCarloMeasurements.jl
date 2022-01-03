@@ -473,7 +473,10 @@ meanvar(p::AbstractParticles) = pvar(p)/nparticles(p)
 
 Base.:(==)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles == p2.particles
 Base.:(!=)(p1::AbstractParticles{T,N},p2::AbstractParticles{T,N}) where {T,N} = p1.particles != p2.particles
-Base.hash(p::AbstractParticles) = hash(p.particles) + hash(typeof(p))
+function Base.hash(p::AbstractParticles, h::UInt)
+    h = hash(p.particles, h)
+    hash(typeof(p), h)
+end
 
 
 function zip_longest(a_,b_)
