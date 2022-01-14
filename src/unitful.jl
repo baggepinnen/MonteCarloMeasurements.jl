@@ -9,6 +9,8 @@ function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
     end
 end
 
+Unitful.ustrip(v::AbstractParticles{T,N}) where {T,N} = v / Unitful.unit(T)
+
 for PT in ParticleSymbols
 
     @eval begin

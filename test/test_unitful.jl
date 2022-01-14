@@ -50,7 +50,9 @@ register_primitive(unitful_testfunction) # must be outside testset
         l = (14.24 ± 0.2)u"m"
         thickness = u"μm"(mass/(ρ*width*l))
         @test thickness ≈ (21.3 ± 1.8)u"μm"
-        
+
+        @test ustrip(mass) ≈ 250 ± 10
+        @test ustrip(mass) isa Particles
     end
 
 end
