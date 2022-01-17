@@ -139,15 +139,17 @@ ribbonplot
 
 
 
-@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true)
+@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
     label --> "Mean with ($q, $(1-q)) quantiles"
-    if N > 0
-        for col = 1:size(y,2)
-            yc = y[:,col]
+    for col = 1:size(y,2)
+        yc = y[:,col]
+        if ri
             @series begin
                 ribbon := quantiles(yc, q)
                 pmean.(yc)
             end
+        end
+        if N > 0
             @series begin
                 M = Matrix(yc)
                 np,ny = size(M)
@@ -200,14 +202,17 @@ end
     mx, y
 end
 
-@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true)
+@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
+    @show N
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
-            @series begin
-                ribbon := quantiles(yc, q)
-                label --> "Mean with ($q, $(1-q)) quantiles"
-                x, pmean.(yc)
+            if ri
+                @series begin
+                    ribbon := quantiles(yc, q)
+                    label --> "Mean with ($q, $(1-q)) quantiles"
+                    x, pmean.(yc)
+                end
             end
             @series begin
                 M = Matrix(yc)
