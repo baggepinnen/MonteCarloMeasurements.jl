@@ -53,6 +53,17 @@ register_primitive(unitful_testfunction) # must be outside testset
 
         @test ustrip(mass) ≈ 250 ± 10
         @test ustrip(mass) isa Particles
+
+        a = (200 + 20*PT())u"ms"
+        @test unit(a) == unit(1u"ms")
+
+        b = ustrip(a)
+
+        c = uconvert(u"s", a)
+        @test c ≈ (0.200 + 0.020*PT())u"s"
+
+        d1 = upreferred(a)
+        @test d1 ≈ (0.200 + 0.020*PT())u"s"
     end
 
 end

@@ -1,4 +1,4 @@
-import .Unitful: Quantity, FreeUnits
+import .Unitful: Quantity, FreeUnits, unit, upreferred
 
 function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
     s = pstd(p)
@@ -9,7 +9,8 @@ function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
     end
 end
 
-Unitful.ustrip(v::AbstractParticles{T,N}) where {T,N} = v / Unitful.unit(T)
+Unitful.unit(v::AbstractParticles{T}) where T = unit(T)
+Unitful.upreferred(v::AbstractParticles) = Unitful.uconvert(upreferred(unit(v)), v)
 
 for PT in ParticleSymbols
 
