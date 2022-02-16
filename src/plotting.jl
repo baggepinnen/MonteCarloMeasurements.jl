@@ -203,7 +203,6 @@ end
 end
 
 @recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
-    @show N
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
