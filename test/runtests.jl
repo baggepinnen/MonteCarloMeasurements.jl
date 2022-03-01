@@ -71,6 +71,10 @@ Random.seed!(0)
                 @test p ∈ uvec
                 @test b ∈ uvec
 
+                @test PT(100, Normal(0.0)) isa PT{Float64, 100}
+                @test PT(100, Normal(0.0f0)) isa PT{Float32, 100}
+                @test PT(100, Uniform(0.0f0, 1.0f0)) isa PT{Float32, 100}
+
 
                 @test !(p ≲ p)
                 @test !(p ≳ p)
