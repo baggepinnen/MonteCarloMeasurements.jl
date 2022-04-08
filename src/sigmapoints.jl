@@ -34,7 +34,8 @@ p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2)) # Correct
 """
 function sigmapoints(m, Σ::AbstractMatrix)
     n = length(m)
-    X = sqrt(n*Σ)
+    # X = sqrt(n*Σ)
+    X = cholesky(Symmetric(n*Σ)).U # Much faster than sqrt
     T = promote_type(eltype(m), eltype(X))
     [X; -X; zeros(T,1,n)] .+ m'
 end
