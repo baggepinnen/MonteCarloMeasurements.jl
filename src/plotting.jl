@@ -48,10 +48,19 @@ end
 end
 
 "This is a helper function to make multiple series into one series separated by `Inf`. This makes plotting vastly more efficient."
-function to1series(x,y)
+function to1series(x::AbstractVector,y)
     r,c = size(y)
     y2 = vec([y; fill(Inf, 1, c)])
     x2 = repeat([x; Inf], c)
+    x2,y2
+end
+
+function to1series(x::AbstractMatrix,y)
+    r,c = size(y)
+    size(x, 2) == 1 && return to1series(vec(x), y)
+    size(x) == size(y) || throw(ArgumentError("expected size(x) == size(y) got $(size(x)) != $(size(y))"))
+    y2 = vec([y; fill(Inf, 1, c)])
+    x2 = vec([x; Infill(Inf, 1, c)])
     x2,y2
 end
 
@@ -82,15 +91,16 @@ end
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
+            xc = size(x,2) == 1 ? x : x[:,col]
             m = pmean.(yc)
             @series begin
                 label --> "Mean with $q quantile"
                 ribbon := quantiles(yc, q)
-                x,m
+                xc,m
             end
             @series begin
                 ribbon := quantiles(yc, q)
-                m
+                xc,m
             end
             @series begin
                 M = Matrix(yc)
@@ -99,7 +109,7 @@ end
                 nc = N > 1 ? N : min(np, 50)
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
-                to1series(M[chosen, :]')
+                to1series(xc, M[chosen, :]')
             end
         end
     else
@@ -206,11 +216,12 @@ end
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
+            xc = size(x,2) == 1 ? x : x[:,col]
             if ri
                 @series begin
                     ribbon := quantiles(yc, q)
                     label --> "Mean with ($q, $(1-q)) quantiles"
-                    x, pmean.(yc)
+                    xc, pmean.(yc)
                 end
             end
             @series begin
@@ -220,7 +231,7 @@ end
                 nc = N > 1 ? N : min(np, 50)
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
-                to1series(x, M[chosen, :]')
+                to1series(xc, M[chosen, :]')
             end
         end
     else
