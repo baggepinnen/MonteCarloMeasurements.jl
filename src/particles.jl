@@ -343,7 +343,7 @@ for PT in ParticleSymbols
         Base.zero(::Type{$PT{T,N}}) where {T,N} = $PT{T,N}(zeros(eltype(T),N))
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(pmean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = $PT{T,N}(round.(p.particles, r, args...; kwargs...))
-        Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = $PT{T,N}(round.(S, p.particles, args...; kwargs...))
+        Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = $PT{S,N}(round.(S, p.particles, args...; kwargs...))
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
             N == 1 && (return p.particles[1])
             pstd(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
