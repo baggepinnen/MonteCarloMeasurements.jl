@@ -465,7 +465,7 @@ Random.seed!(0)
         @test !(0p)
         @test round(p) ≈ 0 atol=0.1
         @test round(Int,p) == 0
-        @test round(Int,p) isa Int
+        @test round(Int,p) isa Particles{Int}
         @test sincos(p) == (sin(p), cos(p))
         @test norm(p) == abs(p)
         @test pmean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
