@@ -43,6 +43,7 @@ using Distributed: pmap
 import Base: add_sum
 
 using Distributions, StatsBase, Requires
+using ForwardDiff
 
 
 const DEFAULT_NUM_PARTICLES = 2000
@@ -146,14 +147,15 @@ include("plotting.jl")
 include("optimize.jl")
 include("sleefpirates.jl")
 include("nominal.jl")
+include("forwarddiff.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 Base.:\(x::Diagonal{<:AbstractParticles}, y::Vector{<:AbstractParticles}) = bymap(\, x, y) # required for ambiguity
 
+
 function __init__()
-    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("forwarddiff.jl")
     @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
     @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
 end
