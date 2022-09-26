@@ -1,6 +1,6 @@
 # # ControlSystems using MonteCarloMeasurements
 # In this example, we will create a transfer function with uncretain coefficients, and use it to calculate bode diagrams and simulate the system.
-using ControlSystems, MonteCarloMeasurements, StatsPlots
+using ControlSystemsBase, MonteCarloMeasurements, StatsPlots
 using Test, LinearAlgebra, Statistics
 import MonteCarloMeasurements: ⊗
 unsafe_comparisons(true, verbose=false) # This file requires mean comparisons for displaying transfer functions in text form as well as for discretizing a LTIsystem
@@ -58,97 +58,94 @@ mcplot!(t,y[:], subplot=2, l=(:black, 0.02))
 ribbonplot!(t,y[:], subplot=3)
 
 # # System identification
-using MonteCarloMeasurements, ControlSystemIdentification, ControlSystems
+using MonteCarloMeasurements, ControlSystemIdentification, ControlSystemsBase
 using Random, LinearAlgebra
 # We start by creating a system to use as the subject of identification and some data to use for identification
 N  = 500      # Number of time steps
 t  = 1:N
 Δt = 1        # Sample time
-u  = randn(N) # A random control input
+u  = randn(1, N) # A random control input
 G  = tf(0.8, [1,-0.9], 1) # An interesting system
 y  = lsim(G,u,t)[1][:]
 yn = y + randn(size(y));
 
 # Validation data
-uv  = randn(N)
+uv  = randn(1, N)
 yv  = lsim(G,uv,t)[1][:]
 ynv = yv + randn(size(yv));
 # Identification parameters
 na,nb,nc = 2,1,1
 
-Gls,Σls     = arx(Δt,yn,u,na,nb) # Regular least-squares estimation
-Gtls,Σtls   = arx(Δt,yn,u,na,nb, estimator=tls) # Total least-squares estimation
-Gwtls,Σwtls = arx(Δt,yn,u,na,nb, estimator=wtls_estimator(y,na,nb)) # Weighted Total least-squares estimation
-
-# Next, we create transfer functions with uncertainty, the first argument is the particle type we want to use
-Gls = TransferFunction(Particles, Gls, Σls)
-Gtls = TransferFunction(Particles, Gtls, Σtls)
-Gwtls = TransferFunction(Particles, Gwtls, Σwtls)
+data = iddata(yn,u,Δt)
+Gls   = arx(data,na,nb,stochastic=true) # Regular least-squares estimation
+Gtls  = arx(data,na,nb,stochastic=true, estimator=tls) # Total least-squares estimation
+Gwtls = arx(data,na,nb,stochastic=true, estimator=wtls_estimator(y,na,nb)) # Weighted Total least-squares estimation
 
 # We now calculate and plot the Bode diagrams for the uncertain transfer functions
 scales = (yscale=:log10, xscale=:log10)
 w = exp10.(LinRange(-3,log10(π),30))
-magG = bode(G,w)[1][:]
-mag = bode(Gls,w)[1][:]
+magG = bodev(G,w)[1]
+mag = bodev(Gls,w)[1]
 errorbarplot(w,mag,0.01; scales..., layout=3, subplot=1, lab="ls")
 # plot(w,mag; scales..., layout=3, subplot=1, lab="ls") # src
 plot!(w,magG, subplot=1)
-mag = bode(Gtls,w)[1][:]
+mag = bodev(Gtls,w)[1]
 errorbarplot!(w,mag,0.01; scales..., subplot=2, lab="qtls")
 # plot!(w,mag; scales..., subplot=2, lab="qtls") # src
 plot!(w,magG, subplot=2)
-mag = bode(Gwtls,w)[1][:]
+mag = bodev(Gwtls,w)[1]
 errorbarplot!(w,mag,0.01; scales..., subplot=3, lab="wtls")
 # plot!(w,mag; scales..., subplot=3, lab="wtls") # src
 plot!(w,magG, subplot=3)
 
 ## bode benchmark =========================================
-using MonteCarloMeasurements, BenchmarkTools, Printf, ControlSystems
+using MonteCarloMeasurements, BenchmarkTools, Printf, ControlSystemsBase
+using Measurements
 using ChangePrecision
 @changeprecision Float32 begin
-w = exp10.(LinRange(-3,log10(π),30))
-p = 1. ± 0.1
-ζ = 0.3 ± 0.1
-ω = 1. ± 0.1
-G = tf([p*ω], [1, 2ζ*ω, ω^2])
-t1 = @belapsed bode($G,$w)
-p = 1.
-ζ = 0.3
-ω = 1.
-G = tf([p*ω], [1., 2ζ*ω, ω^2])
-sleep(0.5)
-t2 = @belapsed bode($G,$w)
-using Measurements
-p = Measurements.:(±)(1., 0.1)
-ζ = Measurements.:(±)(0.3, 0.1)
-ω = Measurements.:(±)(1., 0.1)
-G = tf([p*ω], [1, 2ζ*ω, ω^2])
-sleep(0.5)
-t3 = @belapsed bode($G,$w)
+    w = exp10.(LinRange(-3,log10(π),30))
+    p = 1.  ± 0.1
+    ζ = 0.3 ± 0.1
+    ω = 1.  ± 0.1
+    G = tf([p*ω], [1, 2ζ*ω, ω^2])
+    t1 = @belapsed bode($G,$w)
+    p = 1.
+    ζ = 0.3
+    ω = 1.
+    G = tf([p*ω], [1., 2ζ*ω, ω^2])
+    sleep(0.5)
+    t2 = @belapsed bode($G,$w)
 
-p = 1. ∓ 0.1
-ζ = 0.3 ∓ 0.1
-ω = 1. ∓ 0.1
-G = tf([p*ω], [1, 2ζ*ω, ω^2])
-sleep(0.5)
-t4 = @belapsed bode($G,$w)
-p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2))
-G = tf([p*ω], [1, 2ζ*ω, ω^2])
-sleep(0.5)
-t5 = @belapsed bode($G,$w)
+    p = Measurements.:(±)(1.0, 0.1)
+    ζ = Measurements.:(±)(0.3, 0.1)
+    ω = Measurements.:(±)(1.0, 0.1)
+    G = tf([p*ω], [1, 2ζ*ω, ω^2])
+    sleep(0.5)
+    t3 = @belapsed bode($G,$w)
+
+    p = 1.  ∓ 0.1
+    ζ = 0.3 ∓ 0.1
+    ω = 1.  ∓ 0.1
+    G = tf([p*ω], [1, 2ζ*ω, ω^2])
+    sleep(0.5)
+    t4 = @belapsed bode($G,$w)
+    p,ζ,ω = StaticParticles(sigmapoints([1, 0.3, 1], 0.1^2))
+    G = tf([p*ω], [1, 2ζ*ω, ω^2])
+    sleep(0.5)
+    t5 = @belapsed bode($G,$w)
 end
 ##
 @printf("
 | Benchmark | Result |
 |-----------|--------|
-| Time with 500 particles | %16.4fms |
+| Time with 2000 particles | %16.4fms |
 | Time with regular floating point | %7.4fms |
 | Time with Measurements | %17.4fms |
 | Time with 100 static part. | %13.4fms |
 | Time with static sigmapoints. | %10.4fms |
-| 500×floating point time | %16.4fms |
+| 2000×floating point time | %16.4fms |
 | Speedup factor vs. Manual | %11.1fx |
 | Slowdown factor vs. Measurements | %4.1fx |
 | Slowdown static vs. Measurements | %4.1fx |
 | Slowdown sigma vs. Measurements | %5.1fx|\n",
-1000*t1, 1000*t2, 1000*t3, 1000*t4, 1000*t5, 1000*500t2, 500t2/t1, t1/t3, t4/t3, t5/t3) #src
+1000*t1, 1000*t2, 1000*t3, 1000*t4, 1000*t5, 1000*2000t2, 2000t2/t1, t1/t3, t4/t3, t5/t3) #src
