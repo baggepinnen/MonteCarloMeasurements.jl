@@ -20,7 +20,7 @@ for PT in ParticleSymbols
             $PT{NT,N}
         end
 
-        function Base.convert(::Type{$PT{Quantity{S,D,U},N}}, y::Quantity) where {S, D, U, T, N}
+        function Base.convert(::Type{$PT{Quantity{S,D,U},N}}, y::Quantity) where {S, D, U, N}
             $PT{Quantity{S,D,U},N}(fill(y, N))
         end
 
