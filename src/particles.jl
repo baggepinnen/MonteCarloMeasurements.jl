@@ -186,7 +186,7 @@ exp,exp2,exp10,expm1,
 log,log10,log2,log1p,
 sin,cos,tan,sind,cosd,tand,sinh,cosh,tanh,
 asin,acos,atan,asind,acosd,atand,asinh,acosh,atanh,
-zero,sign,abs,sqrt,rad2deg,deg2rad])
+zero,sign,abs,sqrt,rad2deg,deg2rad,float])
 
 MvParticles(x::AbstractVector{<:AbstractArray{<:Number}}) = Particles(copy(reduce(hcat, x)'))
 MvParticles(v::AbstractVector{<:Number}) = Particles(v)
