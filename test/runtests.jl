@@ -1,6 +1,6 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
-using Test, LinearAlgebra, Statistics, Random, GenericLinearAlgebra
+using Test, LinearAlgebra, Statistics, Random, GenericSchur
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
 import Plots
