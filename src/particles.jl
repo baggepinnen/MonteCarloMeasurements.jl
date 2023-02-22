@@ -589,6 +589,7 @@ LinearAlgebra.norm(x::AbstractParticles, args...) = abs(x)
 Base.log(p::Matrix{<:AbstractParticles}) = ℝⁿ2ℂⁿ_function(log,p) # Matrix more specific than StridedMatrix used in Base.log
 # LinearAlgebra.eigvals(p::Matrix{<:AbstractParticles}; kwargs...) = ℝⁿ2ℂⁿ_function(eigvals,p; kwargs...) # Replaced with implementation below
 Base.exp(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(exp, p)
+LinearAlgebra.exp!(p::AbstractMatrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(LinearAlgebra.exp!, p)
 LinearAlgebra.lyap(p1::Matrix{<:AbstractParticles}, p2::Matrix{<:AbstractParticles}) = ℝⁿ2ℝⁿ_function(lyap, p1, p2)
 
 
