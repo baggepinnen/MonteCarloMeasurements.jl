@@ -124,6 +124,7 @@ function ℂⁿ2ℂⁿ_function(f::F, R::Matrix{<:Complex{<:AbstractParticles{T,
 end
 
 Base.exp(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂⁿ_function(exp, R)
+LinearAlgebra.exp!(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂⁿ_function(LinearAlgebra.exp!, R)
 Base.log(R::Matrix{<:Complex{<:AbstractParticles}}) = ℂⁿ2ℂⁿ_function(log, R)
 
 function ℂⁿ2ℂ_function(f::F, D::Matrix{Complex{PT}}) where {F, PT <: AbstractParticles}

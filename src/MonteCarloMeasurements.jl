@@ -38,7 +38,7 @@ Particles{Int64,500}
 For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
 """
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, SLEEFPirates
+using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, SLEEFPirates, GenericSchur
 using Distributed: pmap
 import Base: add_sum
 

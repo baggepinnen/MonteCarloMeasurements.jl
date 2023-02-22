@@ -2,7 +2,7 @@ using MonteCarloMeasurements
 using Test, LinearAlgebra, Statistics, Random
 import MonteCarloMeasurements: ±, ∓
 using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_container, has_particles, particle_paths
-using ControlSystemsBase, Test, GenericLinearAlgebra
+using ControlSystemsBase, Test, GenericSchur
 ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
 

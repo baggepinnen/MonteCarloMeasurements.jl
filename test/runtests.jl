@@ -1,6 +1,6 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
-using Test, LinearAlgebra, Statistics, Random, GenericLinearAlgebra
+using Test, LinearAlgebra, Statistics, Random, GenericSchur
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
 @info "import Plots"
 import Plots
@@ -476,6 +476,7 @@ Random.seed!(0)
         A = randn(2,2)
         B = A .± 0
         @test sum(pmean, exp(A) .- exp(B)) < 1e-9
+        @test sum(pmean, LinearAlgebra.exp!(copy(A)) .- LinearAlgebra.exp!(copy(B))) < 1e-9
         @test sum(pmean, abs.(log(A)) .- abs.(log(B))) < 1e-9
         @test sum(pmean, abs.(eigvals(A)) .- abs.(eigvals(B))) < 1e-9
 
@@ -491,6 +492,7 @@ Random.seed!(0)
         B = complex.(Particles.(fill.(real.(A), 10)), Particles.(fill.(imag.(A), 10)))
         show(B)
         @test sum(pmean, abs.(exp(A) .- exp(B))) < 1e-9
+        @test sum(pmean, abs.(LinearAlgebra.exp!(copy(A)) .- LinearAlgebra.exp!(copy(B)))) < 1e-9
         @test sum(pmean, abs.(log(A) .- log(B))) < 1e-9
         @test abs(det(A) - det(B)) < 1e-9
 
