@@ -203,6 +203,7 @@ end
 end
 
 @recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
+    samedim = size(x) === size(y)
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
@@ -220,7 +221,7 @@ end
                 nc = N > 1 ? N : min(np, 50)
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
-                to1series(x, M[chosen, :]')
+                to1series(samedim ? x[:, col] : x, M[chosen, :]')
             end
         end
     else
