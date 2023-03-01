@@ -548,6 +548,12 @@ Random.seed!(0)
         @test p1 == p2
         @test nparticles(bootstrap(p, 10)) == 10
         @test_nowarn bootstrap([p; p])
+
+        dict = Dict(:a => p, :b => q, :c => 1)
+        dictvec = MonteCarloMeasurements.particle_dict2dict_vec(dict)
+        @test length(dictvec) == nparticles(p)
+        @test dictvec[1] == Dict(:a => p.particles[1], :b => q.particles[1], :c => 1)
+        @test dictvec[2] == Dict(:a => p.particles[2], :b => q.particles[2], :c => 1)
     end
 
     @time @testset "mutation" begin

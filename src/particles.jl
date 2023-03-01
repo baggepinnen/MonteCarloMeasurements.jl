@@ -692,3 +692,29 @@ function LinearAlgebra.mul!(
     y
 end
 
+
+"""
+    particle_dict2dict_vec(dict)
+
+Take a dict that vaps keys to uncertain values, and return a vector of dicts where each dict has a single sample (particle) of the uncertain values. The length of the returned vector is the number of samples (particles) for all uncertain parameters. 
+"""
+function particle_dict2dict_vec(dict)
+    # check the validity of uncertain parameters
+    found_particle_numbers = Set{Int}()
+    uncertain_parameters = Set{Base.keytype(dict)}()
+    for (k, v) in dict
+        if v isa AbstractParticles
+            push!(found_particle_numbers, nparticles(v))
+            push!(uncertain_parameters, k)
+        end
+    end
+    if length(found_particle_numbers) > 1
+        error("The number of samples (particles) for all uncertain parameters must be the same, but I found $(found_particle_numbers)")
+    elseif isempty(found_particle_numbers)
+        return [dict] # not much to do here
+    end
+    N = only(found_particle_numbers)
+    map(1:N) do i
+        Dict(k => vecindex(v, i) for (k, v) in dict)
+    end
+end
