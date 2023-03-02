@@ -613,6 +613,7 @@ Random.seed!(0)
         @test_nowarn Plots.plot(1:3,v, rib=false)
         @test_nowarn Plots.plot(1:3, v, N=10)
         @test_nowarn Plots.plot(1:3, M, N=10)
+        @test_nowarn Plots.plot((1:3) .* [1 1], M, N=10)
 
         @test_nowarn errorbarplot(1:3,v)
         @test_nowarn errorbarplot(1:3,[v v])
