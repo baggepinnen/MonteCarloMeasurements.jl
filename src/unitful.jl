@@ -12,6 +12,16 @@ end
 Unitful.unit(v::AbstractParticles{T}) where T = unit(T)
 Unitful.upreferred(v::AbstractParticles) = Unitful.uconvert(upreferred(unit(v)), v)
 
+function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where {T <: Unitful.Quantity, N}
+    sPT = MonteCarloMeasurements.shortform(p)
+    compact = get(io, :compact, false)
+    if compact
+        print(io, MonteCarloMeasurements.to_num_str(p, 6, 3))
+    else
+        print(io, MonteCarloMeasurements.to_num_str(p, 6, 3), " $(typeof(p))\n")
+    end
+end
+
 for PT in ParticleSymbols
 
     @eval begin

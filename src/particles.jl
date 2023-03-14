@@ -122,7 +122,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     if compact
         print(io, MonteCarloMeasurements.to_num_str(p, 6, 3))
     else
-        print(io, "$(typeof(p))\n ", MonteCarloMeasurements.to_num_str(p, 6, 3))
+        print(io, MonteCarloMeasurements.to_num_str(p, 6, 3), " $(typeof(p))\n")
     end
 end
 
