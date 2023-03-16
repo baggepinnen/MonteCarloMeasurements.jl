@@ -29,8 +29,9 @@ function quantiles(y,q)
 end
 
 @userplot Errorbarplot
-@recipe function plt(p::Errorbarplot)
+@recipe function plt(p::Errorbarplot; quantile=nothing)
     x,y,q = handle_args(p)
+    q = quantile === nothing ? q : quantile
     m = pmean.(y)
     label --> "Mean with $q quantile"
     Q = quantiles(y, q)
@@ -77,8 +78,9 @@ to1series(y) = to1series(1:size(y,1),y)
 end
 
 @userplot Ribbonplot
-@recipe function plt(p::Ribbonplot; N=false)
+@recipe function plt(p::Ribbonplot; N=false, quantile=nothing)
     x,y,q = handle_args(p)
+    q = quantile === nothing ? q : quantile
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
@@ -139,7 +141,8 @@ ribbonplot
 
 
 
-@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
+@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing)
+    q = quantile === nothing ? q : quantile
     label --> "Mean with ($q, $(1-q)) quantiles"
     for col = 1:size(y,2)
         yc = y[:,col]
@@ -164,17 +167,19 @@ ribbonplot
 end
 
 
-@recipe function plt(func::Function, x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025)
+@recipe function plt(func::Function, x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; quantile=nothing)
     y = func.(x)
+    q = quantile === nothing ? q : quantile
     label --> "Mean with ($q, $(1-q)) quantiles"
     xerror := quantiles(x, q)
     yerror := quantiles(y, q)
     pmean.(x), pmean.(y)
 end
 
-@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; points=false)
+@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; points=false, quantile=nothing)
     my = pmean.(y)
     mx = pmean.(x)
+    q = quantile === nothing ? q : quantile
     if points
         @series begin
             seriestype --> :scatter
@@ -195,15 +200,17 @@ end
     end
 end
 
-@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::AbstractArray, q=0.025)
+@recipe function plt(x::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, y::AbstractArray, q=0.025; quantile=nothing)
     mx = pmean.(x)
+    q = quantile === nothing ? q : quantile
     lower,upper = quantiles(x, q)
     xerror := (lower,upper)
     mx, y
 end
 
-@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true)
+@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing)
     samedim = size(x) === size(y)
+    q = quantile === nothing ? q : quantile
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
