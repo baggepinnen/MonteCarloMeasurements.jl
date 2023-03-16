@@ -153,7 +153,7 @@ ribbonplot
             @series begin
                 M = Matrix(yc)
                 np,ny = size(M)
-                primary := false
+                primary := !ri
                 nc = N > 1 ? N : min(np, 50)
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
@@ -217,7 +217,7 @@ end
             @series begin
                 M = Matrix(yc)
                 np,ny = size(M)
-                primary := false
+                primary := !ri
                 nc = N > 1 ? N : min(np, 50)
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
