@@ -53,7 +53,7 @@ savefig("parabola.html"); nothing # hide
 ```@raw html
 <object type="text/html" data="../parabola.html" style="width:100%;height:450px;"></object>
 ```
-as we can see, the linear method outputs a Dirac distribution (no uncertainty) at $x=0$, while there should clearly be a lot of uncertainty in the output. The histogram displays the output density as approximated by the particles. The histogram does not go below zero, and tapers off as values increase. The problem here is that the uncertainty is large in relation to the curvature of the function. As the uncertainty decreseas, the true output density becomes closer and closer to a DIrac distribution.
+as we can see, the linear method outputs a Dirac distribution (no uncertainty) at $x=0$, while there should clearly be a lot of uncertainty in the output. The histogram displays the output density as approximated by the particles. The histogram does not go below zero, and tapers off as values increase. The problem here is that the uncertainty is large in relation to the curvature of the function. As the uncertainty decreases, the true output density becomes closer and closer to a DIrac distribution.
 
 
 The next function has a discontinuity (≈ infinite curvature)
@@ -65,7 +65,7 @@ savefig("sign.html"); nothing # hide
 ```@raw html
 <object type="text/html" data="../sign.html" style="width:100%;height:450px;"></object>
 ```
-once again, linear uncertainty propagation outputs a distribution with zero uncertainty. The true output distribution has two modes since the input distribution has palces mass on both sides of the discontinuity. This is captured in the particle distribution, where most particles end up at the right side of the discontinuity, while a smaller proportion of the particles end up to the left. If the input density would have its mean at 0, half of the particles would end up in each of the output locations. Any funciton containing an if-statment where the chosen branch depends on an uncertain value falls into this category.
+once again, linear uncertainty propagation outputs a distribution with zero uncertainty. The true output distribution has two modes since the input distribution places mass on both sides of the discontinuity. This is captured in the particle distribution, where most particles end up at the right side of the discontinuity, while a smaller proportion of the particles end up to the left. If the input density would have its mean at 0, half of the particles would end up in each of the output locations. Any function containing an if-statement where the chosen branch depends on an uncertain value falls into this category.
 
 Next, we consider a periodic function
 ```@example comparison

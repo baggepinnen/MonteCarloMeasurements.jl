@@ -4,6 +4,8 @@ This example shows how to simulate control systems (using [ControlSystems.jl](ht
 
 We also perform some limited benchmarks.
 
+The package [RobustAndOptimalControl.jl](https://juliacontrol.github.io/RobustAndOptimalControl.jl/dev/) contains lots of additional tools to work with linear systems with uncertainty represented as `Particles`. See the documentation on [Uncertainty modeling](https://juliacontrol.github.io/RobustAndOptimalControl.jl/dev/uncertainty/) for several examples.
+
 ## [Latin Hypercube Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)
 We show how to initialize particles with LHS and how to make sure the sample gets the desired moments. We also visualize the statistics of the sample.
 
