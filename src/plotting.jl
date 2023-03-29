@@ -183,12 +183,9 @@ end
     if points
         @series begin
             seriestype --> :scatter
-            primary := false
+            primary := true
             seriesalpha --> 0.1
-            Matrix(x), Matrix(y)
-        end
-        @series begin
-            mx, my
+            vec(Matrix(x)), vec(Matrix(y))
         end
     else
         @series begin
