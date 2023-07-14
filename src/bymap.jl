@@ -1,6 +1,7 @@
 import Base.Cartesian.@ntuple
 
 nparticles(p) = length(p)
+nparticles(p::Type) = 1
 nparticles(p::Type{<:AbstractParticles{T,N}}) where {T,N} = N
 nparticles(p::AbstractParticles{T,N}) where {T,N} = N
 nparticles(p::ParticleArray) = nparticles(eltype(p))

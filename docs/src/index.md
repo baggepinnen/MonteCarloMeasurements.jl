@@ -255,7 +255,21 @@ plot(density(p[1]), density(p[2]))
 see also `examples/lhs.jl`.
 
 # Plotting
-An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization. Vectors of particles can be plotted using one of
+An instance of `p::Particles` can be plotted using `plot(p)`, that creates a histogram by default. If [`StatsPlots.jl`](https://github.com/JuliaPlots/StatsPlots.jl) is available, one can call `density(p)` to get a slightly different visualization.
+
+For arrays of particles, `plot` takes a number of keyword arguments, indicated here by the available custom plot signatures
+```julia
+plot(y::Array{Particles}, q=0.025; N=true, ri = true, quantile=nothing) # Applies to matrices and vectors
+plot(x::Array{Particles}, y::Array{Particles}, q=0.025; points=false, quantile=nothing)
+```
+
+- `q` and `quantile` denotes the quantiles used for ribbons.
+- `ri` indicates whether or not to plot ribbons.
+- `N` indicates the number of sample trajectories to plot on top of the ribbon. If `N=true`, a maximum of 50 trajectories are plotted.
+- `points` indicates whether or not to plot the individual particles as points. If `false`, error bars are shown instead.
+
+
+Vectors of particles can also be plotted using one of the custom functions
 - `errorbarplot(x,y,[q=0.025])`: `q` determines the quantiles, set to `0` for max/min. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
 - `mcplot(x,y)`: Plots all trajectories
 - `ribbonplot(x,y,[q=0.025]; N=true)`: Plots with shaded area from quantile `q` to `1-q`. You can also specify both bounds, e.g., `q = (0.01, 0.99)`.
