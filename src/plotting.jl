@@ -161,6 +161,7 @@ ribbonplot
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
                 M[chosen, :]'
+                # to1series(M[chosen, :]') # We actually want different columns to look different
             end
         end
     end
@@ -207,18 +208,23 @@ end
 
 @recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing)
     samedim = size(x) === size(y)
+    layout --> max(size(x, 2), size(y, 2))
     q = quantile === nothing ? q : quantile
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
             if ri
                 @series begin
+                    seriescolor --> col
+                    subplot --> col
                     ribbon := quantiles(yc, q)
                     label --> "Mean with ($q, $(1-q)) quantiles"
                     x, pmean.(yc)
                 end
             end
             @series begin
+                seriescolor --> col
+                subplot --> col
                 M = Matrix(yc)
                 np,ny = size(M)
                 primary := !ri
