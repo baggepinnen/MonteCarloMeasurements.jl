@@ -161,7 +161,7 @@ ribbonplot
                 seriesalpha --> max(1/sqrt(nc), 0.1)
                 chosen = randperm(np)[1:nc]
                 M[chosen, :]'
-                # to1series(M[chosen, :]') # We actually want different columns to look different
+                to1series(M[chosen, :]') # We want different columns to look different, but M here represents a single column (Matrix(yc)), so each column in M correspond to the same yc
             end
         end
     end
