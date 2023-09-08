@@ -179,7 +179,7 @@ end
 
 # Two-argument functions
 # foreach(register_primitive_binop, [+,-,*,/,//,^])
-foreach(register_primitive_multi, [+,-,*,/,//,^,max,min,mod,mod1,atan,atand,add_sum,hypot])
+foreach(register_primitive_multi, [+,-,*,/,//,^,max,min,mod,mod1,atan,atand,add_sum,hypot,clamp])
 # One-argument functions
 foreach(register_primitive_single, [+,-,
 exp,exp2,exp10,expm1,
@@ -349,6 +349,8 @@ for PT in ParticleSymbols
             pstd(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
             return p.particles[1]
         end
+        Base.rem(p1::$PT{T,N}, p2::$PT{T,N}, args...) where {T,N} = $PT{T,N}(Base.rem.(p1.particles, p2.particles, args...))
+        Base.div(p1::$PT{T,N}, p2::$PT{T,N}, args...) where {T,N} = $PT{T,N}(Base.div.(p1.particles, p2.particles, args...))
 
         """
             union(p1::AbstractParticles, p2::AbstractParticles)
