@@ -598,10 +598,11 @@ Random.seed!(0)
         @info "Testing plotting"
         p = Particles(100)
         v = randn(3) .+ Particles.(10)
-        M = randn(3,2) .+ Particles.(10)
+        M = randn(3,2) .+ [-1 1] .+ Particles.(10)
         @test_nowarn Plots.plot(p)
         @test_nowarn Plots.plot(v)
         @test_nowarn Plots.plot(M)
+        @test_nowarn Plots.plot(M .+ 5) # This plot should have 4 different colored bands
         @test_nowarn Plots.plot(v, ri=false)
         @test_nowarn Plots.plot(v, N=0)
         @test_nowarn Plots.plot(M, N=0)
@@ -616,10 +617,15 @@ Random.seed!(0)
         @test_nowarn Plots.plot(1:3,v, ri=false)
         @test_nowarn Plots.plot(1:3, v, N=5)
         @test_nowarn Plots.plot(1:3, M, N=5)
+        @test_nowarn Plots.plot!(1:3, M .+ 5, N=5) # This plot should have 4 different colored bands
         @test_nowarn Plots.plot((1:3) .* [1 1], M, N=10)
+
+        @test_nowarn Plots.plot(1:3, M, N=5, ri=false)
+        @test_nowarn Plots.plot!(1:3, M .+ 5, N=5, ri=false) # This plot should have 4 different colored mclines
 
         @test_nowarn Plots.plot(1:3, v, N=0)
         @test_nowarn Plots.plot(1:3, M, N=0)
+        @test_nowarn Plots.plot!(1:3, M .+ 5, N=0) # This plot should have 4 different colored bands
         @test_nowarn Plots.plot((1:3) .* [1 1], M, N=0)
 
         @test_nowarn errorbarplot(1:3,v)

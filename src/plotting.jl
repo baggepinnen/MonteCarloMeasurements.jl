@@ -59,8 +59,9 @@ end
 to1series(y) = to1series(1:size(y,1),y)
 
 @userplot MCplot
-@recipe function plt(p::MCplot)
+@recipe function plt(p::MCplot; oneseries=true)
     x,y,q = handle_args(p)
+    to1series = oneseries ? MonteCarloMeasurements.to1series : (x,y) -> (x,y)
     N = nparticles(y)
     selected = q > 1 ? randperm(N)[1:q] : 1:N
     N = length(selected)
@@ -78,9 +79,10 @@ to1series(y) = to1series(1:size(y,1),y)
 end
 
 @userplot Ribbonplot
-@recipe function plt(p::Ribbonplot; N=false, quantile=nothing)
+@recipe function plt(p::Ribbonplot; N=false, quantile=nothing, oneseries=true)
     x,y,q = handle_args(p)
     q = quantile === nothing ? q : quantile
+    to1series = oneseries ? MonteCarloMeasurements.to1series : identity
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
@@ -141,9 +143,10 @@ ribbonplot
 
 
 
-@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing)
+@recipe function plt(y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing, oneseries=true)
     q = quantile === nothing ? q : quantile
     label --> "Mean with ($q, $(1-q)) quantiles"
+    to1series = oneseries ? MonteCarloMeasurements.to1series : identity
     for col = 1:size(y,2)
         yc = y[:,col]
         if ri
@@ -206,25 +209,26 @@ end
     mx, y
 end
 
-@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing)
+@recipe function plt(x::AbstractArray, y::Union{MvParticles,AbstractMatrix{<:AbstractParticles}}, q=0.025; N=true, ri=true, quantile=nothing, oneseries=true)
     samedim = size(x) === size(y)
-    layout --> max(size(x, 2), size(y, 2))
+    # layout --> max(size(x, 2), size(y, 2))
     q = quantile === nothing ? q : quantile
+    to1series = oneseries ? MonteCarloMeasurements.to1series : (x,y) -> (x,y)
     if N > 0
         for col = 1:size(y,2)
             yc = y[:,col]
             if ri
                 @series begin
-                    seriescolor --> col
-                    subplot --> col
+                    # seriescolor --> col
+                    # subplot --> col
                     ribbon := quantiles(yc, q)
                     label --> "Mean with ($q, $(1-q)) quantiles"
                     x, pmean.(yc)
                 end
             end
             @series begin
-                seriescolor --> col
-                subplot --> col
+                # seriescolor --> col
+                # subplot --> col
                 M = Matrix(yc)
                 np,ny = size(M)
                 primary := !ri
