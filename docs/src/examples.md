@@ -128,8 +128,7 @@ MonteCarloMeasurements.:∓   25.115 ms  (25788 allocations: 24.68 MiB)    # 100
 MonteCarloMeasurements.:±   345.730 ms (696212 allocations: 838.50 MiB)  # 500 Particles
 ```
 
-# MCMC inference using Soss.jl or Turing.jl
-The probabilistic programming language [Soss.jl](https://github.com/cscherrer/Soss.jl) has native support for converting the inference result to `Particles` for further processing, see the Soss readme for further instruction.
+# MCMC inference using Turing.jl
 
-[Turing.jl](https://github.com/TuringLang/Turing.jl/) is another probabilistic programming language, and an interface between Turing and MonteCarloMeasurements is provided by
+[Turing.jl](https://github.com/TuringLang/Turing.jl/) is a probabilistic programming language, and an interface between Turing and MonteCarloMeasurements is provided by
 [Turing2MonteCarloMeasurements.jl](https://github.com/baggepinnen/Turing2MonteCarloMeasurements.jl) with instructions and examples in the readme.
