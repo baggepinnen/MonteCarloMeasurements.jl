@@ -5,6 +5,8 @@ using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_contai
 using ControlSystemsBase, Test, GenericSchur
 ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
+Continuous = ControlSystemsBase.Continuous
+
 
 @testset "deconstruct" begin
     @info "Testing deconstruct"
