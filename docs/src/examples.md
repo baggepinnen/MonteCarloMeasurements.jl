@@ -29,6 +29,46 @@ using MonteCarloMeasurements, Unitful
 (1..2)u"m"
 ```
 
+### Example: Solar collector energy transfer
+The following example estimates the amount of instantaneous thermal power transferred from a solar collector embedded in a concrete floor, to a water reservoir. The power is computed by an measuring the temperature difference, $\Delta T$, between the warm water going into the collector tank and the colder water returning. Using the mass-flow rate and the specific heat capacity of water, we can estimate the power transfer. No flow meter is installed, so the flow is estimated and subject to large uncertainty.
+```@example solar
+using MonteCarloMeasurements
+using Unitful
+using Unitful: W, kW, m, mm, hr, K, g, J, l, s
+
+ΔT = (3.5 ± 0.8)K # The temperature difference varies slightly between different flow circuits.
+specific_heat_water = 4.19J/(g*K)
+density_water = 1e6g/m^3
+flow = 8*(1..2.5)*l/(60s) # 8 solar collector circuits, each with an estimated flow rate of between 1 and 2.5 l/minute
+mass_flow = flow * density_water |> upreferred # Water flow in mass per second
+power = uconvert(W, mass_flow * specific_heat_water * ΔT) # Power in Watts
+```
+
+Some power is lost to the ground in which the heat-exchanger circuits are embedded, we estimate this to be between 10 and 50% of the total power.
+```@example solar
+ground_losses = (0.1..0.5) * power # Between 10-50% power loss to ground
+reservoir_volume = 7m*3m*1.5m
+```
+
+The energy transfered during 6hrs solar collection can be estimated as
+```@example solar
+energy_6_hrs = (power - ground_losses)*6hr
+```
+and this energy transfer will increase the temperature in the reservoir by
+```@example solar
+ΔT_reservoir_6hr = energy_6_hrs/(reservoir_volume*density_water*specific_heat_water) |> upreferred
+```
+
+Finally, we visualize the distributions associated with the estimated quantities:
+```@example solar
+using Plots
+figh = plot(ΔT_reservoir_6hr, xlabel="\$ΔT [K]\$", ylabel="\$P(ΔT)\$", title="Temperature increase 6hrs sun")
+qs   = 0:0.01:1
+Qs   = pquantile.(ΔT_reservoir_6hr, qs)
+figq = plot(qs, Qs, xlabel="∫\$P(ΔT)\$")
+plot(figh, figq)
+```
+
 
 ## Monte-Carlo sampling properties
 The variance introduced by Monte-Carlo sampling has some fortunate and some unfortunate properties. It decreases as 1/N, where N is the number of particles/samples. This unfortunately means that to get half the standard deviation in your estimate, you need to quadruple the number of particles. On the other hand, this variance does not depend on the dimension of the space, which is very fortunate.
