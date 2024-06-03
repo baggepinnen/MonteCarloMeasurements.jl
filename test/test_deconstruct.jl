@@ -5,12 +5,14 @@ using MonteCarloMeasurements: nakedtypeof, build_container, build_mutable_contai
 using ControlSystemsBase, Test, GenericSchur
 ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRational,2}, Ts, ::Int64, ::Int64) = TransferFunction(matrix,Ts)
 
+Continuous = ControlSystemsBase.Continuous
+
 
 @testset "deconstruct" begin
     @info "Testing deconstruct"
     unsafe_comparisons()
     N = 50
-    P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])
+    P = ss(tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)]))
     f = x->c2d(x,0.1)
     w = Workspace(f,P)
     @time Pd = w(P)
@@ -34,22 +36,17 @@ ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRatio
     p = 1 ± 0.1
     @test mean_object(p) == pmean(p)
     @test mean_object([p,p]) == pmean.([p,p])
-    @test mean_object(P) ≈ tf(tf(1,[1,1])) atol=1e-2
+    @test mean_object(P) ≈ ss(tf(tf(1,[1,1]))) atol=1e-2
 
 
 
-    @test nakedtypeof(P) == TransferFunction
-    @test nakedtypeof(typeof(P)) == TransferFunction
-    @test typeof(P) == TransferFunction{ControlSystemsBase.Continuous, ControlSystemsBase.SisoRational{StaticParticles{Float64,N}}}
+    @test nakedtypeof(P) == StateSpace
+    @test nakedtypeof(typeof(P)) == StateSpace
     P2 = build_container(P)
-    @test typeof(P2) == TransferFunction{ControlSystemsBase.Continuous, ControlSystemsBase.SisoRational{Float64}}
-    @test typeof(build_mutable_container(P)) == TransferFunction{ControlSystemsBase.Continuous, ControlSystemsBase.SisoRational{Particles{Float64,N}}}
+    @test typeof(P2) == StateSpace{Continuous, Float64}
+    @test typeof(build_mutable_container(P)) == StateSpace{Continuous, Particles{Float64, N}}
     @test has_particles(P)
-    @test has_particles(P.matrix)
-    @test has_particles(P.matrix[1])
-    @test has_particles(P.matrix[1].num)
-    @test has_particles(P.matrix[1].num.coeffs)
-    @test has_particles(P.matrix[1].num.coeffs[1])
+    @test has_particles(P.A)
 
     # P = tf(1 ± 0.1, [1, 1±0.1])
     # @benchmark foreach(i->c2d($(tf(1.,[1., 1])),0.1), 1:N) # 1.7 ms 1.2 Mb
@@ -76,12 +73,12 @@ ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRatio
         resultsetter = MonteCarloMeasurements.get_result_setter(Pres)
         @test all(1:paths[1][3]) do i
             buffersetter(P,P2,i)
-            P.matrix[1].num.coeffs[1].particles[i] == P2.matrix[1].num.coeffs[1] &&
-            P.matrix[1].den.coeffs[2].particles[i] == P2.matrix[1].den.coeffs[2]
+
+            P.A[1].particles[i] == P2.A[1] && P.A[1].particles[i] == P2.A[1]
             P2res = f(P2)
             resultsetter(Pres, P2res, i)
-            Pres.matrix[1].num.coeffs[1].particles[i] == P2res.matrix[1].num.coeffs[1] &&
-            Pres.matrix[1].den.coeffs[2].particles[i] == P2res.matrix[1].den.coeffs[2]
+
+            Pres.A[1].particles[i] == P2res.A[1] && Pres.A[1].particles[i] == P2res.A[1]
         end
     end
 
@@ -89,18 +86,18 @@ ControlSystemsBase.TransferFunction(matrix::Array{<:ControlSystemsBase.SisoRatio
     @test mean_object(complex(1. ± 0.1, 1.)) ≈ complex(1,1) atol=1e-3
 
     Ps = MonteCarloMeasurements.make_scalar(P)
-    @test MonteCarloMeasurements.particletypetuple(Ps.matrix[1].num.coeffs[1]) == (Float64,1,Particles)
-    @test MonteCarloMeasurements.particletypetuple(MonteCarloMeasurements.restore_scalar(Ps,50).matrix[1].num.coeffs[1]) == (Float64,50,Particles)
+    @test MonteCarloMeasurements.particletypetuple(Ps.A[1]) == (Float64,1,Particles)
+    @test MonteCarloMeasurements.particletypetuple(MonteCarloMeasurements.restore_scalar(Ps,50).A[1]) == (Float64,50,Particles)
 
     unsafe_comparisons(false)
 
 
     N = 50
-    P = tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)])
+    P = ss(tf(1 +0.1StaticParticles(N), [1, 1+0.1StaticParticles(N)]))
     f = x->c2d(x,0.1)
     res = MonteCarloMeasurements.array_of_structs(f, P)
     @test length(res) == N
-    @test res isa Vector{<:TransferFunction}
+    @test res isa Vector{<:StateSpace}
 
 
 end
