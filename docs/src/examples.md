@@ -30,7 +30,7 @@ using MonteCarloMeasurements, Unitful
 ```
 
 ### Example: Solar collector energy transfer
-The following example estimates the amount of instantaneous thermal power transferred from a solar collector embedded in a concrete floor, to a water reservoir. The power is computed by an measuring the temperature difference, $\Delta T$, between the warm water going into the collector tank and the colder water returning. Using the mass-flow rate and the specific heat capacity of water, we can estimate the power transfer. No flow meter is installed, so the flow is estimated and subject to large uncertainty.
+The following example estimates the amount of thermal power transferred from a solar collector embedded in a concrete floor, to a water reservoir. The power is computed by measuring the temperature difference, $\Delta T$, between the solar collectors circulating warm water going into the collector tank and the colder returning water. Using the mass-flow rate and the specific heat capacity of water, we can estimate the power transfer. No flow meter is installed, so the flow is estimated and subject to large uncertainty.
 ```@example solar
 using MonteCarloMeasurements
 using Unitful
