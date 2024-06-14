@@ -8,7 +8,7 @@ const FD = ForwardDiff
     # In the cost function below, we ensure that $cx+dy > 10 \; ∀ \; c,d ∈ P$ by looking at the worst case
     function cost(params)
         x,y = params
-        -(3x+2y) + 10000sum(params .< 0) + 10000*(pmaximum(c*x+d*y) > 10)
+        -(3x+2y) + 10000sum(params .< 0) + 10000*(pmaximum(c*x+d*y) > 10) + (x/3)*(3/x) - 1
     end
 
     params = [1., 2] # Initial guess
@@ -55,4 +55,8 @@ const FD = ForwardDiff
     @test pmean(pmean(r[2])) != ref[2]
 
     unsafe_comparisons(false)
+
+    x = paramsp[1]
+    @test FD.derivative(x -> x/2, x) == 1/2
+    @test FD.derivative(x -> 2/x, x) ≈ -2/x^2
 end
