@@ -2,9 +2,10 @@
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random, GenericSchur
 import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
-@info "import Plots"
+@info "import Plots, Makie"
 import Plots
-@info "import Plots done"
+import Makie
+@info "import plotting packages done"
 
 Random.seed!(0)
 
@@ -653,6 +654,23 @@ Random.seed!(0)
         @test_throws ArgumentError errorbarplot(1:3, (1:3) .± 0.1, 1,1)
 
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
+    end
+
+    @time @testset "Makie" begin
+        p1 = Particles(10^2)
+        Makie.hist(p1)
+        Makie.density(p1)
+
+        xs = 1:20
+        ys = Particles.(Normal.(sqrt.(1:20), sqrt.(1:20)./5))
+
+        Makie.scatter(xs, ys)
+        Makie.scatter(tuple.(xs, ys))
+        Makie.band(xs, ys)
+        Makie.band(tuple.(xs, ys); q=0.01)
+        Makie.rangebars(tuple.(xs, ys); q=0.16)
+        Makie.series(xs, ys)
+        Makie.series(tuple.(xs, ys); N=5)
     end
 
     @time @testset "optimize" begin
