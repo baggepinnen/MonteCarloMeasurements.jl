@@ -395,25 +395,12 @@ for PT in ParticleSymbols
 
     end
 
-    # for XT in (:T, :($PT{T,N})), YT in (:T, :($PT{T,N})), ZT in (:T, :($PT{T,N}))
-    #     XT == YT == ZT == :T && continue
-    #     @eval function Base.muladd(x::$XT,y::$YT,z::$ZT) where {T<:Number,N}
-    #          res = muladd.(maybe_particles(x),maybe_particles(y),maybe_particles(z))
-    #          $PT{eltype(res),N}(res)
-    #     end
-    # end
-
-    @eval function Base.muladd(x::$PT{T,N},y::$PT{T,N},z::$PT{T,N}) where {T<:Number,N}
-        res = muladd.(x.particles,y.particles,z.particles)
-        $PT{T,N}(res)
-    end
-    @eval function Base.muladd(x::T,y::$PT{T,N},z::$PT{T,N}) where {T<:Number,N}
-        res = muladd.(x,y.particles,z.particles)
-        $PT{T,N}(res)
-    end
-    @eval function Base.muladd(x::T,y::T,z::$PT{T,N}) where {T<:Number,N}
-        res = muladd.(x,y,z.particles)
-        $PT{T,N}(res)
+    for XT in (:Number, :($PT{<:Number,N})), YT in (:Number, :($PT{<:Number,N})), ZT in (:Number, :($PT{<:Number,N}))
+        XT == YT == ZT == :Number && continue
+        @eval function Base.muladd(x::$XT,y::$YT,z::$ZT) where {N}
+             res = muladd.(maybe_particles(x),maybe_particles(y),maybe_particles(z))
+             $PT{eltype(res),N}(res)
+        end
     end
 
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
