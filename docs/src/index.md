@@ -308,7 +308,19 @@ ribbonplot(w,mag, yscale=:log10, xscale=:log10, alpha=0.2)
 ```
 ![A bodeplot with a ribbon](assets/rib.svg)
 
+## Makie support
+!!! danger "Experimental"
+    
+    The support for plotting with Makie is currently experimental and at any time subject to breaking changes or removal **not** respecting semantic versioning.
 
+Basic support for plotting with Makie exists as well, try any of the following functions with uncertain numbers
+- `Makie.scatter(xs, ys)`
+- `Makie.scatter(tuple.(xs, ys))`
+- `Makie.band(xs, ys)`
+- `Makie.band(tuple.(xs, ys); q=0.01)`
+- `Makie.rangebars(tuple.(xs, ys); q=0.16)`
+- `Makie.series(xs, ys)`
+- `Makie.series(tuple.(xs, ys); N=5)`
 
 
 # Limitations
