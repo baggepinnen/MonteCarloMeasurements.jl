@@ -44,6 +44,11 @@ register_primitive(unitful_testfunction) # must be outside testset
 
         typeof(promote(1u"V", (1.0 ± 0.1)u"V")) <: Tuple{Particles{<:Quantity}, Particles{<:Quantity}}
 
+        @test muladd(p1, 1, p1) == p1 + p1
+        @test muladd(p1, 1, p2) == p1 + p2
+        @test muladd(1, p1, p2) == p1 + p2
+        @test muladd(p1, 1/p1, 1) == 2
+
         ρ = (2.7 ± 0.2)u"g/cm^3"
         mass = (250 ± 10)u"g"
         width = (30.5 ± 0.2)u"cm"
