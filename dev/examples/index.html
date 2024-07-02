@@ -14,19 +14,19 @@ specific_heat_water = 4.19J/(g*K)
 density_water = 1e6g/m^3
 flow = 8*(1..2.5)*l/(60s) # 8 solar collector circuits, each with an estimated flow rate of between 1 and 2.5 l/minute
 mass_flow = flow * density_water |&gt; upreferred # Water flow in mass per second
-power = uconvert(W, mass_flow * specific_heat_water * ΔT) # Power in Watts</code></pre><pre><code class="language-none">3425.199085082723 W ± 1184.0252996578963 W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-3, Unitful.FreeUnits{(W,), 𝐋^2 𝐌 𝐓^-3, nothing}}, 2000}
+power = uconvert(W, mass_flow * specific_heat_water * ΔT) # Power in Watts</code></pre><pre><code class="language-none">3421.653605926918 W ± 1169.084817143341 W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-3, Unitful.FreeUnits{(W,), 𝐋^2 𝐌 𝐓^-3, nothing}}, 2000}
 </code></pre><p>Some power is lost to the ground in which the heat-exchanger circuits are embedded, we estimate this to be between 10 and 50% of the total power.</p><pre><code class="language-julia">ground_losses = (0.1..0.5) * power # Between 10-50% power loss to ground
-reservoir_volume = 7m*3m*1.5m</code></pre><pre><code class="language-none">31.5 m^3</code></pre><p>The energy transfered during 6hrs solar collection can be estimated as</p><pre><code class="language-julia">energy_6_hrs = (power - ground_losses)*6hr</code></pre><pre><code class="language-none">14361.363756607525 hr W ± 5526.232383446718 hr W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-2, Unitful.FreeUnits{(hr, W), 𝐋^2 𝐌 𝐓^-2, nothing}}, 2000}
-</code></pre><p>and this energy transfer will increase the temperature in the reservoir by</p><pre><code class="language-julia">ΔT_reservoir_6hr = energy_6_hrs/(reservoir_volume*density_water*specific_heat_water) |&gt; upreferred</code></pre><pre><code class="language-none">0.39171807041547957 K ± 0.15073255733915358 K Particles{Quantity{Float64, 𝚯, Unitful.FreeUnits{(K,), 𝚯, nothing}}, 2000}
+reservoir_volume = 7m*3m*1.5m</code></pre><pre><code class="language-none">31.5 m^3</code></pre><p>The energy transfered during 6hrs solar collection can be estimated as</p><pre><code class="language-julia">energy_6_hrs = (power - ground_losses)*6hr</code></pre><pre><code class="language-none">14382.961151329911 hr W ± 5524.305332501839 hr W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-2, Unitful.FreeUnits{(hr, W), 𝐋^2 𝐌 𝐓^-2, nothing}}, 2000}
+</code></pre><p>and this energy transfer will increase the temperature in the reservoir by</p><pre><code class="language-julia">ΔT_reservoir_6hr = energy_6_hrs/(reservoir_volume*density_water*specific_heat_water) |&gt; upreferred</code></pre><pre><code class="language-none">0.39230715721322623 K ± 0.15067999543134916 K Particles{Quantity{Float64, 𝚯, Unitful.FreeUnits{(K,), 𝚯, nothing}}, 2000}
 </code></pre><p>Finally, we visualize the distributions associated with the estimated quantities:</p><pre><code class="language-julia">using Plots
 figh = plot(ΔT_reservoir_6hr, xlabel=&quot;\$ΔT [K]\$&quot;, ylabel=&quot;\$P(ΔT)\$&quot;, title=&quot;Temperature increase 6hrs sun&quot;)
 qs   = 0:0.01:1
 Qs   = pquantile.(ΔT_reservoir_6hr, qs)
 figq = plot(qs, Qs, xlabel=&quot;∫\$P(ΔT)\$&quot;)
-plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>    <div id="bedf3301-a9b2-41df-b54f-7ff5992c7c71" style="width:600px;height:400px;"></div>
+plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>    <div id="c8ada995-f398-4c33-b1f6-8d38f08d6d87" style="width:600px;height:400px;"></div>
     <script>
     
-    Plotly.newPlot('bedf3301-a9b2-41df-b54f-7ff5992c7c71', [
+    Plotly.newPlot('c8ada995-f398-4c33-b1f6-8d38f08d6d87', [
     {
         "xaxis": "x1",
         "fill": "tozeroy",
@@ -50,12 +50,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            2.0,
+            4.0,
             0.0,
             0.0,
-            2.0,
-            2.0,
-            2.0
+            4.0,
+            4.0,
+            4.0
         ],
         "type": "scatter"
     },
@@ -82,12 +82,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            30.0,
+            28.0,
             0.0,
             0.0,
-            30.0,
-            30.0,
-            30.0
+            28.0,
+            28.0,
+            28.0
         ],
         "type": "scatter"
     },
@@ -114,12 +114,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            105.0,
+            119.0,
             0.0,
             0.0,
-            105.0,
-            105.0,
-            105.0
+            119.0,
+            119.0,
+            119.0
         ],
         "type": "scatter"
     },
@@ -146,12 +146,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            200.0,
+            196.0,
             0.0,
             0.0,
-            200.0,
-            200.0,
-            200.0
+            196.0,
+            196.0,
+            196.0
         ],
         "type": "scatter"
     },
@@ -178,12 +178,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            271.0,
+            265.0,
             0.0,
             0.0,
-            271.0,
-            271.0,
-            271.0
+            265.0,
+            265.0,
+            265.0
         ],
         "type": "scatter"
     },
@@ -210,12 +210,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            286.0,
+            271.0,
             0.0,
             0.0,
-            286.0,
-            286.0,
-            286.0
+            271.0,
+            271.0,
+            271.0
         ],
         "type": "scatter"
     },
@@ -242,12 +242,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            274.0,
+            258.0,
             0.0,
             0.0,
-            274.0,
-            274.0,
-            274.0
+            258.0,
+            258.0,
+            258.0
         ],
         "type": "scatter"
     },
@@ -274,12 +274,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            221.0,
+            234.0,
             0.0,
             0.0,
-            221.0,
-            221.0,
-            221.0
+            234.0,
+            234.0,
+            234.0
         ],
         "type": "scatter"
     },
@@ -306,12 +306,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            181.0,
+            176.0,
             0.0,
             0.0,
-            181.0,
-            181.0,
-            181.0
+            176.0,
+            176.0,
+            176.0
         ],
         "type": "scatter"
     },
@@ -338,12 +338,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            122.0,
+            146.0,
             0.0,
             0.0,
-            122.0,
-            122.0,
-            122.0
+            146.0,
+            146.0,
+            146.0
         ],
         "type": "scatter"
     },
@@ -370,12 +370,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            101.0,
+            106.0,
             0.0,
             0.0,
-            101.0,
-            101.0,
-            101.0
+            106.0,
+            106.0,
+            106.0
         ],
         "type": "scatter"
     },
@@ -402,12 +402,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            74.0,
+            65.0,
             0.0,
             0.0,
-            74.0,
-            74.0,
-            74.0
+            65.0,
+            65.0,
+            65.0
         ],
         "type": "scatter"
     },
@@ -434,12 +434,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            52.0,
+            50.0,
             0.0,
             0.0,
-            52.0,
-            52.0,
-            52.0
+            50.0,
+            50.0,
+            50.0
         ],
         "type": "scatter"
     },
@@ -466,12 +466,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            37.0,
+            41.0,
             0.0,
             0.0,
-            37.0,
-            37.0,
-            37.0
+            41.0,
+            41.0,
+            41.0
         ],
         "type": "scatter"
     },
@@ -498,12 +498,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            21.0,
+            18.0,
             0.0,
             0.0,
-            21.0,
-            21.0,
-            21.0
+            18.0,
+            18.0,
+            18.0
         ],
         "type": "scatter"
     },
@@ -530,12 +530,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            10.0,
+            16.0,
             0.0,
             0.0,
-            10.0,
-            10.0,
-            10.0
+            16.0,
+            16.0,
+            16.0
         ],
         "type": "scatter"
     },
@@ -562,12 +562,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            5.0,
+            3.0,
             0.0,
             0.0,
-            5.0,
-            5.0,
-            5.0
+            3.0,
+            3.0,
+            3.0
         ],
         "type": "scatter"
     },
@@ -594,38 +594,6 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            4.0,
-            0.0,
-            0.0,
-            4.0,
-            4.0,
-            4.0
-        ],
-        "type": "scatter"
-    },
-    {
-        "xaxis": "x1",
-        "fill": "tozeroy",
-        "yaxis": "y1",
-        "x": [
-            0.95,
-            0.95,
-            1.0,
-            1.0,
-            0.95,
-            0.95
-        ],
-        "showlegend": false,
-        "mode": "lines",
-        "fillcolor": "rgba(0, 154, 250, 1.000)",
-        "name": "y1",
-        "legendgroup": "y1",
-        "line": {
-            "color": "rgba(0, 0, 0, 1.000)",
-            "dash": "solid",
-            "width": 1
-        },
-        "y": [
             2.0,
             0.0,
             0.0,
@@ -640,12 +608,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
         "fill": "tozeroy",
         "yaxis": "y1",
         "x": [
-            0.9999999999999999,
-            0.9999999999999999,
-            1.0499999999999998,
-            1.0499999999999998,
-            0.9999999999999999,
-            0.9999999999999999
+            0.95,
+            0.95,
+            1.0,
+            1.0,
+            0.95,
+            0.95
         ],
         "showlegend": false,
         "mode": "lines",
@@ -695,8 +663,7 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             0.825,
             0.875,
             0.925,
-            0.975,
-            1.025
+            0.975
         ],
         "showlegend": false,
         "mode": "markers",
@@ -712,24 +679,23 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "size": 0
         },
         "y": [
-            2.0,
-            30.0,
-            105.0,
-            200.0,
-            271.0,
-            286.0,
-            274.0,
-            221.0,
-            181.0,
-            122.0,
-            101.0,
-            74.0,
-            52.0,
-            37.0,
-            21.0,
-            10.0,
-            5.0,
             4.0,
+            28.0,
+            119.0,
+            196.0,
+            265.0,
+            271.0,
+            258.0,
+            234.0,
+            176.0,
+            146.0,
+            106.0,
+            65.0,
+            50.0,
+            41.0,
+            18.0,
+            16.0,
+            3.0,
             2.0,
             2.0
         ],
@@ -858,107 +824,107 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            0.06453921797046165,
-            0.1364462965230939,
-            0.1584808649319883,
-            0.1662251671974339,
-            0.17785980989142403,
-            0.18481732972140885,
-            0.1930297275936736,
-            0.20096112328350277,
-            0.20795028378277922,
-            0.21236098811642698,
-            0.21649857801021316,
-            0.22209857788677903,
-            0.2268459244648805,
-            0.23179015027511024,
-            0.23791910980700545,
-            0.24352708569520748,
-            0.24793848681003,
-            0.2503641324749997,
-            0.2538012649526535,
-            0.2578294714549189,
-            0.2606739625877862,
-            0.2650940910598295,
-            0.26944707275350815,
-            0.2743622673534007,
-            0.2790831116480713,
-            0.2832087740850601,
-            0.28740407535534335,
-            0.28984262952715967,
-            0.2923133325422102,
-            0.29553792084012864,
-            0.29847158415178376,
-            0.30167698298481527,
-            0.3039065666184889,
-            0.3074440260480583,
-            0.3115072925906249,
-            0.3146806484969174,
-            0.31818675403618896,
-            0.32120284239799063,
-            0.324483981524112,
-            0.32836027791009376,
-            0.3327218604097873,
-            0.3361728542349663,
-            0.33875420314666127,
-            0.34273912802934026,
-            0.3454458311667376,
-            0.3520056127796537,
-            0.35477886684089405,
-            0.35701458905458455,
-            0.3601416255312186,
-            0.36555820683668955,
-            0.37029613956983887,
-            0.3737141071507888,
-            0.3776446993893141,
-            0.38000408122543217,
-            0.3833142017192725,
-            0.3866951280519664,
-            0.39126375353355747,
-            0.3943754331687085,
-            0.39802826875239994,
-            0.4034061291888447,
-            0.41023894958792717,
-            0.41446661371079185,
-            0.41760940362621213,
-            0.4205934898022084,
-            0.42405671037040177,
-            0.4287245239111531,
-            0.43319708849834626,
-            0.4381592482642956,
-            0.44137654329728643,
-            0.44812303049626645,
-            0.45208309431554133,
-            0.45570137256837795,
-            0.4605875810853674,
-            0.46516536721163637,
-            0.4713017113525759,
-            0.4790245685405545,
-            0.4842057003381024,
-            0.490072702218087,
-            0.49668041543601865,
-            0.5033537180501566,
-            0.5083661754447614,
-            0.5177448085896241,
-            0.5288368990502651,
-            0.5338487276014917,
-            0.542489730986709,
-            0.5544645984749207,
-            0.561923318317484,
-            0.5724556321759519,
-            0.5788739996552987,
-            0.5925062638457191,
-            0.6052045243105035,
-            0.6146661197098839,
-            0.6244485756678687,
-            0.6421773765669637,
-            0.6612882352177786,
-            0.675511069652692,
-            0.7007055075081297,
-            0.7191092639309471,
-            0.760073107400139,
-            0.8154443450879969,
-            1.0223223985732999
+            0.059623124125481056,
+            0.1329115300326227,
+            0.15490199298403184,
+            0.16644240058598067,
+            0.17506693365351383,
+            0.18463236555721405,
+            0.18996426833460556,
+            0.19713201790676085,
+            0.20471230017951744,
+            0.20931098863020967,
+            0.21518640864365182,
+            0.21910103526325306,
+            0.22334136139428407,
+            0.22862049317813984,
+            0.2334637082848094,
+            0.23837470585979484,
+            0.2430710130560823,
+            0.24847723916273548,
+            0.25323732778901764,
+            0.2573270550507182,
+            0.26032390669072275,
+            0.2633235466435515,
+            0.2667932449113154,
+            0.2702142622627862,
+            0.2745172864761004,
+            0.27865989305253397,
+            0.28178758926900643,
+            0.2858246279271138,
+            0.28810593100359755,
+            0.29352253402110967,
+            0.2973290955146374,
+            0.3014554265726969,
+            0.3043058747136029,
+            0.3081130878685683,
+            0.3129554647195902,
+            0.31591025938396283,
+            0.3198655148848814,
+            0.32240522997490006,
+            0.3266390031541389,
+            0.32978914903289086,
+            0.3331548582120094,
+            0.33572762421557606,
+            0.3408734842450628,
+            0.3447500738228283,
+            0.3494140218849322,
+            0.3534317915459594,
+            0.35705497845218626,
+            0.3605237717352261,
+            0.36481604349819063,
+            0.3681748275324954,
+            0.3719343859206433,
+            0.37522931916203783,
+            0.3788263199196391,
+            0.3830363632222589,
+            0.3877021745880002,
+            0.3904785356894033,
+            0.39548856737539334,
+            0.39983148629030396,
+            0.4046701556055315,
+            0.40981488118571513,
+            0.41444673249381553,
+            0.41891828528429303,
+            0.4236386377936483,
+            0.42826596503141284,
+            0.43293736110090847,
+            0.4378818568362424,
+            0.4413565631161805,
+            0.4444750405888316,
+            0.44725965800132605,
+            0.45078982600067047,
+            0.4567481574346729,
+            0.4604034823184935,
+            0.46552031845008585,
+            0.47295737285387196,
+            0.48020894070756814,
+            0.48461944486078495,
+            0.4892220252542874,
+            0.4959055966146524,
+            0.5022338127728945,
+            0.5097370655396211,
+            0.515067946224232,
+            0.521709373621165,
+            0.5290276565424828,
+            0.5367392558778261,
+            0.5442573844467943,
+            0.552380448924933,
+            0.5605023162752742,
+            0.5682219208590219,
+            0.5751060692960417,
+            0.5867636721955442,
+            0.5976125042725725,
+            0.6130761288041598,
+            0.626204349182299,
+            0.6412660999366551,
+            0.6635516467350692,
+            0.6833164370831394,
+            0.7020735999740768,
+            0.7161617876777113,
+            0.7530074018136163,
+            0.8042254807181722,
+            0.9644187681314094
         ],
         "type": "scatter"
     }
@@ -977,8 +943,8 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             1.0
         ],
         "range": [
-            -0.011800000000000033,
-            1.1118
+            -0.008709999999999996,
+            1.05871
         ],
         "domain": [
             0.07646908719743364,
@@ -1049,12 +1015,11 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             0.2,
             0.4,
             0.6000000000000001,
-            0.8,
-            1.0
+            0.8
         ],
         "range": [
-            0.03580572255237646,
-            1.051055893991385
+            0.03247925480530317,
+            0.9915626374515871
         ],
         "domain": [
             0.07581474190726165,
@@ -1067,8 +1032,7 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "0.2",
             "0.4",
             "0.6",
-            "0.8",
-            "1.0"
+            "0.8"
         ],
         "zeroline": false,
         "tickfont": {
@@ -1157,7 +1121,7 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
         ],
         "range": [
             0.0,
-            286.0
+            271.0
         ],
         "domain": [
             0.07581474190726165,
@@ -1272,4 +1236,4 @@ sim(MonteCarloMeasurements.:±, tspan, label = &quot;MonteCarlo&quot;, xlims=(ts
 sim(Measurements.:±, tspan, label = &quot;Linear&quot;, xlims=(tspan[2]-5,tspan[2]), l=(5,))
 sim(MonteCarloMeasurements.:∓, tspan, mcplot!, label = &quot;&quot;, xlims=(tspan[2]-5,tspan[2]), l=(:black,0.1))</code></pre><p><img src="../assets/long_timescale_mc.svg" alt="window"/></p><p>It now becomes clear that each trajectory has a constant amplitude (although individual trajectories amplitudes vary slightly due to the uncertainty in the initial angle), but the phase is all mixed up due to the slightly different frequencies!</p><p>These problems grow with increasing uncertainty and increasing integration time. In fact, the uncertainty reported by Measurements.jl goes to infinity as the integration time does the same.</p><p>Of course, the added accuracy from using MonteCarloMeasurements does not come for free, as it costs some additional computation. We have the following timings for integrating the above system 100 seconds using three different uncertainty representations</p><pre><code class="language-julia">Measurements.:±             14.596 ms  (729431 allocations: 32.43 MiB)   # Measurements.Measurement
 MonteCarloMeasurements.:∓   25.115 ms  (25788 allocations: 24.68 MiB)    # 100 StaticParticles
-MonteCarloMeasurements.:±   345.730 ms (696212 allocations: 838.50 MiB)  # 500 Particles</code></pre><h1 id="MCMC-inference-using-Turing.jl-1"><a class="docs-heading-anchor" href="#MCMC-inference-using-Turing.jl-1">MCMC inference using Turing.jl</a><a class="docs-heading-anchor-permalink" href="#MCMC-inference-using-Turing.jl-1" title="Permalink"></a></h1><p><a href="https://github.com/TuringLang/Turing.jl/">Turing.jl</a> is a probabilistic programming language, and an interface between Turing and MonteCarloMeasurements is provided by <a href="https://github.com/baggepinnen/Turing2MonteCarloMeasurements.jl">Turing2MonteCarloMeasurements.jl</a> with instructions and examples in the readme.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../overloading/">« Supporting new functions</a><a class="docs-footer-nextpage" href="../comparison/">Linear vs. Monte-Carlo uncertainty propagation »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 2 July 2024 06:11">Tuesday 2 July 2024</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+MonteCarloMeasurements.:±   345.730 ms (696212 allocations: 838.50 MiB)  # 500 Particles</code></pre><h1 id="MCMC-inference-using-Turing.jl-1"><a class="docs-heading-anchor" href="#MCMC-inference-using-Turing.jl-1">MCMC inference using Turing.jl</a><a class="docs-heading-anchor-permalink" href="#MCMC-inference-using-Turing.jl-1" title="Permalink"></a></h1><p><a href="https://github.com/TuringLang/Turing.jl/">Turing.jl</a> is a probabilistic programming language, and an interface between Turing and MonteCarloMeasurements is provided by <a href="https://github.com/baggepinnen/Turing2MonteCarloMeasurements.jl">Turing2MonteCarloMeasurements.jl</a> with instructions and examples in the readme.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../overloading/">« Supporting new functions</a><a class="docs-footer-nextpage" href="../comparison/">Linear vs. Monte-Carlo uncertainty propagation »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 2 July 2024 06:39">Tuesday 2 July 2024</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
