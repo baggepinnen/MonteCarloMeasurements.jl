@@ -101,7 +101,7 @@ Return a short string describing the type
 """
 shortform(p::Particles) = "Part"
 shortform(p::StaticParticles) = "SPart"
-function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
+function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where {T<:Union{Number,AbstractArray}}
     s = pstd(p)
     # TODO: be smart and select sig digits based on s
     if T <: AbstractFloat && s < eps(p)
@@ -110,6 +110,7 @@ function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T
         string(round(pmean(p), sigdigits=d), " ± ", round(s, sigdigits=ds))
     end
 end
+to_num_str(p::AbstractParticles{T}, d, ds) where T = ""
 
 
 function Base.show(io::IO, p::AbstractParticles{T,N}) where {T,N}
