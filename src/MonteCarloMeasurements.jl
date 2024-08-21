@@ -63,7 +63,8 @@ Toggle the use of a comparison function without warning. By default `mean` is us
 
     unsafe_comparisons(mode=:reduction; verbose=true)
 One can also specify a comparison mode, `mode` can take the values `:safe, :montecarlo, :reduction`. `:safe` is the same as calling `unsafe_comparisons(false)` and `:reduction` corresponds to `true`.
-If
+
+See [Documentation: Comparison mode](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/#Comparison-mode-1) for more details.
 """
 function unsafe_comparisons(mode=true; verbose=true)
     mode == false && (mode = :safe)
