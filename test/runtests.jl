@@ -666,9 +666,12 @@ Random.seed!(0)
 
         Makie.scatter(xs, ys)
         Makie.scatter(tuple.(xs, ys))
+        Makie.scatter(tuple.(xs, ys), avgfunc=pmean)
         Makie.band(xs, ys)
         Makie.band(tuple.(xs, ys); q=0.01)
+        Makie.band(tuple.(xs, ys); nσ=2)
         Makie.rangebars(tuple.(xs, ys); q=0.16)
+        Makie.rangebars(tuple.(xs, ys); q=0.16, nσ=2)
         Makie.series(xs, ys)
         Makie.series(tuple.(xs, ys); N=5)
     end
