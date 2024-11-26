@@ -54,6 +54,13 @@ for PT in (Particles, StaticParticles)
             Dual{T}($PT(value(d) .- p.particles), ntuple(i->$PT(0p.particles .+ partials(d)[i]) ,length(partials(d))))
         end
 
+        function Base.:(/)(p::$PT, d::Dual{T}) where {T}
+            Dual{T}($PT(p.particles ./ value(d)), ntuple(i->$PT(0p.particles ./ partials(d)[i]) ,length(partials(d))))
+        end
+        function Base.:(/)(d::Dual{T}, p::$PT) where {T}
+            Dual{T}($PT(value(d) ./ p.particles), ntuple(i->$PT(0p.particles .+ partials(d)[i]) ,length(partials(d))))
+        end
+
         function Base.promote_rule(::Type{ForwardDiff.Dual{T,V,NP}}, ::Type{$PT{S, N}}) where {T, V, NP, S, N}
             VS = promote_type(V,S)
             Dual{T, $PT{VS, N}, NP}
