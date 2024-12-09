@@ -418,6 +418,8 @@ for PT in ParticleSymbols
     end
 
     @eval Base.promote_rule(::Type{<:AbstractParticles}, ::Type{$PT{T,N}}) where {T,N} = Union{}
+
+    @eval Base.similar(a::Array, ::Type{$PT{T,N}}, dims::Dims{D}) where {D, T, N} = zeros($PT{T,N}, dims) # To handle https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/148 introduced in julia v1.11
 end
 
 # Base.length(p::AbstractParticles{T,N}) where {T,N} = N
@@ -441,7 +443,6 @@ function Base.Array(v::Array{<:AbstractParticles})
 end
 Base.Matrix(v::MvParticles) = Array(v)
 
-Base.similar(a::Array, ::Type{T}, dims::Dims{N}) where {N, T<:AbstractParticles} = zeros(T, dims) # To handle https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/148 introduced in julia v1.11
 
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
 #     s2 = map(1:length(v[1])) do i
