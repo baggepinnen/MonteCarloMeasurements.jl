@@ -441,6 +441,8 @@ function Base.Array(v::Array{<:AbstractParticles})
 end
 Base.Matrix(v::MvParticles) = Array(v)
 
+Base.similar(a::Array, ::Type{T}, dims::Dims{N}) where {N, T<:AbstractParticles} = zeros(T, dims) # To handle https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/148 introduced in julia v1.11
+
 # function Statistics.var(v::MvParticles,args...;kwargs...) # Not sure if it's a good idea to define this. Is needed for when var(v::AbstractArray) is used
 #     s2 = map(1:length(v[1])) do i
 #         var(getindex.(v,i))
