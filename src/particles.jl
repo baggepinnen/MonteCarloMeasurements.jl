@@ -379,6 +379,12 @@ for PT in ParticleSymbols
             res = p.particles.^i
             $PT{eltype(res),N}(res)
         end
+
+        function Base.literal_pow(::typeof(^), p::$PT, ::Val{i}) where {i}
+            res = Base.literal_pow.(^, x.particles, Val(i))
+            $PT{eltype(res),N}(res)
+        end
+
         Base.:\(p::Vector{<:$PT}, p2::Vector{<:$PT}) = Matrix(p)\Matrix(p2) # Must be here to be most specific
 
         function LinearAlgebra.eigvals(p::Matrix{$PT{T,N}}; kwargs...) where {T,N} # Special case to propte types differently
