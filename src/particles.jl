@@ -380,7 +380,7 @@ for PT in ParticleSymbols
             $PT{eltype(res),N}(res)
         end
 
-        function Base.literal_pow(::typeof(^), p::$PT, ::Val{i}) where {i}
+        function Base.literal_pow(::typeof(^), p::$PT{T,N}, ::Val{i}) where {T,N,i}
             res = Base.literal_pow.(^, p.particles, Val(i))
             $PT{eltype(res),N}(res)
         end
