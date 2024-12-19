@@ -381,7 +381,7 @@ for PT in ParticleSymbols
         end
 
         function Base.literal_pow(::typeof(^), p::$PT, ::Val{i}) where {i}
-            res = Base.literal_pow.(^, x.particles, Val(i))
+            res = Base.literal_pow.(^, p.particles, Val(i))
             $PT{eltype(res),N}(res)
         end
 
