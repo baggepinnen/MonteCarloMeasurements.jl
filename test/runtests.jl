@@ -185,10 +185,12 @@ Random.seed!(0)
 
 
                 f = x -> x^2
+                f3 = x -> x^3
                 p = PT(100)
                 @test 0.9 < pmean(f(p)) < 1.1
                 @test 0.9 < pmean(f(p)) < 1.1
                 @test f(p) ≈ 1
+                @test f3(p) ≈ 1
                 @test !(f(p) ≲ 1)
                 @test f(p) ≲ 5
                 @test -3 ≲ f(p)
