@@ -1,6 +1,10 @@
-import .Unitful: Quantity, FreeUnits, unit, upreferred
+module UnitfulExt
 
-function to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
+using MonteCarloMeasurements
+using Unitful
+
+
+function MonteCarloMeasurements.to_num_str(p::AbstractParticles{T}, d=3, ds=d-1) where T <: Quantity
     s = pstd(p)
     if s.val < eps(p)
         string(pmean(p))
@@ -22,7 +26,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::AbstractParticles{T,N}) where 
     end
 end
 
-for PT in ParticleSymbols
+for PT in MonteCarloMeasurements.ParticleSymbols
 
     @eval begin
         function Base.promote_rule(::Type{Quantity{S,D,U}}, ::Type{$PT{T,N}}) where {S, D, U, T, N}
@@ -58,10 +62,12 @@ for PT in ParticleSymbols
                 $PT{QT,N}($(op).(y, p.particles))
             end
 
-            function Base.$f(p::$PT, y::FreeUnits)
+            function Base.$f(p::$PT, y::Unitful.FreeUnits)
                 $PT($(op).(p.particles, y))
             end
         end
 
     end
+end
+
 end

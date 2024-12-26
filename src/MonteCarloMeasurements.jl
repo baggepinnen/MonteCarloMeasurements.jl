@@ -42,7 +42,7 @@ using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, 
 using Distributed: pmap
 import Base: add_sum
 
-using Distributions, StatsBase, Requires
+using Distributions, StatsBase
 using ForwardDiff
 
 
@@ -154,11 +154,5 @@ include("forwarddiff.jl")
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 Base.:\(x::Diagonal{<:AbstractParticles}, y::Vector{<:AbstractParticles}) = bymap(\, x, y) # required for ambiguity
-
-
-function __init__()
-    @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
-    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
-end
 
 end
