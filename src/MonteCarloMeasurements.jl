@@ -39,7 +39,6 @@ For further help, see the [documentation](https://baggepinnen.github.io/MonteCar
 """
 module MonteCarloMeasurements
 using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, SLEEFPirates, GenericSchur
-using Distributed: pmap
 import Base: add_sum
 
 using Distributions, StatsBase
