@@ -42,7 +42,6 @@ using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, 
 import Base: add_sum
 
 using Distributions, StatsBase
-using ForwardDiff
 
 
 const DEFAULT_NUM_PARTICLES = 2000
@@ -147,7 +146,6 @@ include("plotting.jl")
 include("optimize.jl")
 include("sleefpirates.jl")
 include("nominal.jl")
-include("forwarddiff.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
