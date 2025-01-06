@@ -658,7 +658,7 @@ Random.seed!(0)
         @test_nowarn MonteCarloMeasurements.print_functions_to_extend()
     end
 
-    VERSION ≥ v"1.9" && @time @testset "Makie" begin
+    @time @testset "Makie" begin
         p1 = Particles(10^2)
         Makie.hist(p1)
         Makie.density(p1)

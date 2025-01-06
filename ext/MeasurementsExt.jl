@@ -1,3 +1,8 @@
+module MeasurementsExt
+
+import MonteCarloMeasurements: Particles, StaticParticles, AbstractParticles, Normal, DEFAULT_NUM_PARTICLES, DEFAULT_STATIC_NUM_PARTICLES, pmean, pstd
+import Measurements
+
 
 for PT in (:Particles, :StaticParticles)
     @eval begin
@@ -30,3 +35,5 @@ Measurements.value(p::AbstractParticles) = pmean(p)
     Measurements.uncertainty(p::AbstractParticles) = std(p)
 """
 Measurements.uncertainty(p::AbstractParticles) = pstd(p)
+
+end

@@ -38,12 +38,10 @@ Particles{Int64,500}
 For further help, see the [documentation](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable), the [examples folder](https://github.com/baggepinnen/MonteCarloMeasurements.jl/tree/master/examples) or the [arXiv paper](https://arxiv.org/abs/2001.07625).
 """
 module MonteCarloMeasurements
-using LinearAlgebra, Statistics, Random, StaticArrays, RecipesBase, MacroTools, SLEEFPirates, GenericSchur
-using Distributed: pmap
+using LinearAlgebra, Statistics, Random, StaticArrays, MacroTools, SLEEFPirates, GenericSchur
 import Base: add_sum
 
-using Distributions, StatsBase, Requires
-using ForwardDiff
+using Distributions, StatsBase
 
 
 const DEFAULT_NUM_PARTICLES = 2000
@@ -148,17 +146,10 @@ include("plotting.jl")
 include("optimize.jl")
 include("sleefpirates.jl")
 include("nominal.jl")
-include("forwarddiff.jl")
 
 # This is defined here so that @bymap is loaded
 LinearAlgebra.norm2(p::AbstractArray{<:AbstractParticles}) = bymap(LinearAlgebra.norm2,p)
 Base.:\(x::AbstractVecOrMat{<:AbstractParticles}, y::AbstractVecOrMat{<:AbstractParticles}) = bymap(\, x, y)
 Base.:\(x::Diagonal{<:AbstractParticles}, y::Vector{<:AbstractParticles}) = bymap(\, x, y) # required for ambiguity
-
-
-function __init__()
-    @require Measurements="eff96d63-e80a-5855-80a2-b1b0885c5ab7" include("measurements.jl")
-    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include("unitful.jl")
-end
 
 end

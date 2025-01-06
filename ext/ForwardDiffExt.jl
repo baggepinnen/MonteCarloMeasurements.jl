@@ -1,4 +1,9 @@
-import .ForwardDiff: Dual, value, partials, Partials # The dot in .ForwardDiff is an artefact of using Requires.jl
+module ForwardDiffExt
+
+using MonteCarloMeasurements
+using MonteCarloMeasurements: splitdef
+import ForwardDiff
+import ForwardDiff: Dual, value, partials, Partials
 
 """
     switch_representation(d::Dual{T, V, N}) where {T, V <: AbstractParticles, N}
@@ -66,9 +71,8 @@ for PT in (Particles, StaticParticles)
     end
 end
 
-
-
-
 # Base.hidigit(x::AbstractParticles, base) = Base.hidigit(mean(x), base) # To avoid stackoverflow in some printing situations
 # Base.hidigit(x::Dual, base) = Base.hidigit(x.value, base) # To avoid stackoverflow in some printing situations
 # Base.round(d::Dual, r::RoundingMode) = round(d.value,r)
+
+end
