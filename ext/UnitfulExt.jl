@@ -51,13 +51,13 @@ for PT in MonteCarloMeasurements.ParticleSymbols
                 $PT{Quantity{NT,D,U},N}($(op).(p.particles , y))
             end
 
-            function Base.$f(p::$PT{T,N}, y::Quantity{S,D,U}) where {S, D, U, T <: Quantity, N}
+            function Base.$f(p::$PT{T,N}, y::Quantity{S,D,U}) where {S, D, U, T <: Number, N}
                 QT = Base.promote_op($op, T, typeof(y))
                 $PT{QT,N}($(op).(p.particles, y))
             end
 
             # Below is just the reverse signature of above
-            function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T <: Quantity, N}
+            function Base.$f(y::Quantity{S,D,U}, p::$PT{T,N}) where {S, D, U, T <: Number, N}
                 QT = Base.promote_op($op, typeof(y), T)
                 $PT{QT,N}($(op).(y, p.particles))
             end
