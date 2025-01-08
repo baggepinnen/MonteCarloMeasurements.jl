@@ -69,6 +69,13 @@ register_primitive(unitful_testfunction) # must be outside testset
 
         d1 = upreferred(a)
         @test d1 ≈ (0.200 + 0.020*PT())u"s"
+
+        # Issue #152
+        x = PT()
+        z = 123u"m"
+        y = z * x
+        @test y isa PT{<:Quantity}
+        @test ustrip(u"cm", x*y) isa PT{Float64}
     end
 
 end
