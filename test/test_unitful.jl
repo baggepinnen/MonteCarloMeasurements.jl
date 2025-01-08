@@ -1,4 +1,4 @@
-using Unitful
+using Unitful, Test, MonteCarloMeasurements
 function unitful_testfunction(Vi)
     if Vi ≤ 0.0u"V"
         return 0.0u"V"
@@ -74,6 +74,10 @@ register_primitive(unitful_testfunction) # must be outside testset
         x = PT()
         z = 123u"m"
         y = z * x
+        @test y isa PT{<:Quantity}
+        @test ustrip(u"cm", x*y) isa PT{Float64}
+
+        y = x * z
         @test y isa PT{<:Quantity}
         @test ustrip(u"cm", x*y) isa PT{Float64}
     end
