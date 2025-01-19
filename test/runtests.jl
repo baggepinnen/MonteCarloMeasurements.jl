@@ -469,6 +469,13 @@ Random.seed!(0)
         @test round(p) == Particles(round.(p.particles)) 
         @test round(Int,0.001p) == 0
         @test round(Int,p) isa Particles{Int, nparticles(p)}
+        @test round(Int,p,RoundFromZero) == Particles(round.(Int, p.particles, RoundFromZero))
+        @test rem(p, 1.5) == Particles(rem.(p.particles, 1.5))
+        @test div(p, 1.5) == Particles(div.(p.particles, 1.5))
+        @test mod2pi(p) == Particles(mod2pi.(p.particles))
+        @test rem(p, 1.5, RoundFromZero) == Particles(rem.(p.particles, 1.5, RoundFromZero))
+        @test div(p, 1.5, RoundFromZero) == Particles(div.(p.particles, 1.5, RoundFromZero))
+        @test rem2pi(p, RoundToZero) == Particles(rem2pi.(p.particles, RoundToZero))
         @test sincos(p) == (sin(p), cos(p))
         @test norm(p) == abs(p)
         @test pmean(norm([p,p]) - sqrt(2p^2)) < sqrt(eps()) # ≈ with atol fails on mac
