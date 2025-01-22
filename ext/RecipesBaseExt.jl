@@ -2,7 +2,7 @@ module RecipesBaseExt
 
 using MonteCarloMeasurements
 using MonteCarloMeasurements.Random
-import MonteCarloMeasurements: errorbarplot, ribbonplot, mcplot
+import MonteCarloMeasurements: errorbarplot, ribbonplot, mcplot, errorbarplot!, ribbonplot!, mcplot!
 using RecipesBase
 
 

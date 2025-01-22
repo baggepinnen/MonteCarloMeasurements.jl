@@ -50,7 +50,7 @@ ground_losses = (0.1..0.5) * power # Between 10-50% power loss to ground
 reservoir_volume = 7m*3m*1.5m
 ```
 
-The energy transfered during 6hrs solar collection can be estimated as
+The energy transferred during 6hrs solar collection can be estimated as
 ```@example solar
 energy_6_hrs = (power - ground_losses)*6hr
 ```
