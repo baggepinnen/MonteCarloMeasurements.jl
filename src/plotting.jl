@@ -7,6 +7,7 @@ Plots a vector of particles with error bars at quantile `q`.
 If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01, 0.99)`.
 """
 function errorbarplot end
+function errorbarplot! end
 
 """
     mcplot(x,y,[N=0])
@@ -14,6 +15,7 @@ function errorbarplot end
 Plots all trajectories represented by a vector of particles. `N > 1` controls the number of trajectories to plot.
 """
 function mcplot end
+function mcplot! end
 
 """
     ribbonplot(x,y,[q=0.025]; N=true)
@@ -24,3 +26,4 @@ If `q::Tuple`, then you can specify both lower and upper quantile, e.g., `(0.01,
 If a positive number `N` is provided, `N` sample trajectories will be plotted on top of the ribbon.
 """
 function ribbonplot end
+function ribbonplot! end
