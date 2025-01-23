@@ -24,6 +24,8 @@ vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), field
 vecindex(p::Number,i) = p
 vecindex(p,i) = getindex(p,i)
 vecindex(p::AbstractParticles,i) = getindex(p.particles,i)
+vecindex(p::Complex{<:AbstractParticles},i) = complex(getindex(p.re.particles,i), getindex(p.im.particles,i))
+vecindex(p::AbstractArray{<:Complex{<:AbstractParticles}},i) = vecindex.(p,i)
 vecindex(p::ParticleArray,i) = vecindex.(p,i)
 vecindex(p::NamedTuple,i) = (; Pair.(keys(p), ntuple(j->arggetter(i,p[j]), fieldcount(typeof(p))))...)
 
