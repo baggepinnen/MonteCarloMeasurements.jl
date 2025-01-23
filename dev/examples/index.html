@@ -2,10 +2,10 @@
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · MonteCarloMeasurements Documentation</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="MonteCarloMeasurements Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit">MonteCarloMeasurements Documentation</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../overloading/">Supporting new functions</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#[Control-systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)-1"><span>Control systems</span></a></li><li><a class="tocitem" href="#[Latin-Hypercube-Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)-1"><span>Latin Hypercube Sampling</span></a></li><li><a class="tocitem" href="#[How-MC-uncertainty-propagation-works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)-1"><span>How MC uncertainty propagation works</span></a></li><li><a class="tocitem" href="#[Robust-probabilistic-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl)-1"><span>Robust probabilistic optimization</span></a></li><li><a class="tocitem" href="#[Autodiff-and-Robust-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl)-1"><span>Autodiff and Robust optimization</span></a></li><li><a class="tocitem" href="#Unitful-interaction-1"><span>Unitful interaction</span></a></li><li><a class="tocitem" href="#Monte-Carlo-sampling-properties-1"><span>Monte-Carlo sampling properties</span></a></li><li><a class="tocitem" href="#Variational-inference-1"><span>Variational inference</span></a></li><li><a class="tocitem" href="#Differential-Equations-1"><span>Differential Equations</span></a></li><li class="toplevel"><a class="tocitem" href="#MCMC-inference-using-Turing.jl-1"><span>MCMC inference using Turing.jl</span></a></li></ul></li><li><a class="tocitem" href="../comparison/">Linear vs. Monte-Carlo uncertainty propagation</a></li><li><a class="tocitem" href="../performance/">Performance tips</a></li><li><a class="tocitem" href="../advanced_usage/">Advanced usage</a></li><li><a class="tocitem" href="../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples-1"><a class="docs-heading-anchor" href="#Examples-1">Examples</a><a class="docs-heading-anchor-permalink" href="#Examples-1" title="Permalink"></a></h1><h2 id="[Control-systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)-1"><a class="docs-heading-anchor" href="#[Control-systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)-1"><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl">Control systems</a></a><a class="docs-heading-anchor-permalink" href="#[Control-systems](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/controlsystems.jl)-1" title="Permalink"></a></h2><p>This example shows how to simulate control systems (using <a href="https://github.com/JuliaControl/ControlSystems.jl">ControlSystems.jl</a>) with uncertain parameters. We calculate and display Bode diagrams, Nyquist diagrams and time-domain responses. We also illustrate how the package <a href="https://github.com/baggepinnen/ControlSystemIdentification.jl">ControlSystemIdentification.jl</a> interacts with MonteCarloMeasurements to facilitate the creation and analysis of uncertain systems.</p><p>We also perform some limited benchmarks.</p><p>The package <a href="https://juliacontrol.github.io/RobustAndOptimalControl.jl/dev/">RobustAndOptimalControl.jl</a> contains lots of additional tools to work with linear systems with uncertainty represented as <code>Particles</code>. See the documentation on <a href="https://juliacontrol.github.io/RobustAndOptimalControl.jl/dev/uncertainty/">Uncertainty modeling</a> for several examples.</p><h2 id="[Latin-Hypercube-Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)-1"><a class="docs-heading-anchor" href="#[Latin-Hypercube-Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)-1"><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl">Latin Hypercube Sampling</a></a><a class="docs-heading-anchor-permalink" href="#[Latin-Hypercube-Sampling](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/lhs.jl)-1" title="Permalink"></a></h2><p>We show how to initialize particles with LHS and how to make sure the sample gets the desired moments. We also visualize the statistics of the sample.</p><h2 id="[How-MC-uncertainty-propagation-works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)-1"><a class="docs-heading-anchor" href="#[How-MC-uncertainty-propagation-works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)-1"><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl">How MC uncertainty propagation works</a></a><a class="docs-heading-anchor-permalink" href="#[How-MC-uncertainty-propagation-works](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/transformed_densities.jl)-1" title="Permalink"></a></h2><p>We produce the first figure in this readme and explain in visual detail how different forms of uncertainty propagation propagates a probability distribution through a nonlinear function. Also see <a href="../comparison/#Comparison-between-linear-uncertainty-propagation-and-Monte-Carlo-sampling-1">Comparison between linear uncertainty propagation and Monte-Carlo sampling</a> for more visual examples.</p><h2 id="[Robust-probabilistic-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl)-1"><a class="docs-heading-anchor" href="#[Robust-probabilistic-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl)-1"><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl">Robust probabilistic optimization</a></a><a class="docs-heading-anchor-permalink" href="#[Robust-probabilistic-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/robust_controller_opt.jl)-1" title="Permalink"></a></h2><p>Here, we use MonteCarloMeasurements to perform <a href="https://en.wikipedia.org/wiki/Robust_optimization">robust optimization</a>. With robust and probabilistic, we mean that we place some kind of bound on a quantile of an uncertain value, or otherwise make use of the probability distribution of some value that depend on the optimized parameters.</p><p>The application we consider is optimization of a PID controller. Normally, we are interested in controller performance and robustness against uncertainty. The robustness is often introduced by placing an upper bound on the, so called, sensitivity function. When the system to be controlled is parameterized by <code>Particles</code>, we can penalize both variance in the performance measure as well as the 90:th quantile of the maximum of the sensitivity function. This example illustrates how easy it is to incorporate probabilistic constrains or cost functions in an optimization problem using <code>Particles</code>.</p><h2 id="[Autodiff-and-Robust-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl)-1"><a class="docs-heading-anchor" href="#[Autodiff-and-Robust-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl)-1"><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl">Autodiff and Robust optimization</a></a><a class="docs-heading-anchor-permalink" href="#[Autodiff-and-Robust-optimization](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/examples/autodiff_robust_opt.jl)-1" title="Permalink"></a></h2><p>Another example using MonteCarloMeasurements to perform <a href="https://en.wikipedia.org/wiki/Robust_optimization">robust optimization</a>, this time with automatic differentiation. We use Optim.jl to solve a linear program with probabilistic constraints using 4 different methods, two gradient free, one first-order and one second-order method. We demonstrate calculation of gradients of uncertain functions with uncertain inputs using both Zygote.jl and ForwardDiff.jl.</p><h2 id="Unitful-interaction-1"><a class="docs-heading-anchor" href="#Unitful-interaction-1">Unitful interaction</a><a class="docs-heading-anchor-permalink" href="#Unitful-interaction-1" title="Permalink"></a></h2><p>Particles with units can be created using the package <a href="https://github.com/PainterQubits/Unitful.jl">Unitful.jl</a> for uncertainty propagation with automatic unit checks. The interaction is only supported through the construct <code>Particles{Quantity}</code>, whereas the reverse construct <code>Quantity{Particles}</code> is likely to result in problems. Unitful particles are thus created like this</p><pre><code class="language-julia-repl">julia&gt; using MonteCarloMeasurements, Unitful
 
 julia&gt; (1 ± 0.1)u&quot;V&quot;
-1.0 V ± 0.09999231528930488 V Particles{Quantity{Float64, 𝐋^2 𝐌 𝐈^-1 𝐓^-3, Unitful.FreeUnits{(V,), 𝐋^2 𝐌 𝐈^-1 𝐓^-3, nothing}}, 2000}
+1.0000000000000002 V ± 0.09999231528930486 V Particles{Quantity{Float64, 𝐋^2 𝐌 𝐈^-1 𝐓^-3, Unitful.FreeUnits{(V,), 𝐋^2 𝐌 𝐈^-1 𝐓^-3, nothing}}, 2000}
 
 julia&gt; (1..2)u&quot;m&quot;
-1.5000000000000004 m ± 0.2887472943596182 m Particles{Quantity{Float64, 𝐋, Unitful.FreeUnits{(m,), 𝐋, nothing}}, 2000}</code></pre><h3 id="Example:-Solar-collector-energy-transfer-1"><a class="docs-heading-anchor" href="#Example:-Solar-collector-energy-transfer-1">Example: Solar collector energy transfer</a><a class="docs-heading-anchor-permalink" href="#Example:-Solar-collector-energy-transfer-1" title="Permalink"></a></h3><p>The following example estimates the amount of thermal power transferred from a solar collector embedded in a concrete floor, to a water reservoir. The power is computed by measuring the temperature difference, <span>$\Delta T$</span>, between the solar collectors circulating warm water going into the collector tank and the colder returning water. Using the mass-flow rate and the specific heat capacity of water, we can estimate the power transfer. No flow meter is installed, so the flow is estimated and subject to large uncertainty.</p><pre><code class="language-julia">using MonteCarloMeasurements
+1.4999999999999991 m ± 0.2887472943596182 m Particles{Quantity{Float64, 𝐋, Unitful.FreeUnits{(m,), 𝐋, nothing}}, 2000}</code></pre><h3 id="Example:-Solar-collector-energy-transfer-1"><a class="docs-heading-anchor" href="#Example:-Solar-collector-energy-transfer-1">Example: Solar collector energy transfer</a><a class="docs-heading-anchor-permalink" href="#Example:-Solar-collector-energy-transfer-1" title="Permalink"></a></h3><p>The following example estimates the amount of thermal power transferred from a solar collector embedded in a concrete floor, to a water reservoir. The power is computed by measuring the temperature difference, <span>$\Delta T$</span>, between the solar collectors circulating warm water going into the collector tank and the colder returning water. Using the mass-flow rate and the specific heat capacity of water, we can estimate the power transfer. No flow meter is installed, so the flow is estimated and subject to large uncertainty.</p><pre><code class="language-julia">using MonteCarloMeasurements
 using Unitful
 using Unitful: W, kW, m, mm, hr, K, g, J, l, s
 
@@ -14,19 +14,19 @@ specific_heat_water = 4.19J/(g*K)
 density_water = 1e6g/m^3
 flow = 8*(1..2.5)*l/(60s) # 8 solar collector circuits, each with an estimated flow rate of between 1 and 2.5 l/minute
 mass_flow = flow * density_water |&gt; upreferred # Water flow in mass per second
-power = uconvert(W, mass_flow * specific_heat_water * ΔT) # Power in Watts</code></pre><pre><code class="language-none">3416.8445608198144 W ± 1156.7733036538125 W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-3, Unitful.FreeUnits{(W,), 𝐋^2 𝐌 𝐓^-3, nothing}}, 2000}
+power = uconvert(W, mass_flow * specific_heat_water * ΔT) # Power in Watts</code></pre><pre><code class="language-none">3428.674683186124 W ± 1186.5169247518013 W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-3, Unitful.FreeUnits{(W,), 𝐋^2 𝐌 𝐓^-3, nothing}}, 2000}
 </code></pre><p>Some power is lost to the ground in which the heat-exchanger circuits are embedded, we estimate this to be between 10 and 50% of the total power.</p><pre><code class="language-julia">ground_losses = (0.1..0.5) * power # Between 10-50% power loss to ground
-reservoir_volume = 7m*3m*1.5m</code></pre><pre><code class="language-none">31.5 m^3</code></pre><p>The energy transferred during 6hrs solar collection can be estimated as</p><pre><code class="language-julia">energy_6_hrs = (power - ground_losses)*6hr</code></pre><pre><code class="language-none">14335.04066137087 hr W ± 5411.664252779405 hr W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-2, Unitful.FreeUnits{(hr, W), 𝐋^2 𝐌 𝐓^-2, nothing}}, 2000}
-</code></pre><p>and this energy transfer will increase the temperature in the reservoir by</p><pre><code class="language-julia">ΔT_reservoir_6hr = energy_6_hrs/(reservoir_volume*density_water*specific_heat_water) |&gt; upreferred</code></pre><pre><code class="language-none">0.3910000862290042 K ± 0.14760761685044407 K Particles{Quantity{Float64, 𝚯, Unitful.FreeUnits{(K,), 𝚯, nothing}}, 2000}
+reservoir_volume = 7m*3m*1.5m</code></pre><pre><code class="language-none">31.5 m^3</code></pre><p>The energy transferred during 6hrs solar collection can be estimated as</p><pre><code class="language-julia">energy_6_hrs = (power - ground_losses)*6hr</code></pre><pre><code class="language-none">14387.628639392291 hr W ± 5503.3054532937895 hr W Particles{Quantity{Float64, 𝐋^2 𝐌 𝐓^-2, Unitful.FreeUnits{(hr, W), 𝐋^2 𝐌 𝐓^-2, nothing}}, 2000}
+</code></pre><p>and this energy transfer will increase the temperature in the reservoir by</p><pre><code class="language-julia">ΔT_reservoir_6hr = energy_6_hrs/(reservoir_volume*density_water*specific_heat_water) |&gt; upreferred</code></pre><pre><code class="language-none">0.3924344668091994 K ± 0.15010720636328106 K Particles{Quantity{Float64, 𝚯, Unitful.FreeUnits{(K,), 𝚯, nothing}}, 2000}
 </code></pre><p>Finally, we visualize the distributions associated with the estimated quantities:</p><pre><code class="language-julia">using Plots
 figh = plot(ΔT_reservoir_6hr, xlabel=&quot;\$ΔT [K]\$&quot;, ylabel=&quot;\$P(ΔT)\$&quot;, title=&quot;Temperature increase 6hrs sun&quot;)
 qs   = 0:0.01:1
 Qs   = pquantile.(ΔT_reservoir_6hr, qs)
 figq = plot(qs, Qs, xlabel=&quot;∫\$P(ΔT)\$&quot;)
-plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>    <div id="c78293c8-d732-490d-b5c9-d992d1749fb3" style="width:600px;height:400px;"></div>
+plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>    <div id="f986ec8d-14a5-4abe-ab89-86cafddaa9a0" style="width:600px;height:400px;"></div>
     <script>
     
-    Plotly.newPlot('c78293c8-d732-490d-b5c9-d992d1749fb3', [
+    Plotly.newPlot('f986ec8d-14a5-4abe-ab89-86cafddaa9a0', [
     {
         "showlegend": true,
         "mode": "lines",
@@ -42,12 +42,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            5.0,
+            3.0,
             0.0,
             0.0,
-            5.0,
-            5.0,
-            5.0
+            3.0,
+            3.0,
+            3.0
         ],
         "type": "scatter",
         "x": [
@@ -74,12 +74,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            26.0,
+            35.0,
             0.0,
             0.0,
-            26.0,
-            26.0,
-            26.0
+            35.0,
+            35.0,
+            35.0
         ],
         "type": "scatter",
         "x": [
@@ -106,12 +106,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            94.0,
+            114.0,
             0.0,
             0.0,
-            94.0,
-            94.0,
-            94.0
+            114.0,
+            114.0,
+            114.0
         ],
         "type": "scatter",
         "x": [
@@ -138,12 +138,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            215.0,
+            224.0,
             0.0,
             0.0,
-            215.0,
-            215.0,
-            215.0
+            224.0,
+            224.0,
+            224.0
         ],
         "type": "scatter",
         "x": [
@@ -170,12 +170,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            275.0,
+            231.0,
             0.0,
             0.0,
-            275.0,
-            275.0,
-            275.0
+            231.0,
+            231.0,
+            231.0
         ],
         "type": "scatter",
         "x": [
@@ -202,12 +202,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            274.0,
+            265.0,
             0.0,
             0.0,
-            274.0,
-            274.0,
-            274.0
+            265.0,
+            265.0,
+            265.0
         ],
         "type": "scatter",
         "x": [
@@ -234,12 +234,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            272.0,
+            246.0,
             0.0,
             0.0,
-            272.0,
-            272.0,
-            272.0
+            246.0,
+            246.0,
+            246.0
         ],
         "type": "scatter",
         "x": [
@@ -266,12 +266,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            214.0,
+            226.0,
             0.0,
             0.0,
-            214.0,
-            214.0,
-            214.0
+            226.0,
+            226.0,
+            226.0
         ],
         "type": "scatter",
         "x": [
@@ -330,12 +330,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            135.0,
+            178.0,
             0.0,
             0.0,
-            135.0,
-            135.0,
-            135.0
+            178.0,
+            178.0,
+            178.0
         ],
         "type": "scatter",
         "x": [
@@ -362,12 +362,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            110.0,
+            105.0,
             0.0,
             0.0,
-            110.0,
-            110.0,
-            110.0
+            105.0,
+            105.0,
+            105.0
         ],
         "type": "scatter",
         "x": [
@@ -394,12 +394,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            77.0,
+            71.0,
             0.0,
             0.0,
-            77.0,
-            77.0,
-            77.0
+            71.0,
+            71.0,
+            71.0
         ],
         "type": "scatter",
         "x": [
@@ -426,12 +426,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            54.0,
+            55.0,
             0.0,
             0.0,
-            54.0,
-            54.0,
-            54.0
+            55.0,
+            55.0,
+            55.0
         ],
         "type": "scatter",
         "x": [
@@ -458,12 +458,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            24.0,
+            27.0,
             0.0,
             0.0,
-            24.0,
-            24.0,
-            24.0
+            27.0,
+            27.0,
+            27.0
         ],
         "type": "scatter",
         "x": [
@@ -490,12 +490,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            21.0,
+            20.0,
             0.0,
             0.0,
-            21.0,
-            21.0,
-            21.0
+            20.0,
+            20.0,
+            20.0
         ],
         "type": "scatter",
         "x": [
@@ -522,12 +522,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            14.0,
+            10.0,
             0.0,
             0.0,
-            14.0,
-            14.0,
-            14.0
+            10.0,
+            10.0,
+            10.0
         ],
         "type": "scatter",
         "x": [
@@ -554,12 +554,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            7.0,
+            3.0,
             0.0,
             0.0,
-            7.0,
-            7.0,
-            7.0
+            3.0,
+            3.0,
+            3.0
         ],
         "type": "scatter",
         "x": [
@@ -586,12 +586,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            1.0,
+            3.0,
             0.0,
             0.0,
-            1.0,
-            1.0,
-            1.0
+            3.0,
+            3.0,
+            3.0
         ],
         "type": "scatter",
         "x": [
@@ -601,6 +601,70 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             0.95,
             0.9000000000000001,
             0.9000000000000001
+        ]
+    },
+    {
+        "showlegend": false,
+        "mode": "lines",
+        "xaxis": "x1",
+        "fillcolor": "rgba(0, 154, 250, 1.000)",
+        "name": "y1",
+        "fill": "tozeroy",
+        "yaxis": "y1",
+        "legendgroup": "y1",
+        "line": {
+            "color": "rgba(0, 0, 0, 1.000)",
+            "dash": "solid",
+            "width": 1
+        },
+        "y": [
+            1.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "type": "scatter",
+        "x": [
+            0.95,
+            0.95,
+            1.0,
+            1.0,
+            0.95,
+            0.95
+        ]
+    },
+    {
+        "showlegend": false,
+        "mode": "lines",
+        "xaxis": "x1",
+        "fillcolor": "rgba(0, 154, 250, 1.000)",
+        "name": "y1",
+        "fill": "tozeroy",
+        "yaxis": "y1",
+        "legendgroup": "y1",
+        "line": {
+            "color": "rgba(0, 0, 0, 1.000)",
+            "dash": "solid",
+            "width": 1
+        },
+        "y": [
+            1.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "type": "scatter",
+        "x": [
+            0.9999999999999999,
+            0.9999999999999999,
+            1.0499999999999998,
+            1.0499999999999998,
+            0.9999999999999999,
+            0.9999999999999999
         ]
     },
     {
@@ -626,23 +690,25 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "size": 0
         },
         "y": [
-            5.0,
-            26.0,
-            94.0,
-            215.0,
-            275.0,
-            274.0,
-            272.0,
-            214.0,
+            3.0,
+            35.0,
+            114.0,
+            224.0,
+            231.0,
+            265.0,
+            246.0,
+            226.0,
             182.0,
-            135.0,
-            110.0,
-            77.0,
-            54.0,
-            24.0,
-            21.0,
-            14.0,
-            7.0,
+            178.0,
+            105.0,
+            71.0,
+            55.0,
+            27.0,
+            20.0,
+            10.0,
+            3.0,
+            3.0,
+            1.0,
             1.0
         ],
         "type": "scatter",
@@ -664,7 +730,9 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             0.7749999999999999,
             0.825,
             0.875,
-            0.925
+            0.925,
+            0.975,
+            1.025
         ]
     },
     {
@@ -687,107 +755,107 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "width": 1
         },
         "y": [
-            0.07095794930624379,
-            0.13691769117604372,
-            0.16256506585340816,
-            0.17434785969758507,
-            0.18449670379700586,
-            0.1926267289161631,
-            0.19807979127893452,
-            0.2044679439270767,
-            0.2094380998975866,
-            0.2137200128949067,
-            0.21785031473969893,
-            0.22474167046970597,
-            0.22913965709087564,
-            0.232600760627286,
-            0.23768821894641853,
-            0.24228864203556918,
-            0.24776235089044357,
-            0.25016758503381376,
-            0.25446264527655255,
-            0.25799015260836333,
-            0.2610413151233535,
-            0.26429424480664937,
-            0.2678321167800465,
-            0.2721826264915052,
-            0.2746997086456083,
-            0.2788153457653278,
-            0.2828591683020454,
-            0.28633852348134187,
-            0.2898918223646542,
-            0.2934075196515626,
-            0.29750475313496394,
-            0.30082621483260896,
-            0.30378333533041957,
-            0.30739267893357136,
-            0.31066440472507895,
-            0.31370256402146335,
-            0.31719441629270695,
-            0.31995116923427286,
-            0.32316774817910277,
-            0.32583576328044456,
-            0.3305547883636082,
-            0.33364107527771736,
-            0.33839134759929423,
-            0.34323869350561376,
-            0.3476863394537563,
-            0.35303672056944513,
-            0.35658690742362,
-            0.35899720295139337,
-            0.36255227772633547,
-            0.36526408349964407,
-            0.36979369512883875,
-            0.3732729765735757,
-            0.3759364570637942,
-            0.37923247746525895,
-            0.38322923875601167,
-            0.38683797039123247,
-            0.3905973986159287,
-            0.3959821341476144,
-            0.3996761586024136,
-            0.40364409293825243,
-            0.4071442221191992,
-            0.4129376551217362,
-            0.41594882945583983,
-            0.42149978608594285,
-            0.42654545990869874,
-            0.43139008451822114,
-            0.43652806025548774,
-            0.4418664982739712,
-            0.44617485007750907,
-            0.4508415841468615,
-            0.45602928865912784,
-            0.4619517725887855,
-            0.4672232497801967,
-            0.47369261043429944,
-            0.4780253241961788,
-            0.48352802354347124,
-            0.48882423309404543,
-            0.49389320515448154,
-            0.5015085810579994,
-            0.5080526256817063,
-            0.5125965893380883,
-            0.518776702633121,
-            0.5269603689716811,
-            0.5352950517377377,
-            0.5439196528489352,
-            0.5520840618822019,
-            0.5597134344148703,
-            0.5663449196074535,
-            0.574112760948452,
-            0.5870923140695612,
-            0.5986543658146648,
-            0.6077885365046914,
-            0.6217689677630686,
-            0.6356525068360445,
-            0.6500575507329167,
-            0.6643834486182127,
-            0.6819589214632559,
-            0.7125469316690087,
-            0.7525619438371137,
-            0.8020291714815801,
-            0.933753512439703
+            0.08197906848506786,
+            0.1335080929254125,
+            0.15247440613642096,
+            0.16394898937789895,
+            0.17414362170878603,
+            0.1807291884247127,
+            0.19039089195809528,
+            0.19700413722364649,
+            0.20083128665282807,
+            0.2070415918446555,
+            0.2113486360743256,
+            0.21661135161699033,
+            0.22059426792602624,
+            0.22402822601446964,
+            0.22751419823642977,
+            0.23172543383547764,
+            0.235412833262293,
+            0.24095508895818973,
+            0.24490930786276244,
+            0.250878394223253,
+            0.2561515033499299,
+            0.26040896526493124,
+            0.26621154789485335,
+            0.2701929510991862,
+            0.27537960116840865,
+            0.27850272961014,
+            0.28251994869088864,
+            0.2857504075231948,
+            0.291742976069962,
+            0.29509085542199814,
+            0.2979853297540762,
+            0.30267749319136694,
+            0.3062435964527991,
+            0.3105252605728682,
+            0.3132377420551711,
+            0.316664652912333,
+            0.3200605225570849,
+            0.3233600426482034,
+            0.3268974227256505,
+            0.33129079545301865,
+            0.3358884886813648,
+            0.33884799084046,
+            0.34180398662450784,
+            0.34780551091340206,
+            0.3514440654195554,
+            0.3555199106863761,
+            0.3591324400291927,
+            0.36419991541084074,
+            0.36886433570580524,
+            0.37322311431194544,
+            0.376174645804893,
+            0.37943811907011,
+            0.38234697973471166,
+            0.38700135431237936,
+            0.3911331209960046,
+            0.39556909886146174,
+            0.40080309737890985,
+            0.4045050790824466,
+            0.4076645852658266,
+            0.4128506677798033,
+            0.41701515752235846,
+            0.4218243219244958,
+            0.4256441991136022,
+            0.43127115299417373,
+            0.4354879592171018,
+            0.44004075995860037,
+            0.4451754569933588,
+            0.44889354448192514,
+            0.45384512065750027,
+            0.45937019829048564,
+            0.464743292457687,
+            0.46929598476603396,
+            0.4734457655289158,
+            0.4804685481127089,
+            0.48833754304936655,
+            0.493611049289796,
+            0.4993951584494419,
+            0.5032375271203295,
+            0.5074134051463539,
+            0.511596417474849,
+            0.517131600478704,
+            0.5236626110142977,
+            0.5302746135847516,
+            0.5359254038955912,
+            0.5429101235860032,
+            0.5477433287004325,
+            0.5564120054885457,
+            0.5617262184951344,
+            0.5702806640479763,
+            0.5816854207023322,
+            0.594559417813479,
+            0.6075195936566602,
+            0.6197794204381945,
+            0.6331234054027836,
+            0.6480080639121811,
+            0.6664631678984293,
+            0.6843788386378431,
+            0.708920574935842,
+            0.744247991842546,
+            0.7873888886550672,
+            1.0112129251307596
         ],
         "type": "scatter",
         "x": [
@@ -909,8 +977,8 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             1.0
         ],
         "range": [
-            -0.005619999999999958,
-            1.00562
+            -0.011800000000000033,
+            1.1118
         ],
         "domain": [
             0.07646908719743364,
@@ -981,11 +1049,12 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             0.2,
             0.4,
             0.6000000000000001,
-            0.8
+            0.8,
+            1.0
         ],
         "range": [
-            0.04507408241223998,
-            0.9596373793337067
+            0.054102052785697075,
+            1.0390899408301304
         ],
         "domain": [
             0.07581474190726165,
@@ -998,7 +1067,8 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
             "0.2",
             "0.4",
             "0.6",
-            "0.8"
+            "0.8",
+            "1.0"
         ],
         "zeroline": false,
         "tickfont": {
@@ -1087,7 +1157,7 @@ plot(figh, figq)</code></pre><script src="https://cdn.plot.ly/plotly-2.6.3.min.j
         ],
         "range": [
             0.0,
-            275.0
+            265.0
         ],
         "domain": [
             0.07581474190726165,
