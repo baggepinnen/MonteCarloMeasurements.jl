@@ -1,7 +1,7 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random, GenericSchur
-import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
+import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES, vecindex
 @info "import Plots, Makie"
 import Plots
 import Makie
