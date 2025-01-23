@@ -1,7 +1,7 @@
 @info "Running tests"
 using MonteCarloMeasurements, Distributions
 using Test, LinearAlgebra, Statistics, Random, GenericSchur
-import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES
+import MonteCarloMeasurements: ⊗, gradient, optimize, DEFAULT_NUM_PARTICLES, vecindex
 @info "import Plots, Makie"
 import Plots
 import Makie
@@ -557,6 +557,25 @@ Random.seed!(0)
         @test length(dictvec) == nparticles(p)
         @test dictvec[1] == Dict(:a => p.particles[1], :b => q.particles[1], :c => 1)
         @test dictvec[2] == Dict(:a => p.particles[2], :b => q.particles[2], :c => 1)
+
+    end
+
+    @testset "vecindex tests" begin
+        # Test for Complex{<:AbstractParticles}
+        p_real = Particles(100, Normal(0, 1))
+        p_imag = Particles(100, Normal(0, 1))
+        p_complex = complex(p_real, p_imag)
+        
+        @test vecindex(p_complex, 1) == complex(p_real.particles[1], p_imag.particles[1])
+        @test vecindex(p_complex, 50) == complex(p_real.particles[50], p_imag.particles[50])
+        @test vecindex(p_complex, 100) == complex(p_real.particles[100], p_imag.particles[100])
+    
+        # Test for AbstractArray{<:Complex{<:AbstractParticles}}
+        p_array = [p_complex, p_complex]
+        
+        @test vecindex(p_array, 1) == [complex(p_real.particles[1], p_imag.particles[1]), complex(p_real.particles[1], p_imag.particles[1])]
+        @test vecindex(p_array, 50) == [complex(p_real.particles[50], p_imag.particles[50]), complex(p_real.particles[50], p_imag.particles[50])]
+        @test vecindex(p_array, 100) == [complex(p_real.particles[100], p_imag.particles[100]), complex(p_real.particles[100], p_imag.particles[100])]
     end
 
     @time @testset "mutation" begin
