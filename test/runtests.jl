@@ -563,7 +563,6 @@ Random.seed!(0)
         R2 = MonteCarloMeasurements.ℂⁿ2ℂⁿ_function(x->(qr(x).R),H)
         @test R1 ≈ mean_object(R2)
 
-
     end
 
     @testset "vecindex tests" begin
