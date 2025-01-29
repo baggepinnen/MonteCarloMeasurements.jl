@@ -105,16 +105,19 @@ end
 
 
 function ℂⁿ2ℂⁿ_function(f::F, R::Matrix{<:Complex{<:AbstractParticles{T, N}}}) where {F, T, N}
-    E = similar(R)
-    for i in eachindex(E)
-        E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
-    end
+    local E
     r = zeros(Complex{T}, size(R)...)
     for n in 1:N
         for j in eachindex(R)
             r[j] = Complex(R[j].re.particles[n], R[j].im.particles[n]) 
         end
         e = f(r)
+        if n == 1
+            E = similar(R, size(e))
+            for i in eachindex(E)
+                E[i] = Complex(Particles(zeros(N)), Particles(zeros(N)))
+            end
+        end
         for i in eachindex(e)
             E[i].re.particles[n] = e[i].re
             E[i].im.particles[n] = e[i].im
