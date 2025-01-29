@@ -558,6 +558,11 @@ Random.seed!(0)
         @test dictvec[1] == Dict(:a => p.particles[1], :b => q.particles[1], :c => 1)
         @test dictvec[2] == Dict(:a => p.particles[2], :b => q.particles[2], :c => 1)
 
+        H = (10± 0.0) .*rand(ComplexF64,3,2)
+        R1 = qr(mean_object(H)).R
+        R2 = MonteCarloMeasurements.ℂⁿ2ℂⁿ_function(x->(qr(x).R),H)
+        @test R1 ≈ mean_object(R2)
+
     end
 
     @testset "vecindex tests" begin
