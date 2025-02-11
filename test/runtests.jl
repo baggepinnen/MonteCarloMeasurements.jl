@@ -748,6 +748,12 @@ Random.seed!(0)
             end
         end
 
+        x = 1.0 + Particles()
+        y = 1.0 + 2im
+        z = 1.0 + Particles()
+        @test (x*y+z).re.particles ≈ muladd(x,y,z).re.particles
+        @test (x*y+z).im.particles ≈ muladd(x,y,z).im.particles
+
 
         #
         # @btime $A*$p
