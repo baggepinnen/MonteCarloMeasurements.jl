@@ -865,6 +865,19 @@ Random.seed!(0)
 
     end
 
+    @testset "bymap₊" begin
+        using AccessorsExtra
+
+        x = (1 ± 0.2, (a=1 ± 0.1, b=123))
+        y = bymap₊(x) do x
+            vals = (x[1], x[2].a)
+            (;x[2].b, i=argmax(vals))
+        end
+        @test y isa NamedTuple
+        @test y.b == 123.0 ± 0.0
+        @test y.i ≈ 1.52 ± 0.5
+    end
+
     @testset "inference" begin
         @inferred zero(Particles{Float64,1})
         @inferred zeros(Particles{Float64,1}, 5)
