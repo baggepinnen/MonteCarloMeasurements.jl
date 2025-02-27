@@ -137,7 +137,7 @@ end
 
 
 """
-    bymap₊(f, args...)
+    bymap_a(f, args...)
 
 Like `f(args...)`, but with uncertainty propagation.
 
@@ -146,4 +146,4 @@ In addition, reassembles the result to be like the original `f` output with `Par
 
 This function is experimental and requires loading the `AccessorsExtra` package.
 """
-function bymap₊ end
+function bymap_a end

@@ -3,7 +3,7 @@ module AccessorsExtraExt
 using MonteCarloMeasurements
 using AccessorsExtra
 
-function MonteCarloMeasurements.bymap₊(f, args...)
+function MonteCarloMeasurements.bymap_a(f, args...)
 	Ns = @getall args |> RecursiveOfType(AbstractParticles) |> length(_.particles)
     allequal(Ns) || throw(ArgumentError("different number of particles within function arguments: $Ns"))
 	N = first(Ns)

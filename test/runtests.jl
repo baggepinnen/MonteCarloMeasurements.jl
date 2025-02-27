@@ -865,11 +865,11 @@ Random.seed!(0)
 
     end
 
-    @testset "bymap₊" begin
+    @testset "bymap_a" begin
         using AccessorsExtra
 
         x = (1 ± 0.2, (a=1 ± 0.1, b=123))
-        y = bymap₊(x) do x
+        y = bymap_a(x) do x
             vals = (x[1], x[2].a)
             (;x[2].b, i=argmax(vals))
         end

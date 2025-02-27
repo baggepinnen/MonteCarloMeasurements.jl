@@ -129,7 +129,7 @@ export Normal, MvNormal, Cauchy, Beta, Exponential, Gamma, Laplace, Uniform, fit
 
 export unsafe_comparisons, @unsafe, set_comparison_function
 
-export bymap, bypmap, bymap₊, @bymap, @bypmap, @prob, Workspace, with_workspace, has_particles, mean_object
+export bymap, bypmap, bymap_a, @bymap, @bypmap, @prob, Workspace, with_workspace, has_particles, mean_object
 
 include("types.jl")
 include("register_primitive.jl")
