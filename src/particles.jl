@@ -355,8 +355,6 @@ for PT in ParticleSymbols
         Base.rem(p1::$PT{T,N}, p2::Real) where {T,N} = $PT{T,N}(rem.(p1.particles, p2))
         Base.div(p1::$PT{T,N}, p2::$PT{T,N}) where {T,N} = $PT{T,N}(div.(p1.particles, p2.particles))
         Base.div(p1::$PT{T,N}, p2::Real) where {T,N} = $PT{T,N}(div.(p1.particles, p2))
-        Base.rem(p1::$PT{T,N}, p2::$PT{T,N}, m::RoundingMode) where {T,N} = $PT{T,N}(rem.(p1.particles, p2.particles, m))
-        Base.rem(p1::$PT{T,N}, p2::Real, m::RoundingMode) where {T,N} = $PT{T,N}(rem.(p1.particles, p2, m))
         Base.div(p1::$PT{T,N}, p2::$PT{T,N}, m::RoundingMode) where {T,N} = $PT{T,N}(div.(p1.particles, p2.particles, m))
         Base.rem2pi(p::$PT{T,N}, r::RoundingMode) where {T,N} = $PT{T,N}(rem2pi.(p.particles, r))
 
