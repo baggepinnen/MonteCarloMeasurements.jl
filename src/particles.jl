@@ -345,13 +345,18 @@ for PT in ParticleSymbols
         Base.isfinite(p::$PT{T,N}) where {T,N} = isfinite(pmean(p))
         Base.round(p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {T,N} = $PT{T,N}(round.(p.particles, r, args...; kwargs...))
         Base.round(::Type{S}, p::$PT{T,N}, args...; kwargs...) where {S,T,N} = $PT{S,N}(round.(S, p.particles, args...; kwargs...))
+        Base.round(::Type{S}, p::$PT{T,N}, r::RoundingMode, args...; kwargs...) where {S,T,N} = $PT{T,N}(round.(S, p.particles, r, args...; kwargs...))
         function Base.AbstractFloat(p::$PT{T,N}) where {T,N}
             N == 1 && (return p.particles[1])
             pstd(p) < eps(T) || throw(ArgumentError("Cannot convert a particle distribution to a number if not all particles are the same."))
             return p.particles[1]
         end
-        Base.rem(p1::$PT{T,N}, p2::$PT{T,N}, args...) where {T,N} = $PT{T,N}(Base.rem.(p1.particles, p2.particles, args...))
-        Base.div(p1::$PT{T,N}, p2::$PT{T,N}, args...) where {T,N} = $PT{T,N}(Base.div.(p1.particles, p2.particles, args...))
+        Base.rem(p1::$PT{T,N}, p2::$PT{T,N}) where {T,N} = $PT{T,N}(rem.(p1.particles, p2.particles))
+        Base.rem(p1::$PT{T,N}, p2::Real) where {T,N} = $PT{T,N}(rem.(p1.particles, p2))
+        Base.div(p1::$PT{T,N}, p2::$PT{T,N}) where {T,N} = $PT{T,N}(div.(p1.particles, p2.particles))
+        Base.div(p1::$PT{T,N}, p2::Real) where {T,N} = $PT{T,N}(div.(p1.particles, p2))
+        Base.div(p1::$PT{T,N}, p2::$PT{T,N}, m::RoundingMode) where {T,N} = $PT{T,N}(div.(p1.particles, p2.particles, m))
+        Base.rem2pi(p::$PT{T,N}, r::RoundingMode) where {T,N} = $PT{T,N}(rem2pi.(p.particles, r))
 
         """
             union(p1::AbstractParticles, p2::AbstractParticles)
@@ -400,6 +405,12 @@ for PT in ParticleSymbols
             out
         end
 
+    end
+
+    for m in [:Nearest, :FromZero, :Up, :Down, :ToZero]
+        # disambiguate with Base
+        @eval Base.rem(p1::$PT{T,N}, p2::$PT{T,N}, m::RoundingMode{$(QuoteNode(m))}) where {T,N} = $PT{T,N}(Base.rem.(p1.particles, p2.particles, m))
+        @eval Base.rem(p1::$PT{T,N}, p2::Real, m::RoundingMode{$(QuoteNode(m))}) where {T,N} = $PT{T,N}(Base.rem.(p1.particles, p2, m))
     end
 
     for XT in (:Number, :($PT{<:Number,N})), YT in (:Number, :($PT{<:Number,N})), ZT in (:Number, :($PT{<:Number,N}))
