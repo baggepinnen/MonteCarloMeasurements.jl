@@ -15,6 +15,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
+AccessorsExtra = "33016aad-b69d-45be-9359-82a41f556fd4"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
@@ -22,6 +23,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
+AccessorsExtraExt = "AccessorsExtra"
 ForwardDiffExt = "ForwardDiff"
 MakieExt = "Makie"
 MeasurementsExt = "Measurements"
@@ -29,6 +31,7 @@ RecipesBaseExt = "RecipesBase"
 UnitfulExt = "Unitful"
 
 [compat]
+AccessorsExtra = "0.1.93"
 Distributions = "0.17,0.18,0.19,0.20,0.21, 0.22, 0.23, 0.24, 0.25"
 ForwardDiff = "0.10"
 GenericSchur = "0.5"
@@ -53,4 +56,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["ControlSystemsBase", "ForwardDiff", "Makie", "Measurements", "Test", "Plots", "Unitful"]
+test = ["AccessorsExtra", "ControlSystemsBase", "ForwardDiff", "Makie", "Measurements", "Test", "Plots", "Unitful"]
