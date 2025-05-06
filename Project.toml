@@ -1,7 +1,7 @@
 name = "MonteCarloMeasurements"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 authors = ["baggepinnen <baggepinnen@gmail.com>"]
-version = "1.4.5"
+version = "1.4.6"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -30,7 +30,7 @@ UnitfulExt = "Unitful"
 
 [compat]
 Distributions = "0.17,0.18,0.19,0.20,0.21, 0.22, 0.23, 0.24, 0.25"
-ForwardDiff = "0.10"
+ForwardDiff = "0.10, 1"
 GenericSchur = "0.5"
 MacroTools = "<0.6"
 Makie = "0.21, 0.22"
