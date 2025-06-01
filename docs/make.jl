@@ -17,7 +17,10 @@ makedocs(
             "Advanced usage" => "advanced_usage.md",
             "API" => "api.md",
       ],
-      format = Documenter.HTML(prettyurls = haskey(ENV, "CI")),
+      format = Documenter.HTML(
+            prettyurls = haskey(ENV, "CI"),
+            sidebar_sitename = false,
+      ),
 ) # Due to lots of plots, this will just have to be run on my local machine
 
 deploydocs(
