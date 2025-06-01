@@ -7,4 +7,4 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
-Documenter = "~0.24"
+Documenter = "1"
