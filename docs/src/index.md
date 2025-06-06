@@ -421,4 +421,5 @@ The table below compares methods for uncertainty propagation with their parallel
 
 # Citing
 See [CITATION.bib](https://github.com/baggepinnen/MonteCarloMeasurements.jl/blob/master/CITATION.bib)
+
 ArXiv article [MonteCarloMeasurements.jl: Nonlinear Propagation of Arbitrary Multivariate Distributions by means of Method Overloading](https://arxiv.org/abs/2001.07625)
