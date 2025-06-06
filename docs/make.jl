@@ -22,6 +22,9 @@ makedocs(
       format = Documenter.HTML(
             prettyurls = haskey(ENV, "CI"),
             sidebar_sitename = false,
+            assets = [
+                "assets/favicon.ico",
+            ]
       ),
       checkdocs = :export,
 ) # Due to lots of plots, this will just have to be run on my local machine
