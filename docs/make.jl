@@ -3,10 +3,12 @@ using Documenter, MonteCarloMeasurements, Unitful
 using Plots
 plotly()
 
+DocMeta.setdocmeta!(MonteCarloMeasurements, :DocTestSetup,
+                    :(using MonteCarloMeasurements))
 
 makedocs(
       sitename = "MonteCarloMeasurements Documentation",
-      doctest = false,
+      doctest = true,
       modules = [MonteCarloMeasurements],
       pages = [
             "Home" => "index.md",
@@ -21,9 +23,10 @@ makedocs(
             prettyurls = haskey(ENV, "CI"),
             sidebar_sitename = false,
       ),
+      checkdocs = :export,
 ) # Due to lots of plots, this will just have to be run on my local machine
 
 deploydocs(
-      deps = Deps.pip("pygments", "mkdocs", "python-markdown-math", "mkdocs-cinder"),
+      #deps = Deps.pip("pygments", "mkdocs", "python-markdown-math", "mkdocs-cinder"),
       repo = "github.com/baggepinnen/MonteCarloMeasurements.jl.git",
 )
