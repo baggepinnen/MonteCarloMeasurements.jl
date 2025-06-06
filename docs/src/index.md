@@ -30,12 +30,11 @@ In the figure above, we see the probability-density function of the input `p(x)`
 For a comparison of uncertainty propagation and nonlinear filtering, see [notes](https://github.com/baggepinnen/MonteCarloMeasurements.jl#comparison-to-nonlinear-filtering) below.
 
 # Basic Examples
-```julia
-using MonteCarloMeasurements, Distributions
+```julia-repl
+julia> using MonteCarloMeasurements, Distributions
 
 julia> 1 ± 0.1
-Particles{Float64,2000}
- 1.0 ± 0.1
+1.0 ± 0.1 Particles{Float64,2000}
 
 julia> p = StaticParticles(100)
 StaticParticles{Float64,100}
@@ -82,7 +81,7 @@ Particles{Float64,100}
  1.0 ± 0.58
 
 julia> Particles(1000, MvNormal([0,0],[2. 1; 1 4])) # A multivariate distribution will cause a vector of correlated particles
-2-element Array{Particles{Float64,1000},1}:
+2-element Vector{Particles{Float64,1000}}:
  -0.0546 ± 1.4
  -0.128 ± 2.0
 ```
@@ -145,59 +144,59 @@ Independent multivariate systematic samples can be created using the function [`
 
 ### Examples
 The following example creates a vector of two `Particles`. Since they were created independently of each other, they are independent and uncorrelated and have the covariance matrix `Σ = Diagonal([1², 2²])`. The linear transform with the matrix `A` should in theory change this covariance matrix to `AΣAᵀ`, which we can verify be asking for the covariance matrix of the output particles.
-```julia
+```julia-repl
 julia> p = [1 ± 1, 5 ± 2]
-2-element Array{Particles{Float64,2000},1}:
+2-element Vector{Particles{Float64,2000}}:
  1.0 ± 1.0
  5.0 ± 2.0
 
 julia> A = randn(2,2)
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  -1.80898  -1.24566
   1.41308   0.196504
 
 julia> y = A*p
-2-element Array{Particles{Float64,2000},1}:
+2-element Vector{Particles{Float64,2000}}:
  -8.04 ± 3.1
   2.4 ± 1.5
 
 julia> pcov(y)
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
   9.61166  -3.59812
  -3.59812   2.16701
 
 julia> A*Diagonal([1^2, 2^2])*A'
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
   9.4791   -3.53535
  -3.53535   2.15126
 ```
 To create particles that exhibit a known covariance/correlation, use the appropriate constructor, e.g.,
-```julia
+```julia-repl
 julia> p = Particles(2000, MvLogNormal(MvNormal([2, 1],[2. 1;1 3])))
-2-element Array{Particles{Float64,2000},1}:
+2-element Vector{Particles{Float64,2000}}:
  19.3 ± 48.0
  11.9 ± 43.0
 
 julia> pcov(log.(p))
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  1.96672  1.0016
  1.0016   2.98605
 
 julia> pmean(log.(p))
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.985378409751101
  1.000702538699887
 ```
 
 # Sigma points
 The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points called *sigma points* to propagate the first and second moments of a probability density. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
-```julia
+```julia-repl
 julia> m = [1,2]
 
 julia> Σ = [3. 1; 1 4]
 
 julia> p = StaticParticles(sigmapoints(m,Σ))
-2-element Array{StaticParticles{Float64,5},1}:
+2-element Vector{StaticParticles{Float64,5}}:
  1.0 ± 1.7 # 2n+1 = 5 particles
  2.0 ± 2.0
 
@@ -234,12 +233,12 @@ p      = Particles(particle_matrix) # These are our LHS particles with correct m
 plot(scatter(eachcol(particles)..., title="Sample"), plot(fit, title="Fitness vs. iteration"))
 
 julia> pmean(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  2.0
 
 julia> pcov(p)
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  2.0  1.0
  1.0  4.0
 ```
@@ -343,7 +342,7 @@ To sum up, if two uncertain values are compared, and they have no mutual support
 
 ### Calculating probability
 If you would like to calculate the empirical probability that a value represented by `Particles` fulfils a condition, you may use the macro [`@prob`](@ref):
-```julia
+```julia-repl
 julia> p = Particles()
 Particles{Float64,2000}
  0 ± 1.0

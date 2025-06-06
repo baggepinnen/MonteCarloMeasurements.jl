@@ -4,13 +4,13 @@
     sigmapoints(d::MvNormal)
 
 The [unscented transform](https://en.wikipedia.org/wiki/Unscented_transform#Sigma_points) uses a small number of points to propagate the first and second moments of a probability density, called *sigma points*. We provide a function `sigmapoints(μ, Σ)` that creates a `Matrix` of `2n+1` sigma points, where `n` is the dimension. This can be used to initialize any kind of `AbstractParticles`, e.g.:
-```julia
-julia> m = [1,2]
+```jldoctest
+julia> m = [1,2];
 
-julia> Σ = [3. 1; 1 4]
+julia> Σ = [3. 1; 1 4];
 
 julia> p = StaticParticles(sigmapoints(m,Σ))
-2-element Array{StaticParticles{Float64,5},1}:
+2-element Vector{StaticParticles{Float64,5}}:
  (5 StaticParticles: 1.0 ± 1.73)
  (5 StaticParticles: 2.0 ± 2.0)
 
@@ -49,9 +49,11 @@ sigmapoints(d::MvNormal) = sigmapoints(mean(d), Matrix(cov(d)))
     Y = transform_moments(X::Matrix, m, Σ; preserve_latin=false)
 Transforms `X` such that it get the specified mean and covariance.
 
-```julia
-m, Σ   = [1,2], [2 1; 1 4] # Desired mean and covariance
-particles = transform_moments(X, m, Σ)
+```jldoctest
+julia> m, Σ = [1,2], [2 1; 1 4]; # Desired mean and covariance
+
+julia> particles = transform_moments(X, m, Σ);
+
 julia> cov(particles) ≈ Σ
 true
 ```
