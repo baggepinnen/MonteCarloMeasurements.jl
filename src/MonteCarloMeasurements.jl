@@ -4,7 +4,7 @@ This package facilitates working with probability distributions by means of Mont
 A number of type `Particles` behaves just as any other `Number` while partaking in calculations. Particles also behave like a distribution, so after a calculation, an approximation to the **complete distribution** of the output is captured and represented by the output particles. `mean`, `std` etc. can be extracted from the particles using the corresponding functions `pmean` and `pstd`. `Particles` also interact with [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), so that you can call, e.g., `Normal(p)` and get back a `Normal` type from distributions or `fit(Gamma, p)` to get a `Gamma`distribution. Particles can also be asked for `maximum/minimum`, `quantile` etc. using functions with a prefix `p`, i.e., `pmaximum`. If particles are plotted with `plot(p)`, a histogram is displayed. This requires Plots.jl. A kernel-density estimate can be obtained by `density(p)` is StatsPlots.jl is loaded.
 
 ## Quick start
-```julia
+```julia-repl
 julia> using MonteCarloMeasurements, Plots
 
 julia> a = π ± 0.1 # Construct Gaussian uncertain parameters using ± (\\pm)
