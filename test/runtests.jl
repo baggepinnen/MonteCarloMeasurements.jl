@@ -456,6 +456,7 @@ Random.seed!(0)
         @test convert(Int, 0p) isa Int
         @test convert(Int, 0p) == 0
         @test convert(Particles{Float64,100}, Particles(randn(Float32, 100))) isa Particles{Float64,100}
+        @test convert(Particles{Float32,100}, Particles(randn(Float64, 100))) isa Particles{Float32,100}
         @test_throws ArgumentError convert(Int, p)
         @test_throws ArgumentError AbstractFloat(p)
         @test AbstractFloat(0p) == 0.0

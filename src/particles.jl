@@ -330,7 +330,7 @@ for PT in ParticleSymbols
 
         Base.convert(::Type{StaticParticles{T,N}}, p::$PT{T,N}) where {T,N} = StaticParticles(p.particles)
         Base.convert(::Type{$PT{T,N}}, f::Real) where {T,N} = $PT{T,N}(fill(T(f),N))
-        Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{promote_type(T,S),N}(convert.(promote_type(T,S),f.particles))
+        Base.convert(::Type{$PT{T,N}}, f::$PT{S,N}) where {T,N,S} = $PT{T,N}(convert.(T,f.particles))
         function Base.convert(::Type{S}, p::$PT{T,N}) where {S<:ConcreteFloat,T,N}
             N == 1 && (return S(p.particles[1]))
             pstd(p) < eps(S) || throw(ArgumentError("Cannot convert a particle distribution to a float if not all particles are the same."))
