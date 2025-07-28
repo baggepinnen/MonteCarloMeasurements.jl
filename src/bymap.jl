@@ -134,3 +134,16 @@ macro prob(ex)
         mean($op.(MonteCarloMeasurements.maybe_particles($(esc(a))), MonteCarloMeasurements.maybe_particles($(esc(b)))))
     end
 end
+
+
+"""
+    bymap_a(f, args...)
+
+Like `f(args...)`, but with uncertainty propagation.
+
+Similar to `bymap`, but expands particles contained anywhere within `args`.
+In addition, reassembles the result to be like the original `f` output with `Particles` instead of numbers.
+
+This function is experimental and requires loading the `AccessorsExtra` package.
+"""
+function bymap_a end

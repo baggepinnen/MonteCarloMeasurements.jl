@@ -876,6 +876,51 @@ Random.seed!(0)
 
     end
 
+    @testset "bymap_a" begin
+        using AccessorsExtra
+
+        x = (1 ± 0.2, (a=1 ± 0.1, b=123))
+        y = bymap_a(x) do x
+            vals = (x[1], x[2].a)
+            (;x[2].b, i=argmax(vals))
+        end
+        @test y isa NamedTuple
+        @test y.b == 123.0 ± 0.0
+        @test y.i ≈ 1.52 ± 0.5
+
+        # example from https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/162#issuecomment-2592496104:
+        struct Bar{T1, T2}
+            a::T1
+            b::T2
+        end
+        x = Bar(Particles(randn(1024)), 0)
+        y = bymap_a(x) do x
+            val = if x.a > 0
+                x.a + x.b
+            else
+                0
+            end
+            Bar(val, val)
+        end
+        @test all(>=(0), y.a.particles)
+        @test y.a == y.b
+
+        # below are scanarios that aren't currently supported by bymap_a
+        # we test to ensure that they throw an error instead of silently producing incorrect results
+        struct BarNoTypes
+            a
+            b
+        end
+        @test_throws Exception bymap_a(x -> BarNoTypes(x.a, x.b), x)
+        x = BarNoTypes(Particles(randn(1024)), 0)
+        @test_throws Exception bymap_a(x -> BarNoTypes(x.a, x.b), x)
+
+        # example from https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/162#issuecomment-2612847226:
+        H = (10± 0.1) .*rand(ComplexF64,10,5)
+        @test_throws Exception bymap_a(x -> qr(x).R, H)
+        @test_throws Exception bymap_a(x -> qr(x).R, real(H))
+    end
+
     @testset "inference" begin
         @inferred zero(Particles{Float64,1})
         @inferred zeros(Particles{Float64,1}, 5)
