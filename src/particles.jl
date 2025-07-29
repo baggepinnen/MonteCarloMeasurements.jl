@@ -694,9 +694,9 @@ function LinearAlgebra.mul!(
     B = Matrix(b)
     # Y = A*B
     Y = B*A' # This order makes slicing below more efficient
-    @inbounds if isdefined(y, 1)
+    @inbounds if isassigned(y, 1)
         for i in eachindex(y)
-            @views y[i].particles .= Y[:,i]
+            y[i].particles .= @view Y[:,i]
         end
     else
         for i in eachindex(y)
