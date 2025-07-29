@@ -84,7 +84,7 @@ end
 
 function print_functions_to_extend()
     excluded_functions = [fill, |>, <, display, show, promote, promote_rule, promote_type, size, length, ndims, convert, isapprox, ≈, <, (<=), (==), zeros, zero, eltype, getproperty, fieldtype, rand, randn]
-    functions_to_extend = setdiff(names(Base), Symbol.(excluded_functions))
+    functions_to_extend = setdiff(filter(s -> Base.isexported(Base, s), names(Base)), Symbol.(excluded_functions))
     for fs in functions_to_extend
         ff = @eval $fs
         ff isa Function || continue
