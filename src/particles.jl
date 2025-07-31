@@ -84,7 +84,7 @@ end
 
 function print_functions_to_extend()
     excluded_functions = [fill, |>, <, display, show, promote, promote_rule, promote_type, size, length, ndims, convert, isapprox, ≈, <, (<=), (==), zeros, zero, eltype, getproperty, fieldtype, rand, randn]
-    functions_to_extend = setdiff(names(Base), Symbol.(excluded_functions))
+    functions_to_extend = setdiff(filter(s -> Base.isexported(Base, s), names(Base)), Symbol.(excluded_functions))
     for fs in functions_to_extend
         ff = @eval $fs
         ff isa Function || continue
@@ -441,8 +441,6 @@ for PT in ParticleSymbols
     end
 
     @eval Base.promote_rule(::Type{<:AbstractParticles}, ::Type{$PT{T,N}}) where {T,N} = Union{}
-
-    @eval Base.similar(a::Array, ::Type{$PT{T,N}}, dims::Dims{D}) where {D, T, N} = zeros($PT{T,N}, dims) # To handle https://github.com/baggepinnen/MonteCarloMeasurements.jl/issues/148 introduced in julia v1.11
 end
 
 # Base.length(p::AbstractParticles{T,N}) where {T,N} = N
@@ -696,9 +694,9 @@ function LinearAlgebra.mul!(
     B = Matrix(b)
     # Y = A*B
     Y = B*A' # This order makes slicing below more efficient
-    @inbounds if isdefined(y, 1)
+    @inbounds if isassigned(y, 1)
         for i in eachindex(y)
-            @views y[i].particles .= Y[:,i]
+            y[i].particles .= @view Y[:,i]
         end
     else
         for i in eachindex(y)
