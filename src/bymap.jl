@@ -7,6 +7,19 @@ nparticles(p::AbstractParticles{T,N}) where {T,N} = N
 nparticles(p::ParticleArray) = nparticles(eltype(p))
 nparticles(p::Type{<:ParticleArray}) = nparticles(eltype(p))
 
+function nparticles(p::NamedTuple)
+    N = 1
+    for v in values(p)
+        Ni = nparticles(v)
+        if Ni > 1 && N == 1
+            N = Ni
+        elseif Ni > 1 && N != Ni
+            throw(ArgumentError("All particles must have the same number of particles, found $N and $Ni."))
+        end
+    end
+    N
+end
+
 particletype(p::AbstractParticles) = typeof(p)
 particletype(::Type{P}) where P <: AbstractParticles = P
 particletype(p::AbstractArray{<:AbstractParticles}) = eltype(p)
@@ -126,7 +139,7 @@ end
 Calculate the probability that an event on any of the forms `a < b, a > b, a <= b, a >= b` occurs, where `a` and/or `b` are of type `AbstractParticles`.
 """
 macro prob(ex)
-    ex.head == :call && ex.args[1] ∈ (:<,:>,:<=,:>=) || error("Expected an expression on any of the forms `a < b, a > b, a <= b, a >= b`")
+    ex.head == :call && ex.args[1] ∈ (:<,:>,:<=,:>=, :(==)) || error("Expected an expression on any of the forms `a < b, a > b, a <= b, a >= b`")
     op = ex.args[1]
     a  = ex.args[2]
     b  = ex.args[3]

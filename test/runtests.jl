@@ -765,6 +765,17 @@ Random.seed!(0)
         @test (x*y+z).re.particles ≈ muladd(x,y,z).re.particles
         @test (x*y+z).im.particles ≈ muladd(x,y,z).im.particles
 
+        # Test muladd with Complex{Particles} (issue: ambiguity resolution)
+        C = randn(3, 3)
+        B = randn(3, 3)
+        R = complex.(Particles{Float64,32}.(randn(3,3)), Particles{Float64,32}.(randn(3,3)))
+        @test_nowarn C*(R\B)
+
+        # Test muladd ambiguity resolutions
+        zp = complex(Particles{Float64,32}(randn(32)), Particles{Float64,32}(randn(32)))
+        @test_nowarn muladd(1.0+2im, 1.0+2im, zp)  # Complex, Complex, Complex{Particles}
+        @test_nowarn muladd(1.0, 1.0+2im, zp)      # Real, Complex, Complex{Particles}
+
 
         #
         # @btime $A*$p

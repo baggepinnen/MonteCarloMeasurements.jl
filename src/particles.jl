@@ -416,7 +416,7 @@ for PT in ParticleSymbols
     for XT in (:Number, :($PT{<:Number,N})), YT in (:Number, :($PT{<:Number,N})), ZT in (:Number, :($PT{<:Number,N}))
         XT == YT == ZT == :Number && continue
         @eval function Base.muladd(x::$XT,y::$YT,z::$ZT) where {N}
-             res = muladd.(maybe_particles(x),maybe_particles(y),maybe_particles(z))
+             res = Base.muladd.(maybe_particles(x),maybe_particles(y),maybe_particles(z))
              $PT{eltype(res),N}(res)
         end
     end
@@ -425,6 +425,19 @@ for PT in ParticleSymbols
         @eval function Base.muladd(x::$XT,y::Complex,z::$ZT) where {N}
             x*y+z
         end
+
+        # Method below resolves MethodError: muladd(::Particles{Float64, 32}, ::Complex{Particles{Float64, 32}}, ::Complex{Particles{Float64, 32}}) is ambiguous.
+        @eval function Base.muladd(x::$XT,y::Complex,z::Complex{<:$ZT}) where {N}
+            x*y+z
+        end
+    end
+    # Ambiguity hell
+    @eval function Base.muladd(x::Complex,y::Complex,z::Complex{<:$PT{<:Number,N}}) where {N}
+        x*y+z
+    end
+    # Ambiguity hell
+    @eval function Base.muladd(x::Real, y::Complex, z::Complex{<:$PT{<:Number,N}}) where N
+        x*y+z
     end
 
     @eval Base.promote_rule(::Type{S}, ::Type{$PT{T,N}}) where {S<:Number,T,N} = $PT{promote_type(S,T),N} # This is hard to hit due to method for real 3 lines down
