@@ -351,7 +351,7 @@ with_workspace(f,P) = Workspace(f,P)(P, true)
 function (w::Workspace)(input)
     simple_input,simple_result,result,buffersetter,resultsetter,N,f = w.simple_input,w.simple_result,w.result,w.buffersetter,w.resultsetter,w.N,w.f
     for partind = 1:N
-        buffersetter(input,simple_input, partind)
+        Base.invokelatest(buffersetter, input, simple_input, partind)
         simple_result = f(simple_input)
         Base.invokelatest(resultsetter, result,simple_result, partind)
     end
