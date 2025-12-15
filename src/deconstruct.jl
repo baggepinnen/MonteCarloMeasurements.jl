@@ -285,7 +285,7 @@ function get_result_setter(result)
     end
     setresex = Expr(:block, setresex...)
 
-    @eval setresfun = (result,simple_result,partind)-> $setresex
+    setresfun = @eval (result,simple_result,partind)-> $setresex
     setresfun
 end
 

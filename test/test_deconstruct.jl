@@ -26,7 +26,6 @@ Continuous = ControlSystemsBase.Continuous
         w = Workspace(f,P)
         @time Pd = w(P)
     end
-    @test_throws MethodError tt(P) # This causes a world-age problem. If this tests suddenly break, it would be nice and we can get rid of the intermediate workspace object.
     tt = function (P)
         f = x->c2d(x,0.1)
         w = Workspace(f,P)
