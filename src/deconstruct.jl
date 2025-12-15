@@ -327,7 +327,7 @@ function Workspace(f,input)
     Base.invokelatest(buffersetter,input,simple_input,1)
     simple_result = f(simple_input) # We first to index 1 to peek at the result
     result = @unsafe restore_scalar(build_mutable_container(f(make_scalar(input))), N) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
-    resultsetter = get_result_setter(result)
+    resultsetter = @invokelatest get_result_setter(result)
     Workspace(simple_input,simple_result,result,buffersetter, resultsetter,f,N)
 end
 
