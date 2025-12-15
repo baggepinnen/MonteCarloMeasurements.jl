@@ -244,7 +244,7 @@ function get_buffer_setter(paths)
     # setbufex,getbufex = getindex.(setbufex, 1),getindex.(getbufex, 2)
     setbufex = Expr(:block, setbufex...)
     # getbufex = Expr(:block, getbufex...)
-    @eval setbuffun = (input,simple_input,partind)-> $setbufex
+    setbuffun = @eval (input,simple_input,partind)-> $setbufex
     setbuffun
 
 end
@@ -285,7 +285,7 @@ function get_result_setter(result)
     end
     setresex = Expr(:block, setresex...)
 
-    @eval setresfun = (result,simple_result,partind)-> $setresex
+    setresfun = @eval (result,simple_result,partind)-> $setresex
     setresfun
 end
 
@@ -327,7 +327,7 @@ function Workspace(f,input)
     Base.invokelatest(buffersetter,input,simple_input,1)
     simple_result = f(simple_input) # We first to index 1 to peek at the result
     result = @unsafe restore_scalar(build_mutable_container(f(make_scalar(input))), N) # Heuristic, see what the result is if called with particles and unsafe_comparisons TODO: If the reason the workspace approach is used is that the function f fails for different reason than comparinsons, this will fail here. Maybe Particles{1} can act as constant and be propagated through
-    resultsetter = get_result_setter(result)
+    resultsetter = @invokelatest get_result_setter(result)
     Workspace(simple_input,simple_result,result,buffersetter, resultsetter,f,N)
 end
 
@@ -351,7 +351,7 @@ with_workspace(f,P) = Workspace(f,P)(P, true)
 function (w::Workspace)(input)
     simple_input,simple_result,result,buffersetter,resultsetter,N,f = w.simple_input,w.simple_result,w.result,w.buffersetter,w.resultsetter,w.N,w.f
     for partind = 1:N
-        buffersetter(input,simple_input, partind)
+        Base.invokelatest(buffersetter, input, simple_input, partind)
         simple_result = f(simple_input)
         Base.invokelatest(resultsetter, result,simple_result, partind)
     end
