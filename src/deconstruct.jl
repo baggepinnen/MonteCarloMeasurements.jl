@@ -244,7 +244,7 @@ function get_buffer_setter(paths)
     # setbufex,getbufex = getindex.(setbufex, 1),getindex.(getbufex, 2)
     setbufex = Expr(:block, setbufex...)
     # getbufex = Expr(:block, getbufex...)
-    @eval setbuffun = (input,simple_input,partind)-> $setbufex
+    setbuffun = @eval (input,simple_input,partind)-> $setbufex
     setbuffun
 
 end
