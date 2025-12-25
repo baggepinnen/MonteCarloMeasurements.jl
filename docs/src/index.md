@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/baggepinnen/MonteCarloMeasurements.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/MonteCarloMeasurements.jl/actions)
 [![codecov](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/MonteCarloMeasurements.jl)
-[![](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
+[![arXiv badge](https://img.shields.io/badge/article-arXiv%3A2001.07625-B31B1B)](https://arxiv.org/abs/2001.07625)
 
 > Imagine you had a type that behaved like your standard `Float64` but it really represented a probability distribution like `Gamma(0.5)` or `MvNormal(m, S)`. Then you could call `y=f(x)` and have `y` be the probability distribution `y=p(f(x))`. This package gives you such a type.
 
